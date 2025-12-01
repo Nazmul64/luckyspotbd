@@ -1,26 +1,29 @@
- <aside class="sidebar-wrapper" data-simplebar="true">
-          <div class="sidebar-header">
-            <div>
-              <img src="assets/images/logo-icon.png" class="logo-icon" alt="logo icon">
-            </div>
-            <div>
-              <h4 class="logo-text">Luckyspotbd</h4>
-            </div>
-            <div class="toggle-icon ms-auto"> <i class="bi bi-list"></i>
-            </div>
-          </div>
-          <!--navigation-->
-          <ul class="metismenu" id="menu">
-            <li>
-              <a href="{{route('admin.dashboard')}}">
-                <div class="parent-icon"><i class="bi bi-house-fill"></i>
-                </div>
-                <div class="menu-title">Dashboard</div>
-              </a>
+<aside class="sidebar-wrapper" data-simplebar="true">
 
-            </li>
-           <li>
-            <a href="{{ route('commissionsetting.index') }}" class="has-arrow">
+    <!-- Sidebar Header -->
+    <div class="sidebar-header d-flex align-items-center">
+        <div>
+            <a href="{{ route('admin.dashboard') }}" class="logo-text">Luckyspotbd</a>
+        </div>
+        <div class="toggle-icon ms-auto">
+            <i class="bi bi-list"></i>
+        </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <ul class="metismenu" id="menu">
+
+        <!-- Dashboard -->
+        <li>
+            <a href="{{ route('admin.dashboard') }}">
+                <div class="parent-icon"><i class="bi bi-house-fill"></i></div>
+                <div class="menu-title">Dashboard</div>
+            </a>
+        </li>
+
+        <!-- Commission Setup -->
+        <li>
+            <a href="javascript:void(0);" class="has-arrow">
                 <div class="parent-icon"><i class="bi bi-cash-stack"></i></div>
                 <div class="menu-title">Commission Setup</div>
             </a>
@@ -32,6 +35,38 @@
                 </li>
             </ul>
         </li>
-          </ul>
-          <!--end navigation-->
-       </aside>
+
+        <!-- Withdraw Commission Setup -->
+        <li>
+            <a href="javascript:void(0);" class="has-arrow">
+                <div class="parent-icon"><i class="bi bi-cash-stack"></i></div>
+                <div class="menu-title">Withdraw Commission Setup</div>
+            </a>
+            <ul>
+                <li>
+                    <a href="{{ route('withdrawcommisson.index') }}">
+                        <i class="bi bi-circle"></i> Withdraw Commission List
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- Wallet Setting -->
+        <li>
+            <a href="javascript:void(0);" class="has-arrow">
+                <div class="parent-icon"><i class="bi bi-cash-stack"></i></div>
+                <div class="menu-title">Wallet Setting</div>
+            </a>
+            <ul>
+                <li>
+                    <a href="{{ route('waletesetting.index') }}">
+                        <i class="bi bi-circle"></i> Wallet Setting List
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+    </ul>
+    <!-- End Navigation -->
+
+</aside>

@@ -16,16 +16,24 @@ class Adminmiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-          // যদি user login না থাকে
-        if (!Auth::check()) {
-            return redirect()->route('admin.login'); // login page redirect
-        }
-
-        // যদি logged-in user admin না হয়
-        if (Auth::user()->role !== 'admin') {
-            return redirect('/'); // non-admin redirect
-        }
-
+         // Check if logged in as Admin OR impersonate mode is on
+    if (Auth::check() && (
+        trim(strtolower(Auth::user()->role)) === 'admin' ||
+        session()->has('impersonate')
+    )) {
         return $next($request);
     }
+
+    // If logged in but not admin → logout
+    if (Auth::check()) {
+        Auth::logout();
+    }
+
+    // Redirect to admin login with error
+    return redirect()
+        ->route('admin.login')
+        ->withErrors([
+            'error' => 'Unauthorized access. Please log in as an admin.'
+        ]);
+}
 }

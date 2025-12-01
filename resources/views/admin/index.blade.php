@@ -6,8 +6,8 @@
                     <div class="card-body">
                       <div class="d-flex align-items-center">
                         <div class="">
-                          <p class="mb-1">Total User</p>
-                          <h4 class="mb-0">5.8K</h4>
+                          <a class="mb-1"href="{{route('admin.userlist')}}">Total User</a>
+                          <h4 class="mb-0">{{$user_count ?? ''}}</h4>
                         </div>
                         <div class="ms-auto widget-icon bg-primary text-white">
                           <i class="bi bi-basket2"></i>

@@ -44,6 +44,28 @@
                             </div>
                         </div>
                         <ul class="user-dashboard-tab">
+                            <div class="header-controls" role="group" aria-label="Header controls">
+
+                                @if(session()->has('impersonate'))
+                                    <!-- Admin এখন user হিসেবে লগইন করেছে -->
+                                    <a href="{{ route('admin.stopImpersonate') }}"
+                                    class="text-black"
+                                    style="background:#F5CE0D; padding:14px; color:white; border-radius:50px;"
+                                    target="#">
+                                    Admin
+                                    </a>
+                                @else
+                                    <!-- সাধারণ user বা normal user -->
+                                    <a href="{{ route('frontend') }}"
+                                    class="text-black"
+                                    style="background:#F5CE0D; padding:14px; color:white; border-radius:50px;"
+                                    target="_blank">
+                                    Home
+                                    </a>
+                                @endif
+
+                            </div>
+
                             <li>
                                 <a href="#" class="active">Dashboard</a>
                             </li>

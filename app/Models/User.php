@@ -35,6 +35,7 @@ class User extends Authenticatable
         'refer_income',
         'generation_income',
         'address',
+        'status',
 
     ];
 
