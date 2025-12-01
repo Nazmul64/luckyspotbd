@@ -18,9 +18,21 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('role', ['admin', 'user'])->default('user');
+            $table->string('first_name')->nullable();
+            $table->string('last_name')->nullable();
             $table->string('profile_photo')->nullable();
             $table->string('number')->nullable();
+            $table->string('username')->nullable();
             $table->string('country')->nullable();
+            $table->unsignedBigInteger('referred_by')->nullable()->comment('User ID who referred this user');
+            $table->unsignedBigInteger('ref_id')->nullable()->comment('Alternate referral user ID');
+            $table->string('ref_code')->unique()->nullable();
+
+            // Wallet & commission
+            $table->decimal('balance', 12, 2)->default(0.00)->comment('User wallet balance');
+            $table->decimal('refer_income', 12, 2)->default(0.00)->comment('Direct referral commission earned');
+            $table->decimal('generation_income', 12, 2)->default(0.00)->comment('Generation level commission earned');
+            $table->string('address')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

@@ -25,6 +25,17 @@ class User extends Authenticatable
         'number',
         'country',
         'profile_photo',
+        'username',
+        'first_name',
+        'last_name',
+        'referred_by',
+        'ref_id',
+        'ref_code',
+        'balance',
+        'refer_income',
+        'generation_income',
+        'address',
+
     ];
 
     /**

@@ -36,8 +36,42 @@
 <link href="{{ asset('admin/assets/css/semi-dark.css') }}" rel="stylesheet" />
 <link href="{{ asset('admin/assets/css/header-colors.css') }}" rel="stylesheet" />
 
-
   <title>luckyspotbd</title>
+
+
+
+
+
+<!-- jQuery first, then Bootstrap JS, then Toastr -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<!-- jQuery first, then Toastr -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+<!-- Toastr & Font Awesome CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<!-- Toastr Notifications -->
+<script>
+    $(document).ready(function() {
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: "toast-top-right",
+            timeOut: 5000
+        };
+
+        @if(Session::has('success'))
+            toastr.success("{{ Session::get('success') }}");
+        @endif
+
+        @if(Session::has('error'))
+            toastr.error("{{ Session::get('error') }}");
+        @endif
+    });
+</script>
 </head>
 
 <body>
