@@ -1,9 +1,19 @@
 <?php
 
+use App\Http\Controllers\Backend\AboutController;
 use App\Http\Controllers\Backend\AdminAuthController;
+use App\Http\Controllers\Backend\AdminBlanceController;
 use App\Http\Controllers\Backend\AdminController;
+use App\Http\Controllers\Backend\AdmindepositeblanceaddController;
 use App\Http\Controllers\Backend\AdminuseraccountviewController;
 use App\Http\Controllers\Backend\CommissionSettingController;
+use App\Http\Controllers\Backend\ContactController;
+use App\Http\Controllers\Backend\NoticesController;
+use App\Http\Controllers\Backend\PrivacypolicyController;
+use App\Http\Controllers\Backend\SettingController;
+use App\Http\Controllers\Backend\SliderController;
+use App\Http\Controllers\Backend\SupportControler;
+use App\Http\Controllers\Backend\TermsconditionController;
 use App\Http\Controllers\Backend\WaletaSetupController;
 use App\Http\Controllers\Backend\WithdrawcommissonController;
 use App\Http\Controllers\Frontend\FrontendAuthController;
@@ -65,6 +75,27 @@ Route::middleware(['admin'])->group(function () {
     // Waleta Setting Route
     Route::resource('waletesetting', WaletaSetupController::class);
     // End Waleta Setting Route
+
+    // Additional admin routes can be added here
+     Route::resource('aboutus', AboutController::class);
+     // End Additional admin routes
+     Route::resource('privacypolicy',PrivacypolicyController::class);
+     Route::resource('settings', SettingController::class);
+     Route::resource('contact',ContactController::class);
+     Route::resource('Termscondition',TermsconditionController::class);
+     Route::resource('slider',SliderController::class);
+     Route::resource('supportlink',SupportControler::class);
+     Route::resource('notices',NoticesController::class);
+     Route::get('/admin/user/depositebalances', [AdmindepositeblanceaddController::class, 'adminuserdepositecheck'])->name('admin.depositeblanceadd');
+     Route::get('/admin/user/{id}/depositebalances',[AdmindepositeblanceaddController::class, 'depositebalanceEdit'])->name('admin.deposite.edit');
+     Route::put('/admin/user/{id}/depositebalances',[AdmindepositeblanceaddController::class, 'depositebalanceUpdate'])->name('admin.deposite.update');
+     Route::delete('/admin/user/{id}/delete', [AdmindepositeblanceaddController::class, 'usrdelete'])->name('admin.usrdelete');
+     //  admin blance added
+     Route::get('/admin/user/balance', [AdminBlanceController::class, 'adminusercheck'])->name('admin.balance.index');
+     Route::get('/admin/user/{id}/balance', [AdminBlanceController::class, 'adminBalanceEdit'])->name('admin.balance.edit');
+     Route::put('/admin/user/{id}/balance', [AdminBlanceController::class, 'update'])->name('admin.balance.update');
+     Route::delete('/admin/user/{id}/delete', [AdminBlanceController::class, 'usrdelete'])->name('admin.usrdelete');
+     //  admin blance End
 
 });
 // End Admin Auth Routes
