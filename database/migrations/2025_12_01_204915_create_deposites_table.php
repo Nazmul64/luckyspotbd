@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('transaction_id')->nullable();
             $table->string('screenshot')->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->timestamps(); // <-- add this
+            $table->timestamps();
         });
     }
 

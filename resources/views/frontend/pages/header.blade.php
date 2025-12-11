@@ -94,13 +94,13 @@
                     <ul class="menu">
                         <li><a href="{{ route('frontend') }}">Home</a></li>
                         <li><a href="#">About</a></li>
-                        <li><a href="#">Lottery <span class="badge badge--sm badge--base text-dark"></span></a></li>
+                        <li><a href="#">Ticket <span class="badge badge--sm badge--base text-dark"></span></a></li>
                         <li><a href="#">Faq</a></li>
                         <li>
                             <a href="#0">Pages</a>
                             <ul class="sub-menu">
                                 <li><a href="#">User Dashboard</a></li>
-                                <li><a href="#">Lottery Details</a></li>
+                                <li><a href="#">Ticket Details</a></li>
                                 <li><a href="#">Privacy Policy</a></li>
                                 <li><a href="#">Terms & Conditions</a></li>
                             </ul>

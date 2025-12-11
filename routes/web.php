@@ -5,21 +5,31 @@ use App\Http\Controllers\Backend\AdminAuthController;
 use App\Http\Controllers\Backend\AdminBlanceController;
 use App\Http\Controllers\Backend\AdminController;
 use App\Http\Controllers\Backend\AdmindepositeblanceaddController;
+use App\Http\Controllers\Backend\AdminpasswordchangeController;
 use App\Http\Controllers\Backend\AdminuseraccountviewController;
+use App\Http\Controllers\Backend\AdminWithdrawController;
 use App\Http\Controllers\Backend\CommissionSettingController;
 use App\Http\Controllers\Backend\ContactController;
+use App\Http\Controllers\Backend\LotterycreateController;
 use App\Http\Controllers\Backend\NoticesController;
 use App\Http\Controllers\Backend\PrivacypolicyController;
 use App\Http\Controllers\Backend\SettingController;
 use App\Http\Controllers\Backend\SliderController;
 use App\Http\Controllers\Backend\SupportControler;
 use App\Http\Controllers\Backend\TermsconditionController;
+use App\Http\Controllers\Backend\UserlottryController;
 use App\Http\Controllers\Backend\WaletaSetupController;
 use App\Http\Controllers\Backend\WithdrawcommissonController;
+use App\Http\Controllers\Frontend\AdminDepositeApprovedController;
+use App\Http\Controllers\Frontend\DepositeController;
 use App\Http\Controllers\Frontend\FrontendAuthController;
 use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\Frontend\FrontendDashboardController;
+use App\Http\Controllers\Frontend\PaswordchangeController;
+use App\Http\Controllers\Frontend\UserprofileController;
+use App\Http\Controllers\Frontend\WithdrawController;
 use App\Models\CommissionSetting;
+use App\Models\Deposite;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -37,12 +47,23 @@ Route::post('frontend/login/submit', [FrontendAuthController::class, 'frontend_l
 
 Route::post('frontend/logout', [FrontendAuthController::class, 'frontend_logout'])->name('frontend.logout');
 Route::get('frontend/register', [FrontendAuthController::class, 'frontend_register'])->name('frontend.register');
-Route::get('frontend/register', [FrontendAuthController::class, 'frontend_register'])->name('frontend.register');
 Route::post('frontend/register/submit', [FrontendAuthController::class, 'frontend_register_submit'])->name('frontend.register.submit');
 
 // Protect Dashboard (login required)
 Route::middleware(['user'])->group(function () {
     Route::get('frontend/dashboard', [FrontendDashboardController::class, 'frontend'])->name('frontend.dashboard');
+    Route::get('user/deposte', [DepositeController::class, 'deposte_index'])->name('deposte.index');
+    Route::post('user/deposte/store', [DepositeController::class, 'store'])->name('frontend.deposit.store');
+    Route::post('/buy-package/{packageId}', [UserlottryController::class, 'buyPackage'])->name('buy.package');
+  // user profile update route and controller
+
+   Route::get('/profile', [UserprofileController::class, 'profile'])->name('profile.index');
+   Route::put('/profile/{id}', [UserprofileController::class, 'updateProfile'])->name('profile.update');
+   Route::get('/password', [PaswordchangeController::class, 'password'])->name('password.index');
+   Route::post('/password/change', [PaswordchangeController::class, 'passwordchange'])->name('password.change');
+  // user profile update route and controller End
+   Route::get('Withdraw', [WithdrawController::class, 'Withdraw'])->name('Withdraw.index');
+   Route::post('withdraw/submit', [WithdrawController::class, 'submit'])->name('Withdraw.submit');
 });
 
 
@@ -96,6 +117,21 @@ Route::middleware(['admin'])->group(function () {
      Route::put('/admin/user/{id}/balance', [AdminBlanceController::class, 'update'])->name('admin.balance.update');
      Route::delete('/admin/user/{id}/delete', [AdminBlanceController::class, 'usrdelete'])->name('admin.usrdelete');
      //  admin blance End
+    Route::get('/admin/password/change', [AdminpasswordchangeController::class, 'adminpasswordchange'])->name('adminpassword.change');
+    Route::post('/admin/password/change/submit', [AdminpasswordchangeController::class, 'adminpasswordsubmit'])->name('adminpassword.submit');
+    Route::get('/admin/profile/change', [AdminpasswordchangeController::class, 'adminProfile'])->name('profile.change');
+    Route::put('/admin/profile/{id}', [AdminpasswordchangeController::class, 'adminProfileSubmit'])->name('admin.profile.update');
+
+    Route::post('/deposites/{deposit}/status', [AdminDepositeApprovedController::class, 'updateStatus'])->name('deposites.updateStatus');
+    Route::get('/deposites/index', [AdminDepositeApprovedController::class, 'approveindex'])->name('approve.index');
+    Route::get('/deposites/delete/{id}', [AdminDepositeApprovedController::class, 'approvedelete'])->name('approve.delete');
+    Route::resource('lottery', LotterycreateController::class);
+    // Show withdrawals
+    Route::get('admin/withdraw/show', [AdminWithdrawController::class, 'Withdrawshow'])->name('admin.withdraw.show');
+
+    // Approve & Reject
+    Route::get('admin/withdraw/approve/{id}', [AdminWithdrawController::class,'approve'])->name('admin.withdraw.approve');
+    Route::get('admin/withdraw/reject/{id}', [AdminWithdrawController::class,'reject'])->name('admin.withdraw.reject');
 
 });
 // End Admin Auth Routes

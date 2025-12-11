@@ -33,9 +33,9 @@ class User extends Authenticatable
         'ref_code',
         'balance',
         'refer_income',
-        'generation_income',
         'address',
         'status',
+        'zip_code',
 
     ];
 
@@ -61,4 +61,5 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
 }

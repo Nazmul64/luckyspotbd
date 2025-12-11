@@ -9,7 +9,7 @@ class Deposite extends Model
     protected $fillable=[
      "user_id","amount","payment_method","transaction_id","screenshot","status","new_screenshot",
    ];
-     public $timestamps = false; // important
+     public $timestamps = true; // ensure timestamps enabled
 
   protected $casts = [
     'user_id' => 'string',
@@ -20,4 +20,8 @@ class Deposite extends Model
     'status'=> 'string',
     'status'=> 'string',
 ];
+  public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

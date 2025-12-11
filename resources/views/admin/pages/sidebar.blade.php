@@ -211,6 +211,48 @@
                 </li>
             </ul>
         </li>
+        <li>
+            <a href="javascript:void(0);" class="has-arrow">
+                <div class="parent-icon"><i class="bi bi-clock-history"></i></div>
+                <div class="menu-title">Pending Deposite</div>
+            </a>
+            <ul>
+                <li>
+                    <a href="{{ route('approve.index') }}">
+                        <i class="bi bi-circle"></i> Pending Deposite
+                    </a>
+                </li>
+            </ul>
+        </li>
+       <li>
+        <a href="javascript:void(0);" class="has-arrow">
+            <div class="parent-icon"><i class="bi bi-ticket-perforated"></i></div>
+            <div class="menu-title">Ticket Create</div>
+        </a>
+        <ul>
+            <li>
+                <a href="{{ route('lottery.index') }}">
+                    <i class="bi bi-circle"></i> Ticket List
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li>
+    <a href="javascript:void(0);" class="has-arrow">
+        <div class="parent-icon"><i class="bi bi-cash-stack"></i></div>
+        <div class="menu-title">Withdraw</div>
+    </a>
+    <ul>
+        <li>
+            <a href="{{ route('admin.withdraw.show') }}">
+                <i class="bi bi-circle"></i> Withdraw List
+            </a>
+        </li>
+    </ul>
+    </li>
+
+
+
     </ul>
     <!-- End Navigation Menu -->
 

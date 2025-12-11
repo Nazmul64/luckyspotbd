@@ -6,10 +6,10 @@
         <div class="container">
             <div class="banner-wrapper d-flex flex-wrap align-items-center">
                 <div class="banner-content">
-                    <h1 class="banner-content__title">Play <span class="text--base">Online Casino</span> & Win Money Unlimited</h1>
+                    <h1 class="banner-content__title">Ticket <span class="text--base">Online Ticket</span> & Win Money Unlimited</h1>
                     <p class="banner-content__subtitle">PLAY CASINO AND EARN CRYPTO IN ONLINE. THE ULTIMATE ONLINE CASINO PLATFORM.</p>
                     <div class="button-wrapper">
-                        <a href="#" class="cmn--btn active btn--lg"><i class="las la-play"></i> Play Now</a>
+                        <a href="#" class="cmn--btn active btn--lg"><i class="las la-play"></i> Ticket Now</a>
                         <a href="sign-up.html" class="cmn--btn btn--lg">Sign Up</a>
                     </div>
                     <img src="assets/images/banner/card.png" alt="" class="shape1">
@@ -30,8 +30,8 @@
                 <div class="col-lg-6">
                     <div class="about-content">
                         <div class="section-header">
-                            <h2 class="section-header__title">About The Casino</h2>
-                            <p>A casino is a facility for certain types of gambling. Casinos are often built near or combined with hotels, resorts, restaurants, retail shopping, cruise ships, and other tourist attractions. Some casinos are also known for hosting live entertainment, such as stand-up comedy, concerts, and sports.</p>
+                            <h2 class="section-header__title">About The Ticket</h2>
+                            <p>A Ticket is a facility for certain types of gambling. Ticket are often built near or combined with hotels, resorts, restaurants, retail shopping, cruise ships, and other tourist attractions. Some casinos are also known for hosting live entertainment, such as stand-up comedy, concerts, and sports.</p>
                         </div>
                         <a href="about.html" class="cmn--btn active">Know More</a>
                     </div>
@@ -50,149 +50,121 @@
     <!-- About Section Ends Here -->
 
 
+
+
     <!-- Game Section Starts Here -->
-    <section class="game-section padding-top padding-bottom bg_img" style="background: url(assets/images/game/bg3.jpg);">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-6 col-xl-5">
-                    <div class="section-header text-center">
-                        <h2 class="section-header__title">Top Awesome Games</h2>
-                        <p>A casino is a facility for certain types of gambling. Casinos are often built combined with hotels, resorts,.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="row gy-4 justify-content-center">
-                <div class="col-lg-4 col-xl-3 col-md-6 col-sm-6">
-                    <div class="game-item">
-                        <div class="game-inner">
-                            <div class="game-item__thumb">
-                                <img src="{{asset('frontend')}}/assets/images/game/item2.png" alt="game">
-                            </div>
-                            <div class="game-item__content">
-                                <h4 class="title">Roulette</h4>
-                                <p class="invest-info">Invest Limit</p>
-                                <p class="invest-amount">$10.49 - $1,000</p>
-                                <a href="#0" class="cmn--btn active btn--md radius-0">Play Now</a>
-                            </div>
-                        </div>
-                        <div class="ball"></div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-xl-3 col-md-6 col-sm-6">
-                    <div class="game-item">
-                        <div class="game-inner">
-                            <div class="game-item__thumb">
-                                <img src="{{asset('frontend')}}/assets/images/game/item1.png" alt="game">
-                            </div>
-                            <div class="game-item__content">
-                                <h4 class="title">Zero To Ninty</h4>
-                                <p class="invest-info">Invest Limit</p>
-                                <p class="invest-amount">$10.49 - $1,000</p>
-                                <a href="#0" class="cmn--btn active btn--md radius-0">Play Now</a>
-                            </div>
-                        </div>
-                        <div class="ball"></div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-xl-3 col-md-6 col-sm-6">
-                    <div class="game-item">
-                        <div class="game-inner">
-                            <div class="game-item__thumb">
-                                <img src="{{asset('frontend')}}/assets/images/game/item3.png" alt="game">
-                            </div>
-                            <div class="game-item__content">
-                                <h4 class="title">Number Buy</h4>
-                                <p class="invest-info">Invest Limit</p>
-                                <p class="invest-amount">$10.49 - $1,000</p>
-                                <a href="#0" class="cmn--btn active btn--md radius-0">Play Now</a>
-                            </div>
-                        </div>
-                        <div class="ball"></div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-xl-3 col-md-6 col-sm-6">
-                    <div class="game-item">
-                        <div class="game-inner">
-                            <div class="game-item__thumb">
-                                <img src="{{asset('frontend')}}/assets/images/game/item4.png" alt="game">
-                            </div>
-                            <div class="game-item__content">
-                                <h4 class="title">Roulette</h4>
-                                <p class="invest-info">Invest Limit</p>
-                                <p class="invest-amount">$10.49 - $1,000</p>
-                                <a href="#0" class="cmn--btn active btn--md radius-0">Play Now</a>
-                            </div>
-                        </div>
-                        <div class="ball"></div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-xl-3 col-md-6 col-sm-6">
-                    <div class="game-item">
-                        <div class="game-inner">
-                            <div class="game-item__thumb">
-                                <img src="{{asset('frontend')}}/assets/images/game/item5.png" alt="game">
-                            </div>
-                            <div class="game-item__content">
-                                <h4 class="title">Card Game</h4>
-                                <p class="invest-info">Invest Limit</p>
-                                <p class="invest-amount">$10.49 - $1,000</p>
-                                <a href="#0" class="cmn--btn active btn--md radius-0">Play Now</a>
-                            </div>
-                        </div>
-                        <div class="ball"></div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-xl-3 col-md-6 col-sm-6">
-                    <div class="game-item">
-                        <div class="game-inner">
-                            <div class="game-item__thumb">
-                                <img src="{{asset('frontend')}}/assets/images/game/item6.png" alt="game">
-                            </div>
-                            <div class="game-item__content">
-                                <h4 class="title">Dice Rolling</h4>
-                                <p class="invest-info">Invest Limit</p>
-                                <p class="invest-amount">$10.49 - $1,000</p>
-                                <a href="#0" class="cmn--btn active btn--md radius-0">Play Now</a>
-                            </div>
-                        </div>
-                        <div class="ball"></div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-xl-3 col-md-6 col-sm-6">
-                    <div class="game-item">
-                        <div class="game-inner">
-                            <div class="game-item__thumb">
-                                <img src="{{asset('frontend')}}/assets/images/game/item2.png" alt="game">
-                            </div>
-                            <div class="game-item__content">
-                                <h4 class="title">Card Game</h4>
-                                <p class="invest-info">Invest Limit</p>
-                                <p class="invest-amount">$10.49 - $1,000</p>
-                                <a href="#0" class="cmn--btn active btn--md radius-0">Play Now</a>
-                            </div>
-                        </div>
-                        <div class="ball"></div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-xl-3 col-md-6 col-sm-6">
-                    <div class="game-item">
-                        <div class="game-inner">
-                            <div class="game-item__thumb">
-                                <img src="{{asset('frontend')}}/assets/images/game/item6.png" alt="game">
-                            </div>
-                            <div class="game-item__content">
-                                <h4 class="title">Dice Rolling</h4>
-                                <p class="invest-info">Invest Limit</p>
-                                <p class="invest-amount">$10.49 - $1,000</p>
-                                <a href="#0" class="cmn--btn active btn--md radius-0">Play Now</a>
-                            </div>
-                        </div>
-                        <div class="ball"></div>
-                    </div>
+<section class="game-section padding-top padding-bottom bg_img" style="background: url(assets/images/game/bg3.jpg);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-xl-5">
+                <div class="section-header text-center">
+                    <h2 class="section-header__title">Top Awesome Ticket</h2>
+                    <p>A casino is a facility for certain types of gambling. Casinos are often built combined with hotels, resorts.</p>
                 </div>
             </div>
         </div>
-    </section>
+
+        <div class="row gy-4 justify-content-center">
+            @foreach ($lottery_show as $itm)
+                <div class="col-lg-4 col-xl-3 col-md-6 col-sm-6">
+                    <div class="game-item">
+                        <div class="game-inner">
+
+                            {{-- Image --}}
+                            <div class="game-item__thumb">
+                                <img src="{{ asset('uploads/Lottery/' . ($itm->photo ?? 'default.png')) }}" alt="{{ $itm->name }}">
+                            </div>
+
+                            <div class="game-item__content">
+                                {{-- Name --}}
+                                <h4 class="title">{{ $itm->name ?? 'N/A' }}</h4>
+
+                                {{-- Win Type --}}
+                                <p class="invest-info">{{ $itm->win_type ?? 'N/A' }}</p>
+
+                                {{-- Price --}}
+                                <p class="invest-amount">
+                                    {{ $itm->price ? round($itm->price) . ' টাকা' : '0 টাকা' }}
+                                </p>
+
+                                {{-- Draw Date --}}
+                                <p class="text-white">
+                                    Draw Date: {{ $itm->draw_date ? $itm->draw_date->format('d M, Y h:i A') : 'N/A' }}
+                                </p>
+
+                                {{-- Countdown Timer --}}
+                                @if($itm->draw_date)
+                                    <p class="text-warning countdown-timer" data-draw="{{ $itm->draw_date->format('Y-m-d H:i:s') }}"></p>
+                                @endif
+
+                                {{-- Prizes --}}
+                                <p class="text-success">1st Prize: {{ round($itm->first_prize ?? 0) }} টাকা</p>
+                                <p class="text-warning">2nd Prize: {{ round($itm->second_prize ?? 0) }} টাকা</p>
+                                <p class="text-info">3rd Prize: {{ round($itm->third_prize ?? 0) }} টাকা</p>
+
+                                {{-- Ticket Buy Button --}}
+                                <a href="javascript:void(0);"
+                                   class="cmn--btn active btn--md radius-0 ticket-buy-btn"
+                                   data-url-dashboard="{{ route('frontend.dashboard') }}"
+                                   data-url-login="{{ route('frontend.login') }}">
+                                   Ticket Buy
+                                </a>
+                            </div>
+                        </div>
+                        <div class="ball"></div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+{{-- Countdown Script --}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function updateCountdowns() {
+        const timers = document.querySelectorAll('.countdown-timer');
+        timers.forEach(function(timer) {
+            const drawTime = timer.getAttribute('data-draw');
+            const drawDate = new Date(drawTime);
+            const now = new Date();
+            const diff = drawDate - now;
+
+            if(diff <= 0) {
+                timer.textContent = '🎉 Draw time has arrived!';
+                return;
+            }
+
+            const days = Math.floor(diff / (1000*60*60*24));
+            const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+            const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
+            const seconds = Math.floor((diff % (1000*60)) / 1000);
+
+            timer.textContent = `⏳ ${days}d ${hours}h ${minutes}m ${seconds}s remaining`;
+        });
+    }
+
+    setInterval(updateCountdowns, 1000);
+
+    // Ticket Buy button logic
+    const ticketButtons = document.querySelectorAll('.ticket-buy-btn');
+    ticketButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            @if(Auth::check())
+                // User is logged in -> go to dashboard
+                window.location.href = btn.dataset.urlDashboard;
+            @else
+                // User not logged in -> go to login page
+                alert('You need to login first!');
+                window.location.href = btn.dataset.urlLogin;
+            @endif
+        });
+    });
+});
+</script>
+
+
+
     <!-- Game Section Ends Here -->
 
 
@@ -202,8 +174,8 @@
             <div class="row justify-content-between gy-5">
                 <div class="col-lg-5 col-xl-4">
                     <div class="section-header mb-4">
-                        <h2 class="section-header__title">Why Play Our Casino</h2>
-                        <p>A casino is a facility for certain types of gambling. Casinos are often built combined with hotels, resorts,</p>
+                        <h2 class="section-header__title">Why Play Our Ticket</h2>
+                        <p>A casino is a facility for certain types of gambling. Ticket are often built combined with hotels, resorts,</p>
                     </div>
                     <p>Debitis ad dolor sint consequatur hic, facere est doloribustemp oribus in laborum similique saepe bland itiis odio nulla repellat dicta reprehenderit. Obcaecati, sed perferendis? Quam cum debitis odit recusandae dolor earum.</p>
                 </div>
@@ -215,8 +187,8 @@
                                     <i class="las la-shield-alt"></i>
                                 </div>
                                 <div class="why-item__content">
-                                    <h4 class="title">Secure Casino Games</h4>
-                                    <p>Games available in most casinos are commonly called casino games. In a casino game. you will found options.</p>
+                                    <h4 class="title">Secure Ticket Games</h4>
+                                    <p>Games available in most Ticket are commonly called Ticket games. In a casino game. you will found options.</p>
                                 </div>
                             </div>
                         </div>
@@ -227,7 +199,7 @@
                                 </div>
                                 <div class="why-item__content">
                                     <h4 class="title">Awesome Game State</h4>
-                                    <p>Games available in most casinos are commonly called casino games. In a casino game. you will found options.</p>
+                                    <p>Games available in most Ticket are commonly called Ticket games. In a Ticket game. you will found options.</p>
                                 </div>
                             </div>
                         </div>
@@ -238,7 +210,7 @@
                                 </div>
                                 <div class="why-item__content">
                                     <h4 class="title">Higher Wining Chance</h4>
-                                    <p>Games available in most casinos are commonly called casino games. In a casino game. you will found options.</p>
+                                    <p>Games available in most Ticket are commonly called Ticket games. In a Ticket game. you will found options.</p>
                                 </div>
                             </div>
                         </div>
@@ -249,7 +221,7 @@
                                 </div>
                                 <div class="why-item__content">
                                     <h4 class="title">Invest Win And Earn</h4>
-                                    <p>Games available in most casinos are commonly called casino games. In a casino game. you will found options.</p>
+                                    <p>Games available in most Ticket are commonly called Ticket games. In a Ticket game. you will found options.</p>
                                 </div>
                             </div>
                         </div>
@@ -270,8 +242,8 @@
             <div class="row justify-content-center">
                 <div class="col-lg-6">
                     <div class="section-header text-center">
-                        <h2 class="section-header__title">How to Play Game</h2>
-                        <p>A casino is a facility for certain types of gambling. Casinos are often built combined with hotels, resorts.</p>
+                        <h2 class="section-header__title">How to  Ticket</h2>
+                        <p>A Ticket is a facility for certain types of gambling. Ticket are often built combined with hotels, resorts.</p>
                     </div>
                 </div>
             </div>
@@ -322,7 +294,7 @@
                 <div class="col-lg-7 col-xl-6">
                     <div class="section-header text-center">
                         <h2 class="section-header__title">Frequently Asked Questions</h2>
-                        <p>A casino is a facility for certain types of gambling. Casinos are often built combined with hotels, resorts.</p>
+                        <p>A Ticket is a facility for certain types of gambling. Ticket are often built combined with hotels, resorts.</p>
                     </div>
                 </div>
             </div>
@@ -330,7 +302,7 @@
                 <div class="col-lg-6">
                     <div class="faq-item">
                         <div class="faq-item__title">
-                            <h5 class="title">01. How do I create Casine Account ?</h5>
+                            <h5 class="title">01. How do I create Ticket Account ?</h5>
                         </div>
                         <div class="faq-item__content">
                             <p>Autem ut suscipit, quibusdam officia, perferendis odio neque eius similique quae ipsum dolor voluptas sequi recusandae dolorem assumenda asperiores deleniti numquam iste fugit eligendi voluptates aliquam voluptate. Quas, magni excepturi ab, dolore explicabo  .</p>
@@ -338,7 +310,7 @@
                     </div>
                     <div class="faq-item">
                         <div class="faq-item__title">
-                            <h5 class="title">01. How do I create Casine Account ?</h5>
+                            <h5 class="title">01. How do I create Ticket Account ?</h5>
                         </div>
                         <div class="faq-item__content">
                             <p>Autem ut suscipit, quibusdam officia, perferendis odio neque eius similique quae ipsum dolor voluptas sequi recusandae dolorem assumenda asperiores deleniti numquam iste fugit eligendi voluptates aliquam voluptate. Quas, magni excepturi ab, dolore explicabo  .</p>
@@ -346,7 +318,7 @@
                     </div>
                     <div class="faq-item">
                         <div class="faq-item__title">
-                            <h5 class="title">01. How do I create Casine Account ?</h5>
+                            <h5 class="title">01. How do I create Ticket Account ?</h5>
                         </div>
                         <div class="faq-item__content">
                             <p>Autem ut suscipit, quibusdam officia, perferendis odio neque eius similique quae ipsum dolor voluptas sequi recusandae dolorem assumenda asperiores deleniti numquam iste fugit eligendi voluptates aliquam voluptate. Quas, magni excepturi ab, dolore explicabo  .</p>
@@ -354,7 +326,7 @@
                     </div>
                     <div class="faq-item mb-2 mb-lg-0">
                         <div class="faq-item__title">
-                            <h5 class="title">01. How do I create Casine Account ?</h5>
+                            <h5 class="title">01. How do I create Ticket Account ?</h5>
                         </div>
                         <div class="faq-item__content">
                             <p>Autem ut suscipit, quibusdam officia, perferendis odio neque eius similique quae ipsum dolor voluptas sequi recusandae dolorem assumenda asperiores deleniti numquam iste fugit eligendi voluptates aliquam voluptate. Quas, magni excepturi ab, dolore explicabo  .</p>
@@ -364,7 +336,7 @@
                 <div class="col-lg-6">
                     <div class="faq-item">
                         <div class="faq-item__title">
-                            <h5 class="title">01. How do I create Casine Account ?</h5>
+                            <h5 class="title">01. How do I create Ticket Account ?</h5>
                         </div>
                         <div class="faq-item__content">
                             <p>Autem ut suscipit, quibusdam officia, perferendis odio neque eius similique quae ipsum dolor voluptas sequi recusandae dolorem assumenda asperiores deleniti numquam iste fugit eligendi voluptates aliquam voluptate. Quas, magni excepturi ab, dolore explicabo  .</p>
@@ -372,7 +344,7 @@
                     </div>
                     <div class="faq-item">
                         <div class="faq-item__title">
-                            <h5 class="title">01. How do I create Casine Account ?</h5>
+                            <h5 class="title">01. How do I create Ticket Account ?</h5>
                         </div>
                         <div class="faq-item__content">
                             <p>Autem ut suscipit, quibusdam officia, perferendis odio neque eius similique quae ipsum dolor voluptas sequi recusandae dolorem assumenda asperiores deleniti numquam iste fugit eligendi voluptates aliquam voluptate. Quas, magni excepturi ab, dolore explicabo  .</p>
@@ -380,7 +352,7 @@
                     </div>
                     <div class="faq-item">
                         <div class="faq-item__title">
-                            <h5 class="title">01. How do I create Casine Account ?</h5>
+                            <h5 class="title">01. How do I create Ticket Account ?</h5>
                         </div>
                         <div class="faq-item__content">
                             <p>Autem ut suscipit, quibusdam officia, perferendis odio neque eius similique quae ipsum dolor voluptas sequi recusandae dolorem assumenda asperiores deleniti numquam iste fugit eligendi voluptates aliquam voluptate. Quas, magni excepturi ab, dolore explicabo  .</p>
@@ -388,7 +360,7 @@
                     </div>
                     <div class="faq-item">
                         <div class="faq-item__title">
-                            <h5 class="title">01. How do I create Casine Account ?</h5>
+                            <h5 class="title">01. How do I create Ticket Account ?</h5>
                         </div>
                         <div class="faq-item__content">
                             <p>Autem ut suscipit, quibusdam officia, perferendis odio neque eius similique quae ipsum dolor voluptas sequi recusandae dolorem assumenda asperiores deleniti numquam iste fugit eligendi voluptates aliquam voluptate. Quas, magni excepturi ab, dolore explicabo  .</p>
@@ -529,8 +501,8 @@
             <div class="row justify-content-center">
                 <div class="col-lg-7 col-xl-6">
                     <div class="section-header text-center">
-                        <h2 class="section-header__title">What Casino Players Say</h2>
-                        <p>A casino is a facility for certain types of gambling. Casinos are often built combined with hotels, resorts.</p>
+                        <h2 class="section-header__title">What Ticket Players Say</h2>
+                        <p>A Ticket is a facility for certain types of gambling. Ticket are often built combined with hotels, resorts.</p>
                     </div>
                 </div>
             </div>

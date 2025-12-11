@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Str;
 class FrontendAuthController extends Controller
 {
     // Show login page
@@ -51,34 +51,53 @@ class FrontendAuthController extends Controller
     }
 
     // Handle registration submit
-    public function frontend_register_submit(Request $request)
-    {
-        $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'username' => 'required|string|max:255|unique:users,username',
-            'number' => 'required|string|max:20',
-            'country' => 'required|string|max:255',
-            'ref_code' => 'nullable|string|exists:users,ref_code',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
 
-        $full_name = $request->first_name . ' ' . $request->last_name;
+      public function frontend_register_submit(Request $request)
+{
+    $request->validate([
+        'first_name' => 'required|string|max:255',
+        'last_name'  => 'required|string|max:255',
+        'email'      => 'required|email|unique:users,email',
+        'username'   => 'required|string|max:255|unique:users,username',
+        'number'     => 'required|string|max:20|unique:users,number',
+        'country'    => 'required|string|max:255',
+        'ref_code'   => 'nullable|string|exists:users,ref_code',
+        'password'   => 'required|string|min:6|confirmed',
+    ]);
 
-        $user = User::create([
-            'name' => $full_name,
-            'email' => $request->email,
-            'username' => $request->username,
-            'phone' => $request->number,
-            'country' => $request->country,
-            'ref_code' => $request->ref_code,
-            'password' => Hash::make($request->password),
-        ]);
+    // Full name
+    $full_name = $request->first_name . ' ' . $request->last_name;
 
-        Auth::login($user);
-
-        return redirect()->route('frontend.dashboard')
-            ->with('success', 'Registration successful! Welcome ' . $full_name);
+    // Referral
+    $referredBy = null;
+    if ($request->filled('ref_code')) {
+        $refUser = User::where('ref_code', $request->ref_code)->first();
+        if ($refUser) {
+            $referredBy = $refUser->id;
+        }
     }
+
+    // Random ref code for new user
+    $randomRefCode = strtoupper(Str::random(8));
+
+    $user = User::create([
+        'first_name'  => $request->first_name,
+        'last_name'   => $request->last_name,
+        'name'        => $full_name,
+        'email'       => $request->email,
+        'username'    => $request->username,
+        'number'      => $request->number,
+        'country'     => $request->country,
+        'password'    => Hash::make($request->password),
+        'ref_code'    => $randomRefCode,
+        'referred_by' => $referredBy,
+        'status'      => 'active',
+        'role'        => 'user',
+    ]);
+
+    Auth::login($user);
+
+    return redirect()->route('frontend.dashboard')
+        ->with('success', 'Registration successful! Welcome ' . $full_name);
+}
 }
