@@ -24,6 +24,7 @@
                             <th>Bank Name</th>
                             <th>Amount</th>
                             <th>Transaction ID</th>
+                            <th>Photo</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
@@ -43,6 +44,7 @@
 
                                 {{-- Transaction ID --}}
                                 <td>{{ $item->transaction_id ?? 'N/A' }}</td>
+                                <td>{{ $item->photo ?? 'N/A' }}</td>
 
                                 {{-- Status Dropdown --}}
                                 <td>

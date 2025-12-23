@@ -24,6 +24,7 @@
                 <table id="settingsTable" class="table table-hover table-bordered align-middle">
                     <thead class="table-dark text-center">
                         <tr>
+                            <th>Site  Name</th>
                             <th>Photo</th>
                             <th>Favicon</th>
                             <th>Phone</th>
@@ -64,6 +65,7 @@
                                 </td>
 
                                 {{-- Other Fields --}}
+                                <td>{{ $item->site_name ?? 'N/A' }}</td>
                                 <td>{{ $item->phone ?? 'N/A' }}</td>
                                 <td>{{ $item->email ?? 'N/A' }}</td>
                                 <td>{{ $item->address ?? 'N/A' }}</td>

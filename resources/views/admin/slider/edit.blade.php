@@ -1,84 +1,64 @@
 @extends('admin.master')
 
 @section('admin')
+
 <div class="row">
     <div class="col-12 mx-auto">
         <h6 class="mb-3 text-uppercase">Edit Slider</h6>
 
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('slider.update', $slider->id) }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('slider.update', $slider->id) }}"
+                      method="POST"
+                      enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 
-                    <!-- Title Field -->
+                    <!-- Title -->
                     <div class="mb-3">
-                        <label for="title" class="form-label">Title</label>
-                        <input
-                            type="text"
-                            id="title"
-                            name="title"
-                            class="form-control"
-                            value="{{ old('title', $slider->title) }}"
-                            placeholder="Enter Title">
-                        @error('title')
-                            <span class="text-danger">{{ $message }}</span>
-                        @enderror
+                        <label class="form-label">Title</label>
+                        <input type="text"
+                               name="title"
+                               class="form-control"
+                               value="{{ old('title', $slider->title) }}">
                     </div>
 
-                    <!-- Description Field -->
+                    <!-- Description -->
                     <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea
-                            name="description"
-                            id="description"
-                            class="form-control"
-                            rows="6">{{ old('description', $slider->description) }}</textarea>
-                        @error('description')
-                            <span class="text-danger">{{ $message }}</span>
-                        @enderror
+                        <label class="form-label">Description</label>
+                        <textarea name="description"
+                                  class="form-control"
+                                  rows="5">{{ old('description', $slider->description) }}</textarea>
                     </div>
 
-                    <!-- Photo Field -->
+                    <!-- Photo -->
                     <div class="mb-3">
-                        <label for="photo" class="form-label">Photo</label>
-                        <input
-                            type="file"
-                            id="photo"
-                            name="photo"
-                            class="form-control">
-                        @error('photo')
-                            <span class="text-danger">{{ $message }}</span>
-                        @enderror
+                        <label class="form-label">Photo</label>
+                        <input type="file" name="photo" class="form-control">
 
-                        <!-- Show Current Photo -->
                         @if($slider->photo)
                             <div class="mt-2">
-                                <img src="{{ asset($slider->photo) }}" alt="Slider Image" width="150" class="rounded shadow">
+                                <img src="{{ asset($slider->photo) }}"
+                                     width="120"
+                                     class="img-thumbnail rounded">
                             </div>
                         @endif
                     </div>
 
-                    <!-- Status Field -->
+                    <!-- Status -->
                     <div class="mb-3">
-                        <label for="status" class="form-label">Select Status</label>
-                        <select
-                            id="status"
-                            name="status"
-                            class="form-select">
-                            <option value="1" {{ old('status', $slider->status) == '1' ? 'selected' : '' }}>Active</option>
-                            <option value="0" {{ old('status', $slider->status) == '0' ? 'selected' : '' }}>Inactive</option>
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="1" {{ $slider->status == 1 ? 'selected' : '' }}>Inactive</option>
+                            <option value="0" {{ $slider->status == 0 ? 'selected' : '' }}>Active</option>
                         </select>
-                        @error('status')
-                            <span class="text-danger">{{ $message }}</span>
-                        @enderror
                     </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" class="btn btn-primary">Update</button>
+                    <button type="submit" class="btn btn-primary">Update Slider</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
 @endsection

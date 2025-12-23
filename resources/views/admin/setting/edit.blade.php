@@ -50,6 +50,12 @@
                     <input type="email" name="email" id="email" class="form-control" value="{{ $setting->email }}">
                 </div>
 
+                    {{-- Site Name --}}
+                <div class="mb-3">
+                    <label for="site_name" class="form-label">Site Name</label>
+                    <input type="text" name="site_name" id="site_name" class="form-control" value="{{ $setting->site_name }}">
+                </div>
+
                 {{-- Address --}}
                 <div class="mb-3">
                     <label for="address" class="form-label">Address</label>

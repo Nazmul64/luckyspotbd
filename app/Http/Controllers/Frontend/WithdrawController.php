@@ -17,9 +17,9 @@ class WithdrawController extends Controller
     public function Withdraw()
     {
         $Withdraw_limit = WithdrawCommission::latest()->first(); // Get latest withdraw limits
-        $payment_methods = Waleta_setup::all(); // Get all payment methods
+        $payment_method_name = Waleta_setup::all(); // Get all payment methods
 
-        return view('frontend.Withdraw.index', compact('Withdraw_limit', 'payment_methods'));
+        return view('frontend.Withdraw.index', compact('Withdraw_limit', 'payment_method_name'));
     }
 
     /**

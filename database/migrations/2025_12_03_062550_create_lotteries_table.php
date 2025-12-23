@@ -13,39 +13,38 @@ return new class extends Migration
     {
         Schema::create('lotteries', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->nullable();
-            $table->decimal('price')->nullable();
+
+            // Basic Info
+            $table->string('name');
+            $table->decimal('price', 15, 2)->default(0);
             $table->text('description')->nullable();
             $table->string('photo')->nullable();
-            $table->decimal('first_prize')->nullable();
-            $table->decimal('second_prize')->nullable();
-            $table->decimal('third_prize')->nullable();
+
+            // Prizes
+            $table->decimal('first_prize', 15, 2)->nullable()->default(0);
+            $table->decimal('second_prize', 15, 2)->nullable()->default(0);
+            $table->decimal('third_prize', 15, 2)->nullable()->default(0);
+
+            // Multiple packages - stored as JSON
+            $table->json('multiple_title')->nullable();
+            $table->json('multiple_price')->nullable();
+
+            // Video settings
+            $table->string('video_url', 500)->nullable();
+            $table->boolean('video_enabled')->default(false);
+            $table->dateTime('video_scheduled_at')->nullable();
+
+            // Draw settings
+            $table->dateTime('draw_date');
+            $table->string('win_type', 50);
             $table->enum('status', ['active', 'inactive', 'completed'])->default('active');
-            $table->date('draw_date')->nullable();
-
-            // -----------------------------
-            // 🔥 WIN TYPE ENUM CLEAN VERSION
-            // -----------------------------
-            $winTypes = [
-                'daily',
-
-                // Fixed Periods
-                'weekly',
-                'biweekly',
-                'monthly',
-                'quarterly',
-                'halfyearly',
-                'yearly',
-            ];
-
-            // Add 1–30 days dynamically
-            for ($i = 1; $i <= 30; $i++) {
-                $winTypes[] = $i . 'days';
-            }
-
-            $table->enum('win_type', $winTypes)->default('daily');
 
             $table->timestamps();
+
+            // Indexes for better performance
+            $table->index('status');
+            $table->index('draw_date');
+            $table->index(['status', 'draw_date']);
         });
     }
 

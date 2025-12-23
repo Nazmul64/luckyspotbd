@@ -13,10 +13,16 @@ return new class extends Migration
     {
         Schema::create('profits', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->decimal('total_deposit')->default(0.00);
-            $table->decimal('total_profit',)->default(0.00);
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('from_user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('deposit_id')->constrained('deposites')->cascadeOnDelete();
+
+            $table->decimal('amount');
+            $table->unsignedTinyInteger('level')->comment('Referral level');
+            $table->string('note')->nullable();
+
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

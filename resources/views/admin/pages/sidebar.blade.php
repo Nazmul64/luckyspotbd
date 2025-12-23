@@ -250,6 +250,39 @@
         </li>
     </ul>
     </li>
+   <li>
+    <a class="has-arrow" href="javascript:;" aria-expanded="false">
+        <div class="parent-icon"><i class="bi bi-cash-stack"></i></div>
+        <div class="menu-title">Ticket Show Declare</div>
+    </a>
+
+    <ul>
+        <li>
+            <a href="{{ route('admin.lottery.purchases') }}">
+                <i class="bi bi-circle"></i> Ticket Declare List
+            </a>
+        </li>
+    </ul>
+</li>
+
+<li>
+    <a class="has-arrow" href="javascript:;" aria-expanded="false">
+        <div class="parent-icon">
+            <i class="bi bi-palette"></i>
+        </div>
+        <div class="menu-title">Theme Setting</div>
+    </a>
+
+    <ul>
+        <li>
+            <a href="{{ route('theme.index') }}">
+                <i class="bi bi-circle"></i> Theme Setting List
+            </a>
+        </li>
+    </ul>
+</li>
+
+
 
 
 

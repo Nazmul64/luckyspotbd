@@ -8,9 +8,11 @@ use App\Http\Controllers\Backend\AdmindepositeblanceaddController;
 use App\Http\Controllers\Backend\AdminpasswordchangeController;
 use App\Http\Controllers\Backend\AdminuseraccountviewController;
 use App\Http\Controllers\Backend\AdminWithdrawController;
+use App\Http\Controllers\Backend\AllTicketController;
 use App\Http\Controllers\Backend\CommissionSettingController;
 use App\Http\Controllers\Backend\ContactController;
 use App\Http\Controllers\Backend\LotterycreateController;
+use App\Http\Controllers\Backend\LotteryResultController;
 use App\Http\Controllers\Backend\NoticesController;
 use App\Http\Controllers\Backend\PrivacypolicyController;
 use App\Http\Controllers\Backend\SettingController;
@@ -28,6 +30,8 @@ use App\Http\Controllers\Frontend\FrontendDashboardController;
 use App\Http\Controllers\Frontend\PaswordchangeController;
 use App\Http\Controllers\Frontend\UserprofileController;
 use App\Http\Controllers\Frontend\WithdrawController;
+use App\Http\Controllers\Frontend\LanguageController;
+use App\Http\Controllers\Frontend\WinnerListController;
 use App\Models\CommissionSetting;
 use App\Models\Deposite;
 use Illuminate\Support\Facades\Auth;
@@ -51,6 +55,8 @@ Route::post('frontend/register/submit', [FrontendAuthController::class, 'fronten
 
 // Protect Dashboard (login required)
 Route::middleware(['user'])->group(function () {
+    Route::post('/change-language', [LanguageController::class, 'changeLanguage'])->name('language.change');
+    Route::get('/get-texts', [LanguageController::class, 'getText'])->name('language.get_texts');
     Route::get('frontend/dashboard', [FrontendDashboardController::class, 'frontend'])->name('frontend.dashboard');
     Route::get('user/deposte', [DepositeController::class, 'deposte_index'])->name('deposte.index');
     Route::post('user/deposte/store', [DepositeController::class, 'store'])->name('frontend.deposit.store');
@@ -64,6 +70,10 @@ Route::middleware(['user'])->group(function () {
   // user profile update route and controller End
    Route::get('Withdraw', [WithdrawController::class, 'Withdraw'])->name('Withdraw.index');
    Route::post('withdraw/submit', [WithdrawController::class, 'submit'])->name('Withdraw.submit');
+   Route::get('/all/ticket', [AllTicketController::class, 'ticket'])->name('all.ticket');
+   Route::get('/my/ticket', [AllTicketController::class, 'myticket'])->name('my.ticket');
+   Route::get('winnerlist', [WinnerListController::class, 'winnerlist'])->name('winnerlist.index');
+
 });
 
 
@@ -97,6 +107,7 @@ Route::middleware(['admin'])->group(function () {
     Route::resource('waletesetting', WaletaSetupController::class);
     // End Waleta Setting Route
 
+
     // Additional admin routes can be added here
      Route::resource('aboutus', AboutController::class);
      // End Additional admin routes
@@ -126,12 +137,25 @@ Route::middleware(['admin'])->group(function () {
     Route::get('/deposites/index', [AdminDepositeApprovedController::class, 'approveindex'])->name('approve.index');
     Route::get('/deposites/delete/{id}', [AdminDepositeApprovedController::class, 'approvedelete'])->name('approve.delete');
     Route::resource('lottery', LotterycreateController::class);
+    Route::get('/admin/lottery/statistics', [LotterycreateController::class, 'statistics']) ->name('lottery.statistics');
     // Show withdrawals
     Route::get('admin/withdraw/show', [AdminWithdrawController::class, 'Withdrawshow'])->name('admin.withdraw.show');
 
     // Approve & Reject
     Route::get('admin/withdraw/approve/{id}', [AdminWithdrawController::class,'approve'])->name('admin.withdraw.approve');
     Route::get('admin/withdraw/reject/{id}', [AdminWithdrawController::class,'reject'])->name('admin.withdraw.reject');
+
+    // Show all purchases
+    Route::get('/admin/lottery/purchases', [LotteryResultController::class, 'purchasedTickets'])->name('admin.lottery.purchases');
+
+        // Show form to declare winners
+    Route::get('/admin/lottery/{lotteryId}/declare', [LotteryResultController::class, 'showDeclareForm'])->name('admin.lottery.showDeclare');
+
+        // Declare winners
+    Route::post('/admin/lottery/{lotteryId}/declare', [LotteryResultController::class, 'declareResult'])->name('admin.lottery.declare');
+
+    Route::resource('theme', \App\Http\Controllers\Backend\ThemeSettingController::class);
+
 
 });
 // End Admin Auth Routes

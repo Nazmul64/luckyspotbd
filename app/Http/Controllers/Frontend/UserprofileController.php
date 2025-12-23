@@ -30,7 +30,7 @@ class UserprofileController extends Controller
             'address' => 'required',
             'zip_code' => 'required',
             'number' => 'nullable|string|max:20',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
+            'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
         ]);
 
         // UPDATE FIELDS
@@ -44,20 +44,20 @@ class UserprofileController extends Controller
         $user->number     = $request->number;
 
         // IMAGE UPLOAD
-        if ($request->hasFile('image')) {
+        if ($request->hasFile('profile_photo')) {
 
             // DELETE OLD IMAGE
-            $oldPath = public_path('uploads/profile/' . $user->image);
-            if ($user->image && file_exists($oldPath)) {
+            $oldPath = public_path('uploads/profile/' . $user->profile_photo);
+            if ($user->profile_photo && file_exists($oldPath)) {
                 unlink($oldPath);
             }
 
             // UPLOAD NEW
-            $file = $request->file('image');
+            $file = $request->file('profile_photo');
             $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
             $file->move(public_path('uploads/profile'), $filename);
 
-            $user->image = $filename;
+            $user->profile_photo = $filename;
         }
 
         $user->save();

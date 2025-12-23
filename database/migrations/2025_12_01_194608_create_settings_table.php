@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('youtube');
             $table->string('footer_about');
             $table->string('footer_text');
+            $table->string('site_name')->nullable();
             $table->timestamps();
         });
     }

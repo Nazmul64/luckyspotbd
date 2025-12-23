@@ -5,135 +5,331 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Lottery;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\File;
+use Carbon\Carbon;
+use Exception;
 
 class LotterycreateController extends Controller
 {
-    /**
-     * Display a listing of the lotteries.
-     */
     public function index()
     {
-        $lotteries = Lottery::orderBy('created_at', 'desc')->get();
-        return view('admin.Lottery.index', compact('lotteries'));
+        try {
+            $lotteries = Lottery::latest()->get();
+            return view('admin.lottery.index', compact('lotteries'));
+        } catch (Exception $e) {
+            Log::error('Lottery Index Error: ' . $e->getMessage());
+            return back()->with('error', 'Failed to load lotteries.');
+        }
     }
 
-    /**
-     * Show the form for creating a new lottery.
-     */
     public function create()
     {
-        return view('admin.Lottery.create');
+        return view('admin.lottery.create');
     }
 
-    /**
-     * Store a newly created lottery in storage.
-     */
     public function store(Request $request)
     {
-        $request->validate([
-            'name'        => 'required|string|max:255',
-            'price'       => 'required|numeric',
-            'description' => 'nullable|string',
-            'photo'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'draw_date'   => 'required|date',
-            'win_type'    => 'required|string',
-            'first_prize' => 'nullable|string',
-            'second_prize'=> 'nullable|string',
-            'third_prize' => 'nullable|string',
-            'status'      => 'required|in:active,inactive',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'description' => 'nullable|string|max:5000',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'first_prize' => 'nullable|numeric|min:0',
+            'second_prize' => 'nullable|numeric|min:0',
+            'third_prize' => 'nullable|numeric|min:0',
+            'multiple_title' => 'nullable|array',
+            'multiple_title.*' => 'nullable|string|max:255',
+            'multiple_price' => 'nullable|array',
+            'multiple_price.*' => 'nullable|numeric|min:0',
+            'video_url' => 'nullable|url|max:500',
+            'video_enabled' => 'nullable|boolean',
+            'video_scheduled_at' => 'nullable|date|after:now',
+            'status' => 'required|in:active,inactive,completed',
+            'draw_date' => 'required|date|after:now',
+            'win_type' => 'required|string|max:50',
         ]);
 
-        $lottery = new Lottery();
-        $lottery->name        = $request->name;
-        $lottery->price       = $request->price;
-        $lottery->description = $request->description;
-        $lottery->draw_date   = $request->draw_date;
-        $lottery->win_type    = $request->win_type;
-        $lottery->first_prize = $request->first_prize;
-        $lottery->second_prize= $request->second_prize;
-        $lottery->third_prize = $request->third_prize;
-        $lottery->status      = $request->status;
+        try {
+            $data = $validated;
+            $data['video_enabled'] = $request->has('video_enabled') ? 1 : 0;
 
-        if ($request->hasFile('photo')) {
-            $file = $request->file('photo');
-            $filename = time().'_'.$file->getClientOriginalName();
-            $file->move(public_path('uploads/Lottery'), $filename);
-            $lottery->photo = $filename;
+            // Clean packages
+            if (isset($data['multiple_title']) && is_array($data['multiple_title'])) {
+                $cleanTitles = [];
+                $cleanPrices = [];
+
+                foreach ($data['multiple_title'] as $index => $title) {
+                    $trimmedTitle = trim($title ?? '');
+                    if (!empty($trimmedTitle)) {
+                        $cleanTitles[] = $trimmedTitle;
+                        $cleanPrices[] = floatval($data['multiple_price'][$index] ?? 0);
+                    }
+                }
+
+                $data['multiple_title'] = !empty($cleanTitles) ? $cleanTitles : null;
+                $data['multiple_price'] = !empty($cleanPrices) ? $cleanPrices : null;
+            } else {
+                $data['multiple_title'] = null;
+                $data['multiple_price'] = null;
+            }
+
+            // Upload photo
+            if ($request->hasFile('photo')) {
+                $data['photo'] = $this->uploadPhoto($request->file('photo'));
+            }
+
+            // ⭐ CRITICAL: Convert Bangladesh time to UTC for database storage
+            if (!empty($data['video_scheduled_at'])) {
+                // User enters Bangladesh time (BST = UTC+6)
+                // We need to convert to UTC for database
+                $bstTime = Carbon::parse($data['video_scheduled_at'], 'Asia/Dhaka');
+                $data['video_scheduled_at'] = $bstTime->setTimezone('UTC')->format('Y-m-d H:i:s');
+
+                Log::info('Video Scheduled Time Conversion', [
+                    'input_bst' => $request->input('video_scheduled_at'),
+                    'parsed_bst' => $bstTime->format('Y-m-d H:i:s'),
+                    'saved_utc' => $data['video_scheduled_at'],
+                ]);
+            }
+
+            if (!empty($data['draw_date'])) {
+                // User enters Bangladesh time (BST = UTC+6)
+                // We need to convert to UTC for database
+                $bstTime = Carbon::parse($data['draw_date'], 'Asia/Dhaka');
+                $data['draw_date'] = $bstTime->setTimezone('UTC')->format('Y-m-d H:i:s');
+
+                Log::info('Draw Date Conversion', [
+                    'input_bst' => $request->input('draw_date'),
+                    'parsed_bst' => $bstTime->format('Y-m-d H:i:s'),
+                    'saved_utc' => $data['draw_date'],
+                ]);
+            }
+
+            $lottery = Lottery::create($data);
+
+            Log::info('✅ Lottery Created Successfully', [
+                'id' => $lottery->id,
+                'name' => $lottery->name,
+                'video_scheduled_at_utc' => $data['video_scheduled_at'] ?? null,
+                'draw_date_utc' => $data['draw_date'],
+            ]);
+
+            return redirect()
+                ->route('lottery.index')
+                ->with('success', '✅ Lottery created successfully!');
+
+        } catch (Exception $e) {
+            Log::error('❌ Lottery Store Error: ' . $e->getMessage());
+            Log::error('Stack Trace: ' . $e->getTraceAsString());
+
+            if (isset($data['photo'])) {
+                $this->deletePhoto($data['photo']);
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', '❌ Failed to create lottery: ' . $e->getMessage());
         }
-
-        $lottery->save();
-
-        return redirect()->route('lottery.index')->with('success', 'Lottery created successfully!');
     }
 
-    /**
-     * Show the form for editing the specified lottery.
-     */
     public function edit($id)
     {
-        $lottery = Lottery::findOrFail($id);
-        return view('admin.Lottery.edit', compact('lottery'));
+        try {
+            $lottery = Lottery::findOrFail($id);
+            return view('admin.lottery.edit', compact('lottery'));
+        } catch (Exception $e) {
+            Log::error('Lottery Edit Error: ' . $e->getMessage());
+            return redirect()
+                ->route('lottery.index')
+                ->with('error', '❌ Lottery not found.');
+        }
     }
 
-    /**
-     * Update the specified lottery in storage.
-     */
     public function update(Request $request, $id)
     {
-        $lottery = Lottery::findOrFail($id);
+        try {
+            $lottery = Lottery::findOrFail($id);
+        } catch (Exception $e) {
+            return redirect()
+                ->route('lottery.index')
+                ->with('error', '❌ Lottery not found.');
+        }
 
-        $request->validate([
-            'name'        => 'required|string|max:255',
-            'price'       => 'required|numeric',
-            'description' => 'nullable|string',
-            'new_photo'   => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'draw_date'   => 'required|date',
-            'win_type'    => 'required|string',
-            'first_prize' => 'nullable|string',
-            'second_prize'=> 'nullable|string',
-            'third_prize' => 'nullable|string',
-            'status'      => 'required|in:active,inactive',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'description' => 'nullable|string|max:5000',
+            'new_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'first_prize' => 'nullable|numeric|min:0',
+            'second_prize' => 'nullable|numeric|min:0',
+            'third_prize' => 'nullable|numeric|min:0',
+            'multiple_title' => 'nullable|array',
+            'multiple_title.*' => 'nullable|string|max:255',
+            'multiple_price' => 'nullable|array',
+            'multiple_price.*' => 'nullable|numeric|min:0',
+            'video_url' => 'nullable|url|max:500',
+            'video_enabled' => 'nullable|boolean',
+            'video_scheduled_at' => 'nullable|date',
+            'status' => 'required|in:active,inactive,completed',
+            'draw_date' => 'required|date',
+            'win_type' => 'required|string|max:50',
         ]);
 
-        $lottery->name        = $request->name;
-        $lottery->price       = $request->price;
-        $lottery->description = $request->description;
-        $lottery->draw_date   = $request->draw_date;
-        $lottery->win_type    = $request->win_type;
-        $lottery->first_prize = $request->first_prize;
-        $lottery->second_prize= $request->second_prize;
-        $lottery->third_prize = $request->third_prize;
-        $lottery->status      = $request->status;
+        try {
+            $data = $validated;
+            $data['video_enabled'] = $request->has('video_enabled') ? 1 : 0;
 
-        if ($request->hasFile('new_photo')) {
-            // পুরানো ফটো ডিলিট
-            if ($lottery->photo && file_exists(public_path('uploads/Lottery/'.$lottery->photo))) {
-                unlink(public_path('uploads/Lottery/'.$lottery->photo));
+            // Clean packages
+            if (isset($data['multiple_title']) && is_array($data['multiple_title'])) {
+                $cleanTitles = [];
+                $cleanPrices = [];
+
+                foreach ($data['multiple_title'] as $index => $title) {
+                    $trimmedTitle = trim($title ?? '');
+                    if (!empty($trimmedTitle)) {
+                        $cleanTitles[] = $trimmedTitle;
+                        $cleanPrices[] = floatval($data['multiple_price'][$index] ?? 0);
+                    }
+                }
+
+                $data['multiple_title'] = !empty($cleanTitles) ? $cleanTitles : null;
+                $data['multiple_price'] = !empty($cleanPrices) ? $cleanPrices : null;
+            } else {
+                $data['multiple_title'] = null;
+                $data['multiple_price'] = null;
             }
-            $file = $request->file('new_photo');
-            $filename = time().'_'.$file->getClientOriginalName();
-            $file->move(public_path('uploads/Lottery'), $filename);
-            $lottery->photo = $filename;
+
+            // Handle new photo
+            if ($request->hasFile('new_photo')) {
+                if ($lottery->photo) {
+                    $this->deletePhoto($lottery->photo);
+                }
+                $data['photo'] = $this->uploadPhoto($request->file('new_photo'));
+            }
+
+            // ⭐ CRITICAL: Convert Bangladesh time to UTC for database
+            if (!empty($data['video_scheduled_at'])) {
+                $bstTime = Carbon::parse($data['video_scheduled_at'], 'Asia/Dhaka');
+                $data['video_scheduled_at'] = $bstTime->setTimezone('UTC')->format('Y-m-d H:i:s');
+
+                Log::info('Video Scheduled Time Update', [
+                    'input_bst' => $request->input('video_scheduled_at'),
+                    'saved_utc' => $data['video_scheduled_at'],
+                ]);
+            }
+
+            if (!empty($data['draw_date'])) {
+                $bstTime = Carbon::parse($data['draw_date'], 'Asia/Dhaka');
+                $data['draw_date'] = $bstTime->setTimezone('UTC')->format('Y-m-d H:i:s');
+
+                Log::info('Draw Date Update', [
+                    'input_bst' => $request->input('draw_date'),
+                    'saved_utc' => $data['draw_date'],
+                ]);
+            }
+
+            unset($data['new_photo']);
+            $lottery->update($data);
+
+            Log::info('✅ Lottery Updated Successfully', [
+                'id' => $lottery->id,
+                'video_scheduled_at_utc' => $data['video_scheduled_at'] ?? null,
+            ]);
+
+            return redirect()
+                ->route('lottery.index')
+                ->with('success', '✅ Lottery updated successfully!');
+
+        } catch (Exception $e) {
+            Log::error('❌ Lottery Update Error: ' . $e->getMessage());
+            Log::error('Stack Trace: ' . $e->getTraceAsString());
+
+            if (isset($data['photo']) && $data['photo'] !== $lottery->photo) {
+                $this->deletePhoto($data['photo']);
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', '❌ Failed to update lottery: ' . $e->getMessage());
         }
-
-        $lottery->save();
-
-        return redirect()->route('lottery.index')->with('success', 'Lottery updated successfully!');
     }
 
-    /**
-     * Remove the specified lottery from storage.
-     */
     public function destroy($id)
     {
-        $lottery = Lottery::findOrFail($id);
+        try {
+            $lottery = Lottery::findOrFail($id);
 
-        if ($lottery->photo && file_exists(public_path('uploads/Lottery/'.$lottery->photo))) {
-            unlink(public_path('uploads/Lottery/'.$lottery->photo));
+            if ($lottery->photo) {
+                $this->deletePhoto($lottery->photo);
+            }
+
+            $lottery->delete();
+            Log::info('✅ Lottery Deleted', ['id' => $id]);
+
+            return redirect()
+                ->route('lottery.index')
+                ->with('success', '✅ Lottery deleted successfully!');
+
+        } catch (Exception $e) {
+            Log::error('❌ Lottery Delete Error: ' . $e->getMessage());
+            return back()->with('error', '❌ Failed to delete lottery.');
         }
+    }
 
-        $lottery->delete();
+    private function uploadPhoto($file)
+    {
+        try {
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $uploadPath = public_path('uploads/lottery');
 
-        return redirect()->route('lottery.index')->with('success', 'Lottery deleted successfully!');
+            if (!File::exists($uploadPath)) {
+                File::makeDirectory($uploadPath, 0755, true);
+            }
+
+            $file->move($uploadPath, $filename);
+            return $filename;
+        } catch (Exception $e) {
+            Log::error('Photo Upload Error: ' . $e->getMessage());
+            throw new Exception('Failed to upload photo.');
+        }
+    }
+
+    private function deletePhoto($filename)
+    {
+        try {
+            if (!$filename) return false;
+
+            $filePath = public_path('uploads/lottery/' . $filename);
+
+            if (File::exists($filePath)) {
+                File::delete($filePath);
+                return true;
+            }
+
+            return false;
+        } catch (Exception $e) {
+            Log::error('Photo Delete Error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function statistics()
+    {
+        try {
+            $stats = [
+                'total' => Lottery::count(),
+                'active' => Lottery::where('status', 'active')->count(),
+                'inactive' => Lottery::where('status', 'inactive')->count(),
+                'completed' => Lottery::where('status', 'completed')->count(),
+                'upcoming' => Lottery::where('draw_date', '>', Carbon::now('Asia/Dhaka'))->count(),
+                'today' => Lottery::whereDate('draw_date', Carbon::today('Asia/Dhaka'))->count(),
+            ];
+
+            return response()->json($stats);
+        } catch (Exception $e) {
+            Log::error('Lottery Statistics Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to get statistics'], 500);
+        }
     }
 }

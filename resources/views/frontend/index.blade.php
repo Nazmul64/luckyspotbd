@@ -2,17 +2,22 @@
 
 @section('content')
  <!-- Banner Section Starts Here -->
+
+ @foreach ($slider_show as $item)
+   @if($item->status === 'active')
     <section class="banner-section bg_img overflow-hidden" style="background:url(assets/images/banner/bg.png) center">
         <div class="container">
             <div class="banner-wrapper d-flex flex-wrap align-items-center">
                 <div class="banner-content">
-                    <h1 class="banner-content__title">Ticket <span class="text--base">Online Ticket</span> & Win Money Unlimited</h1>
-                    <p class="banner-content__subtitle">PLAY CASINO AND EARN CRYPTO IN ONLINE. THE ULTIMATE ONLINE CASINO PLATFORM.</p>
+
+                    <h1 class="banner-content__title">{{ $item->title ?? ''}}</h1>
+
+                    <p class="banner-content__subtitle">{{ $item->description ?? ''}}</p>
                     <div class="button-wrapper">
                         <a href="#" class="cmn--btn active btn--lg"><i class="las la-play"></i> Ticket Now</a>
-                        <a href="sign-up.html" class="cmn--btn btn--lg">Sign Up</a>
+                        <a href="{{ route('frontend.login') }}" class="cmn--btn btn--lg">Sign Up</a>
                     </div>
-                    <img src="assets/images/banner/card.png" alt="" class="shape1">
+                    <img src="{{asset('uplods/slider/'.$item->photo ?? '')}}" alt="" class="shape1">
                 </div>
                 <div class="banner-thumb">
                     <img src="{{asset('frontend')}}/assets/images/banner/thumb.png" alt="banner">
@@ -20,9 +25,11 @@
             </div>
         </div>
     </section>
+    @endif
+@endforeach
     <!-- Banner Section Ends Here -->
 
-
+ @foreach ($slider_show as $item)
     <!-- About Section Starts Here -->
     <section class="about-section padding-top padding-bottom overflow-hidden">
         <div class="container">
@@ -30,23 +37,24 @@
                 <div class="col-lg-6">
                     <div class="about-content">
                         <div class="section-header">
-                            <h2 class="section-header__title">About The Ticket</h2>
-                            <p>A Ticket is a facility for certain types of gambling. Ticket are often built near or combined with hotels, resorts, restaurants, retail shopping, cruise ships, and other tourist attractions. Some casinos are also known for hosting live entertainment, such as stand-up comedy, concerts, and sports.</p>
+                            <h2 class="section-header__title">{{ $item->title ?? '' }}</h2>
+                            <p>{{ $item->description ?? '' }}</p>
                         </div>
-                        <a href="about.html" class="cmn--btn active">Know More</a>
                     </div>
                 </div>
                 <div class="col-lg-6">
                     <div class="aobut-thumb section-thumb">
-                        <img src="{{asset('frontend')}}/assets/images/about/thumb.png" alt="about" class="ms-lg-5">
+                        <img src="{{ asset($item->photo) }}" alt="about" class="ms-lg-5">
                     </div>
                 </div>
             </div>
         </div>
-        <div class="shapes">
+        {{-- <div class="shapes">
             <img src="{{asset('frontend')}}/assets/images/about/shape.png" alt="about" class="shape shape1">
-        </div>
+        </div> --}}
     </section>
+
+@endforeach
     <!-- About Section Ends Here -->
 
 

@@ -46,6 +46,14 @@
                         <div class="text-danger mt-1">{{ $message }}</div>
                     @enderror
                 </div>
+                     {{-- Email --}}
+                <div class="mb-3">
+                    <label for="site_name" class="form-label">Site Name</label>
+                    <input type="text" name="site_name" id="site_name" class="form-control" placeholder="Enter site name">
+                    @error('site_name')
+                        <div class="text-danger mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
 
                 {{-- Address --}}
                 <div class="mb-3">

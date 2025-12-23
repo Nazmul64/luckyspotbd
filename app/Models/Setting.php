@@ -22,5 +22,6 @@ class Setting extends Model
         'youtube',
         'footer_about',
         'footer_text',
+        'site_name',
     ];
 }
