@@ -26,10 +26,11 @@
         <div class="dashboard-card" style="background: linear-gradient(135deg, {{ $primaryColor }}20 0%, {{ $primaryColor }}40 100%); border: 2px solid {{ $primaryColor }}; border-radius: 12px; padding: 25px; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s ease;">
             <div style="position: relative; z-index: 2;">
                 <h2 style="color: {{ $secondaryColor }}; font-size: 2em; font-weight: bold; margin-bottom: 10px;">
-                    {{ round($total_deposite ?? 0) }} টাকা
+                    {{ round($total_deposite ?? 0) }} {{(trans_db('টাকা','টাকা'))}}
                 </h2>
                 <p style="color: {{ $secondaryColor }}; opacity: 0.8; font-size: 1.1em; margin: 0;">
-                    Total Deposit
+                    {{ trans_db('Total Deposit','Total Deposit') }}
+
                 </p>
             </div>
             <div style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 3em; color: {{ $primaryColor }}; opacity: 0.3;">
@@ -43,10 +44,10 @@
         <div class="dashboard-card" style="background: linear-gradient(135deg, {{ $primaryColor }}20 0%, {{ $primaryColor }}40 100%); border: 2px solid {{ $primaryColor }}; border-radius: 12px; padding: 25px; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s ease;">
             <div style="position: relative; z-index: 2;">
                 <h2 style="color: {{ $secondaryColor }}; font-size: 2em; font-weight: bold; margin-bottom: 10px;">
-                    {{ round($total_balance ?? 0) }} টাকা
+                    {{ round($total_balance ?? 0) }} {{(trans_db('টাকা','টাকা'))}}
                 </h2>
                 <p style="color: {{ $secondaryColor }}; opacity: 0.8; font-size: 1.1em; margin: 0;">
-                    Total Balance
+                    {{ trans_db('Total Balance','Total Balance') }}
                 </p>
             </div>
             <div style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 3em; color: {{ $primaryColor }}; opacity: 0.3;">
@@ -60,10 +61,10 @@
         <div class="dashboard-card" style="background: linear-gradient(135deg, {{ $primaryColor }}20 0%, {{ $primaryColor }}40 100%); border: 2px solid {{ $primaryColor }}; border-radius: 12px; padding: 25px; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s ease;">
             <div style="position: relative; z-index: 2;">
                 <h2 style="color: {{ $secondaryColor }}; font-size: 2em; font-weight: bold; margin-bottom: 10px;">
-                    {{ round($total_withdraw ?? 0) }} টাকা
+                    {{ round($total_withdraw ?? 0) }} {{(trans_db('টাকা','টাকা'))}}
                 </h2>
                 <p style="color: {{ $secondaryColor }}; opacity: 0.8; font-size: 1.1em; margin: 0;">
-                    Total Withdraw
+                    {{ trans_db('Total Withdraw','Total Withdraw') }}
                 </p>
             </div>
             <div style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 3em; color: {{ $primaryColor }}; opacity: 0.3;">

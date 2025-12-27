@@ -21,6 +21,23 @@
             </a>
         </li>
 
+        <li>
+            <a href="javascript:void(0);" class="has-arrow">
+                <div class="parent-icon">
+                    <i class="bi bi-chat-dots"></i>
+                </div>
+                <div class="menu-title">Live Chat</div>
+            </a>
+            <ul>
+                <li>
+                    <a href="{{ route('admin.userchat') }}">
+                        <i class="bi bi-circle"></i> Live Chat
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+
         <!-- Commission Setup -->
         <li>
             <a href="javascript:void(0);" class="has-arrow">

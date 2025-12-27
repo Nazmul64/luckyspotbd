@@ -22,17 +22,22 @@ use App\Http\Controllers\Backend\TermsconditionController;
 use App\Http\Controllers\Backend\UserlottryController;
 use App\Http\Controllers\Backend\WaletaSetupController;
 use App\Http\Controllers\Backend\WithdrawcommissonController;
+use App\Http\Controllers\Backend\AdminandchatuserController;
+use App\Http\Controllers\Backend\UsertoadminchatController;
 use App\Http\Controllers\Frontend\AdminDepositeApprovedController;
 use App\Http\Controllers\Frontend\DepositeController;
 use App\Http\Controllers\Frontend\FrontendAuthController;
 use App\Http\Controllers\Frontend\FrontendController;
+use App\Http\Controllers\Frontend\KeyController;
 use App\Http\Controllers\Frontend\FrontendDashboardController;
 use App\Http\Controllers\Frontend\PaswordchangeController;
 use App\Http\Controllers\Frontend\UserprofileController;
 use App\Http\Controllers\Frontend\WithdrawController;
 use App\Http\Controllers\Frontend\LanguageController;
 use App\Http\Controllers\Frontend\WinnerListController;
+use App\Http\Controllers\Frontend\UserchatController;
 use App\Models\CommissionSetting;
+use Illuminate\Support\Facades\Session;
 use App\Models\Deposite;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -43,6 +48,7 @@ Auth::routes();
 // Frontend Routes
 
 Route::get('/', [FrontendController::class, 'frontend'])->name('frontend');
+Route::get('contactpages', [FrontendController::class, 'contactpages'])->name('contact.pages');
 
 
 Route::get('frontend/login', [FrontendAuthController::class, 'frontend_login'])->name('frontend.login');
@@ -55,8 +61,14 @@ Route::post('frontend/register/submit', [FrontendAuthController::class, 'fronten
 
 // Protect Dashboard (login required)
 Route::middleware(['user'])->group(function () {
-    Route::post('/change-language', [LanguageController::class, 'changeLanguage'])->name('language.change');
+
+    Route::get('/get-locale', [LanguageController::class, 'getLocale'])->name('language.locale');
     Route::get('/get-texts', [LanguageController::class, 'getText'])->name('language.get_texts');
+
+
+// Language Route
+Route::post('/language/change', [LanguageController::class, 'changeLanguage'])->name('language.change');
+
     Route::get('frontend/dashboard', [FrontendDashboardController::class, 'frontend'])->name('frontend.dashboard');
     Route::get('user/deposte', [DepositeController::class, 'deposte_index'])->name('deposte.index');
     Route::post('user/deposte/store', [DepositeController::class, 'store'])->name('frontend.deposit.store');
@@ -74,11 +86,27 @@ Route::middleware(['user'])->group(function () {
    Route::get('/my/ticket', [AllTicketController::class, 'myticket'])->name('my.ticket');
    Route::get('winnerlist', [WinnerListController::class, 'winnerlist'])->name('winnerlist.index');
 
-});
 
 
-// End Frontend Routes
+   /* User Chat Route Start*/
+Route::get('chat/frontend/list', [UserchatController::class, 'frontend_chat_list'])->name('frontend.user.chat.list');
+Route::post('chat/frontend/submit', [UserchatController::class, 'frontend_chat_submit'])->name('frontend.user.chat.submit');
+Route::get('chat/frontend/messages', [UserchatController::class, 'frontend_chat_messages'])->name('frontend.user.chat.messages');
+Route::get('/chat/unread-counts', [UserchatController::class, 'getUnreadCounts'])->name('frontend.user.chat.unread');
 
+
+
+Route::get('/usertoadminchat/fetch', [UsertoadminchatController::class, 'fetchMessages'])->name('usertoadminchat.fetch');
+Route::post('/usertoadminchat/send', [UsertoadminchatController::class, 'sendMessage'])->name('usertoadminchat.send');
+Route::post('/usertoadminchat/mark-read', [UsertoadminchatController::class, 'markRead'])->name('usertoadminchat.markread');
+Route::get('/usertoadminchat/unread-count', [UsertoadminchatController::class, 'unreadCount'])->name('usertoadminchat.unreadcount');
+
+Route::get('frontend/key', [KeyController::class, 'frontend_key'])->name('frontend.key');
+Route::post('frontend/key', [KeyController::class, 'frontend_key_submit'])->name('frontend.key.submit');
+
+
+
+}); // End Protect Dashboard (login required)
 
 
 
@@ -156,7 +184,12 @@ Route::middleware(['admin'])->group(function () {
 
     Route::resource('theme', \App\Http\Controllers\Backend\ThemeSettingController::class);
 
-
+   // Admin and User Chat Routes
+   Route::get('admin/to/user/tochat/list', [AdminandchatuserController::class, 'adminuserchat'])->name('admin.userchat');
+   Route::get('admin/to/chat/fetch/{user_id}', [AdminandchatuserController::class, 'fetchMessages'])->name('admin.chat.fetch');
+   Route::post('admin/to/chat/send', [AdminandchatuserController::class, 'sendMessage'])->name('admin.chat.send');
+   Route::get('admin/to/user/unread', [AdminandchatuserController::class, 'unreadCount'])->name('admin.user.unread');
+   Route::post('admin/to/chat/mark-read/{user_id}', [AdminandchatuserController::class, 'markRead'])->name('admin.chat.markread');
 });
 // End Admin Auth Routes
 

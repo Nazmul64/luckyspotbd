@@ -3,34 +3,61 @@
 @section('content')
  <!-- Banner Section Starts Here -->
 
- @foreach ($slider_show as $item)
-   @if($item->status === 'active')
-    <section class="banner-section bg_img overflow-hidden" style="background:url(assets/images/banner/bg.png) center">
-        <div class="container">
-            <div class="banner-wrapper d-flex flex-wrap align-items-center">
-                <div class="banner-content">
+{{-- =======================
+    HOME PAGE SLIDER
+======================= --}}
 
-                    <h1 class="banner-content__title">{{ $item->title ?? ''}}</h1>
+@if($slider_show && count($slider_show) > 0)
+    @foreach ($slider_show as $item)
+        <section
+            class="banner-section bg_img overflow-hidden">
+            <div class="container">
+                <div class="banner-wrapper d-flex flex-wrap align-items-center">
 
-                    <p class="banner-content__subtitle">{{ $item->description ?? ''}}</p>
-                    <div class="button-wrapper">
-                        <a href="#" class="cmn--btn active btn--lg"><i class="las la-play"></i> Ticket Now</a>
-                        <a href="{{ route('frontend.login') }}" class="cmn--btn btn--lg">Sign Up</a>
+                    {{-- Banner Content --}}
+                    <div class="banner-content">
+
+                        <h1 class="banner-content__title">
+                            {{ trans_db($item->title ?? 'Win Big With LuckySpotBD') }}
+                        </h1>
+
+                        <p class="banner-content__subtitle">
+                            {{ trans_db($item->description ?? 'Buy tickets and get a chance to win amazing prizes') }}
+                        </p>
+
+                        <div class="button-wrapper">
+                            <a href="{{ route('frontend') }}"
+                               class="cmn--btn active btn--lg">
+                                <i class="las la-ticket-alt"></i>
+                                {{ trans_db('ticket_now', 'Ticket Now') }}
+                            </a>
+
+                            @guest
+                                <a href="{{ route('frontend.login') }}"
+                                   class="cmn--btn btn--lg">
+                                    {{ trans_db('sign_up', 'Sign Up') }}
+                                </a>
+                            @endguest
+                        </div>
+
                     </div>
-                    <img src="{{asset('uplods/slider/'.$item->photo ?? '')}}" alt="" class="shape1">
-                </div>
-                <div class="banner-thumb">
-                    <img src="{{asset('frontend')}}/assets/images/banner/thumb.png" alt="banner">
+
+                    {{-- Banner Thumbnail --}}
+                    @if($item->photo)
+                    <div class="banner-thumb"><img src="{{ asset($item->photo) }}"alt="Banner Thumbnail">
+                    @endif
+                    </div>
+
                 </div>
             </div>
-        </div>
-    </section>
-    @endif
-@endforeach
+        </section>
+    @endforeach
+@endif
+
     <!-- Banner Section Ends Here -->
 
- @foreach ($slider_show as $item)
-    <!-- About Section Starts Here -->
+ {{-- @foreach ($slider_show as $item)
+
     <section class="about-section padding-top padding-bottom overflow-hidden">
         <div class="container">
             <div class="row align-items-center">
@@ -49,12 +76,12 @@
                 </div>
             </div>
         </div>
-        {{-- <div class="shapes">
+        <div class="shapes">
             <img src="{{asset('frontend')}}/assets/images/about/shape.png" alt="about" class="shape shape1">
-        </div> --}}
-    </section>
+        </div>
+    </section> --}}
 
-@endforeach
+{{-- @endforeach --}}
     <!-- About Section Ends Here -->
 
 

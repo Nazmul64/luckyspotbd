@@ -108,6 +108,11 @@ public function userPackageBuys()
     return $this->hasMany(Userpackagebuy::class, 'user_id');
 }
 
+public function kyc()
+{
+    return $this->hasOne(Kyc::class);
+}
+
 
 
 

@@ -5,7 +5,10 @@ return [
 
 'timezone' => 'UTC', // এটা UTC থাকতে হবে
 
+  'locale' => 'en',
+    'fallback_locale' => 'en',
 
+    'locales' => ['en', 'bn'],
     /*
     |--------------------------------------------------------------------------
     | Application Name

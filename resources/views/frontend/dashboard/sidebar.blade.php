@@ -100,6 +100,13 @@
                     Password Change
                 </a>
             </li>
+             <li style="margin-bottom: 5px;">
+                <a href="{{ route('frontend.key') }}"
+                   class="dashboard-link"
+                   style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
+                    KYC Verification
+                </a>
+            </li>
 
             {{-- Logout --}}
             @auth

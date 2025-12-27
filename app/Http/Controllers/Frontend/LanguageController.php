@@ -3,72 +3,59 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
-use App\Models\Text;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Log;
 
 class LanguageController extends Controller
 {
     /**
-     * Change the application language (English or Bangla)
-     * Stores the language in session
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * Change language
      */
     public function changeLanguage(Request $request)
     {
-        $lang = $request->input('lang');
+        try {
+            // Validate করুন
+            $lang = $request->input('lang');
 
-        // Validate language
-        if (in_array($lang, ['en', 'bn'])) {
+            if (!in_array($lang, ['en', 'bn'])) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid language'
+                ], 400);
+            }
+
+            // Session এ save করুন (এটি খুবই গুরুত্বপূর্ণ)
             Session::put('locale', $lang);
+            Session::save(); // ✅ Force save করুন
+
+            // তৎক্ষণাৎ locale set করুন
             App::setLocale($lang);
+
+            // Log করুন debugging এর জন্য
+            Log::info('Language changed', [
+                'new_locale' => $lang,
+                'session_locale' => Session::get('locale'),
+                'app_locale' => App::getLocale()
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'locale' => $lang,
+                'message' => $lang === 'bn' ? 'ভাষা পরিবর্তন সফল হয়েছে' : 'Language changed successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Language change error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Server error'
+            ], 500);
         }
-
-        return response()->json(['status' => true]);
-    }
-
-    /**
-     * Get all texts for the current language
-     * Reads from 'texts' table based on keys
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function getText(Request $request)
-    {
-        // Get current locale from session, fallback to app default
-        $lang = Session::get('locale', config('app.locale'));
-
-        // Define keys to fetch
-        $keys = [
-            'welcome',
-            'home',
-            'about',
-            'ticket',
-            'faq',
-            'pages',
-            'user_dashboard',
-            'ticket_details',
-            'privacy_policy',
-            'terms_conditions',
-            'contact',
-            'login',
-            'languages'
-        ];
-
-        $texts = [];
-
-        foreach ($keys as $key) {
-            $text = Text::where('key', $key)
-                        ->where('language_code', $lang)
-                        ->first();
-
-            $texts[$key] = $text ? $text->value : '';
-        }
-
-        return response()->json($texts);
     }
 }

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('photo')->nullable();
             $table->boolean('status')->default(1);
+            $table->string('language_code', 5)->default('en')->nullable();
             $table->timestamps();
         });
     }
