@@ -23,7 +23,9 @@ use App\Http\Controllers\Backend\UserlottryController;
 use App\Http\Controllers\Backend\WaletaSetupController;
 use App\Http\Controllers\Backend\WithdrawcommissonController;
 use App\Http\Controllers\Backend\AdminandchatuserController;
+use App\Http\Controllers\Backend\AdminsupportemailController;
 use App\Http\Controllers\Backend\UsertoadminchatController;
+use App\Http\Controllers\Backend\WhychooseusticketController;
 use App\Http\Controllers\Frontend\AdminDepositeApprovedController;
 use App\Http\Controllers\Frontend\DepositeController;
 use App\Http\Controllers\Frontend\FrontendAuthController;
@@ -36,9 +38,11 @@ use App\Http\Controllers\Frontend\WithdrawController;
 use App\Http\Controllers\Frontend\LanguageController;
 use App\Http\Controllers\Frontend\WinnerListController;
 use App\Http\Controllers\Frontend\UserchatController;
+use App\Http\Controllers\SupportEmailController;
 use App\Models\CommissionSetting;
 use Illuminate\Support\Facades\Session;
 use App\Models\Deposite;
+use App\Models\Whychooseusticket;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -49,6 +53,9 @@ Auth::routes();
 
 Route::get('/', [FrontendController::class, 'frontend'])->name('frontend');
 Route::get('contactpages', [FrontendController::class, 'contactpages'])->name('contact.pages');
+Route::get('privacy', [FrontendController::class, 'privacy'])->name('privacy.pages');
+Route::get('trmsandcondation', [FrontendController::class, 'trmsandcondation'])->name('trmsandcondation');
+Route::post('/supportemail', [SupportEmailController::class, 'supportemail'])->name('contact.message');
 
 
 Route::get('frontend/login', [FrontendAuthController::class, 'frontend_login'])->name('frontend.login');
@@ -190,6 +197,15 @@ Route::middleware(['admin'])->group(function () {
    Route::post('admin/to/chat/send', [AdminandchatuserController::class, 'sendMessage'])->name('admin.chat.send');
    Route::get('admin/to/user/unread', [AdminandchatuserController::class, 'unreadCount'])->name('admin.user.unread');
    Route::post('admin/to/chat/mark-read/{user_id}', [AdminandchatuserController::class, 'markRead'])->name('admin.chat.markread');
+
+
+
+   Route::get('contactmessages', [AdminsupportemailController::class, 'contact_messages'])->name('contact.messages');
+   Route::get('contactmessagesdelete/{id}', [AdminsupportemailController::class, 'contactmessagesdelete'])->name('contactmessagesdelete');
+
+
+   Route::resource('whychooseustickets',WhychooseusticketController::class);
+
 });
 // End Admin Auth Routes
 

@@ -67,46 +67,56 @@
 
                         </div>
                     </div>
-                    <div class="col-lg-7">
-                        <form class="contact-form">
-                            <h3 class="title mb-3">Get In Touch</h3>
-                            <div class="row gy-3">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="fname" class="form-label">First Name <span class="text--danger">*</span></label>
-                                        <input id="fname" type="text" class="form-control form--control"></input>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="lname" class="form-label">Last Name <span class="text--danger">*</span></label>
-                                        <input id="lname" type="text" class="form-control form--control"></input>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="email" class="form-label">Email Address <span class="text--danger">*</span></label>
-                                        <input id="email" type="text" class="form-control form--control"></input>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="phone" class="form-label">Phone Number <span class="text--danger">*</span></label>
-                                        <input id="phone" type="text" class="form-control form--control"></input>
-                                    </div>
-                                </div>
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label for="msg" class="form-label">Your Message <span class="text--danger">*</span></label>
-                                        <textarea id="msg" class="form-control form--control"></textarea>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <button class="cmn--btn active">Send Message</button>
+                   <div class="col-lg-7">
+                    <form class="contact-form" action="{{ route('contact.message') }}" method="POST">
+                        @csrf
+
+                        <h3 class="title mb-3">Get In Touch</h3>
+                        <div class="row gy-3">
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">First Name <span class="text--danger">*</span></label>
+                                    <input type="text" name="first_name" class="form-control form--control" value="{{ old('first_name') }}" required>
                                 </div>
                             </div>
-                        </form>
-                    </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Last Name <span class="text--danger">*</span></label>
+                                    <input type="text" name="last_name" class="form-control form--control" value="{{ old('last_name') }}" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Email Address <span class="text--danger">*</span></label>
+                                    <input type="email" name="email" class="form-control form--control" value="{{ old('email') }}" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Phone Number <span class="text--danger">*</span></label>
+                                    <input type="text" name="phone" class="form-control form--control" value="{{ old('phone') }}" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label">Your Message <span class="text--danger">*</span></label>
+                                    <textarea name="messages" rows="4" class="form-control form--control" required>{{ old('messages') }}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <button type="submit" class="cmn--btn active">Send Message</button>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+
                 </div>
             </div>
         </div>

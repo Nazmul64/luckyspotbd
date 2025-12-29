@@ -301,6 +301,56 @@
 
 
 
+<li>
+    <a class="has-arrow" href="javascript:;" aria-expanded="false">
+        <div class="parent-icon">
+            <i class="bi bi-envelope"></i>
+        </div>
+        <div class="menu-title">Contact Messages</div>
+    </a>
+
+    <ul>
+        <li>
+            <a href="{{ route('contact.messages') }}">
+                <i class="bi bi-chat-left-text"></i> Contact Messages
+            </a>
+        </li>
+    </ul>
+</li>
+<li>
+    <a class="has-arrow" href="javascript:;" aria-expanded="false">
+        <div class="parent-icon">
+            <i class="bi bi-envelope"></i>
+        </div>
+        <div class="menu-title">Why Choose Us</div>
+    </a>
+
+    <ul>
+        <li>
+            <a href="{{ route('whychooseustickets.index') }}">
+                <i class="bi bi-chat-left-text"></i> Why Choose Us List
+            </a>
+        </li>
+
+        <li>
+            <a href="{{ route('whychooseustickets.create') }}">
+                <i class="bi bi-plus-circle"></i> Add New
+            </a>
+        </li>
+    </ul>
+</li>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     </ul>

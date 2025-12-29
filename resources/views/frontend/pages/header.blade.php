@@ -63,10 +63,8 @@
                     <li>
                         <a href="#0">{{ trans_db('nav_pages','Pages') }}</a>
                         <ul class="sub-menu">
-                            <li><a href="#">{{ trans_db('nav_user_dashboard','User Dashboard') }}</a></li>
-                            <li><a href="#">{{ trans_db('nav_ticket_details','Ticket Details') }}</a></li>
-                            <li><a href="#">{{ trans_db('nav_privacy_policy','Privacy Policy') }}</a></li>
-                            <li><a href="#">{{ trans_db('nav_terms_conditions','Terms & Conditions') }}</a></li>
+                            <li><a href="{{ route('privacy.pages') }}">{{ trans_db('nav_privacy_policy','Privacy Policy') }}</a></li>
+                            <li><a href="{{ route('trmsandcondation') }}">{{ trans_db('trmsandcondation','Terms & Conditions') }}</a></li>
                         </ul>
                     </li>
 
