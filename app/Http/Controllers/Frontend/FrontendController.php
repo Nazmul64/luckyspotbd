@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\About;
+use App\Models\Faq;
 use App\Models\Lottery;
 use App\Models\Privacypolicy;
 use App\Models\Setting;
@@ -27,8 +28,9 @@ class FrontendController extends Controller
         ->get();
 
         $whychooseustickets =Whychooseusticket::all();
+        $faq=Faq::all();
 
-    return view('frontend.index', compact('slider_show', 'lottery_show','about', 'whychooseustickets'));
+    return view('frontend.index', compact('slider_show', 'lottery_show','about', 'whychooseustickets', 'faq'));
 }
 
     public function contactpages()

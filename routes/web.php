@@ -24,6 +24,7 @@ use App\Http\Controllers\Backend\WaletaSetupController;
 use App\Http\Controllers\Backend\WithdrawcommissonController;
 use App\Http\Controllers\Backend\AdminandchatuserController;
 use App\Http\Controllers\Backend\AdminsupportemailController;
+use App\Http\Controllers\Backend\FaqController;
 use App\Http\Controllers\Backend\UsertoadminchatController;
 use App\Http\Controllers\Backend\WhychooseusticketController;
 use App\Http\Controllers\Frontend\AdminDepositeApprovedController;
@@ -205,6 +206,7 @@ Route::middleware(['admin'])->group(function () {
 
 
    Route::resource('whychooseustickets',WhychooseusticketController::class);
+   Route::resource('faq',FaqController::class);
 
 });
 // End Admin Auth Routes

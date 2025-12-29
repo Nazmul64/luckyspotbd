@@ -269,45 +269,72 @@ document.addEventListener('DOMContentLoaded', function() {
 ======================= --}}
 <section class="faq-section padding-top padding-bottom overflow-hidden">
     <div class="container">
+
+        <!-- Section Header -->
         <div class="row justify-content-center">
             <div class="col-lg-7 col-xl-6">
                 <div class="section-header text-center">
-                    <h2 class="section-header__title">Frequently Asked Questions</h2>
-                    <p>A Ticket is a facility for certain types of gambling. Ticket are often built combined with hotels, resorts.</p>
+                    <h2 class="section-header__title">
+                        Frequently Asked Questions
+                    </h2>
+                    <p>
+                        A Ticket is a facility for certain types of gambling.
+                        Ticket are often built combined with hotels, resorts.
+                    </p>
                 </div>
             </div>
         </div>
+
+        <!-- FAQ Items -->
         <div class="faq-wrapper row justify-content-between">
+
+            <!-- Left Column (1–6) -->
             <div class="col-lg-6">
-                @for($i = 1; $i <= 4; $i++)
-                <div class="faq-item {{ $i == 4 ? 'mb-2 mb-lg-0' : '' }}">
-                    <div class="faq-item__title">
-                        <h5 class="title">0{{ $i }}. How do I create Ticket Account ?</h5>
+                @foreach($faq->take(6) as $index => $item)
+                    <div class="faq-item">
+                        <div class="faq-item__title">
+                            <h5 class="title">
+                                {{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}.
+                                {{ $item->question }}
+                            </h5>
+                        </div>
+                        <div class="faq-item__content">
+                            <p>{{ $item->answer }}</p>
+                        </div>
                     </div>
-                    <div class="faq-item__content">
-                        <p>Autem ut suscipit, quibusdam officia, perferendis odio neque eius similique quae ipsum dolor voluptas sequi recusandae dolorem assumenda asperiores deleniti numquam iste fugit eligendi voluptates aliquam voluptate. Quas, magni excepturi ab, dolore explicabo.</p>
-                    </div>
-                </div>
-                @endfor
+                @endforeach
             </div>
+
+            <!-- Right Column (7–12) -->
             <div class="col-lg-6">
-                @for($i = 1; $i <= 4; $i++)
-                <div class="faq-item">
-                    <div class="faq-item__title">
-                        <h5 class="title">0{{ $i }}. How do I create Ticket Account ?</h5>
+                @foreach($faq->skip(6)->take(6) as $index => $item)
+                    <div class="faq-item">
+                        <div class="faq-item__title">
+                            <h5 class="title">
+                                {{ str_pad($index + 7, 2, '0', STR_PAD_LEFT) }}.
+                                {{ $item->question }}
+                            </h5>
+                        </div>
+                        <div class="faq-item__content">
+                            <p>{{ $item->answer }}</p>
+                        </div>
                     </div>
-                    <div class="faq-item__content">
-                        <p>Autem ut suscipit, quibusdam officia, perferendis odio neque eius similique quae ipsum dolor voluptas sequi recusandae dolorem assumenda asperiores deleniti numquam iste fugit eligendi voluptates aliquam voluptate. Quas, magni excepturi ab, dolore explicabo.</p>
-                    </div>
-                </div>
-                @endfor
+                @endforeach
             </div>
+
         </div>
     </div>
+
+    <!-- Shapes -->
     <div class="shapes">
-        <img src="{{asset('frontend')}}/assets/images/faq/shape.png" alt="faq" class="shape shape1">
+        <img src="{{ asset('frontend/assets/images/faq/shape.png') }}"
+             alt="faq"
+             class="shape shape1">
     </div>
 </section>
+
+
+
 
 {{-- =======================
     TOP INVESTOR & WINNER

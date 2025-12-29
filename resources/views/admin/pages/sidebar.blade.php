@@ -326,7 +326,7 @@
     </a>
 
     <ul>
-        <li>
+<li>
             <a href="{{ route('whychooseustickets.index') }}">
                 <i class="bi bi-chat-left-text"></i> Why Choose Us List
             </a>
@@ -339,6 +339,32 @@
         </li>
     </ul>
 </li>
+
+
+<li class="menu-item">
+    <a href="javascript:void(0)" class="menu-link">
+        <i class="bi bi-chat-left-text"></i>
+        <span>FAQ</span>
+    </a>
+
+    <ul class="submenu">
+        <li>
+            <a href="{{ route('faq.index') }}">
+                <i class="bi bi-list-ul"></i> All FAQ
+            </a>
+        </li>
+
+        <li>
+            <a href="{{ route('faq.create') }}">
+                <i class="bi bi-plus-circle"></i> Add New FAQ
+            </a>
+        </li>
+    </ul>
+</li>
+
+
+
+
 
 
 
