@@ -38,6 +38,29 @@
         </li>
 
 
+
+        <li>
+            <a href="javascript:void(0);" class="has-arrow">
+                <div class="parent-icon">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+                <div class="menu-title">KYC Setup</div>
+            </a>
+            <ul>
+                <li>
+                    <a href="{{ route('kyc.list') }}">
+                        <i class="bi bi-circle"></i> KYC List
+                    </a>
+                </li>
+            </ul>
+        </li>
+        <!-- KYC Setup -->
+
+
+
+
+
+
         <!-- Commission Setup -->
         <li>
             <a href="javascript:void(0);" class="has-arrow">
@@ -361,6 +384,30 @@
         </li>
     </ul>
 </li>
+
+<li class="menu-item">
+    <a href="javascript:void(0)" class="menu-link">
+        <i class="bi bi-chat-quote"></i>
+        <span>Testimonial</span>
+    </a>
+
+    <ul class="submenu">
+        <li class="{{ request()->routeIs('testimonial.index') ? 'active' : '' }}">
+            <a href="{{ route('testimonial.index') }}">
+                <i class="bi bi-list-ul"></i> All Testimonials
+            </a>
+        </li>
+
+        <li class="{{ request()->routeIs('testimonial.create') ? 'active' : '' }}">
+            <a href="{{ route('testimonial.create') }}">
+                <i class="bi bi-plus-circle"></i> Add New Testimonial
+            </a>
+        </li>
+    </ul>
+</li>
+
+
+
 
 
 

@@ -112,6 +112,9 @@ public function kyc()
 {
     return $this->hasOne(Kyc::class);
 }
+public function kycagent(){
+    return $this->belongsTo(User::class, 'user_id');
+}
 
 
 

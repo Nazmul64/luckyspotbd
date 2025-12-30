@@ -51,7 +51,7 @@
             @endif
 
             <li style="margin-bottom: 5px;">
-                <a href="#"
+                <a href="{{ route('frontend.dashboard') }}"
                    class="dashboard-link active"
                    style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
                     Dashboard
@@ -107,6 +107,16 @@
                     KYC Verification
                 </a>
             </li>
+               <li style="margin-bottom: 5px;">
+                <a href="{{ route('supportcontact') }}"
+                   class="dashboard-link"
+                   style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
+                    Support Contact
+                </a>
+            </li>
+
+
+
 
             {{-- Logout --}}
             @auth

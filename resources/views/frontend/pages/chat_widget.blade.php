@@ -229,12 +229,14 @@
         text-transform: uppercase;
     }
 
-    .usertoadminchat-message-bubble {
-        max-width: 75%;
+  .usertoadminchat-message-bubble {
+        max-width:50%;
         padding: 12px 16px;
         border-radius: 18px;
-        word-wrap: break-word;
-        line-height: 1.5;
+        overflow-wrap: break-word;
+        word-break: keep-all;
+        line-height:15px;
+        white-space: pre-wrap;
     }
 
     .usertoadminchat-admin .usertoadminchat-message-bubble {

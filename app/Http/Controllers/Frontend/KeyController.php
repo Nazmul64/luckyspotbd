@@ -32,8 +32,8 @@ class KeyController extends Controller
 
         $request->validate([
             'document_type' => 'required|string',
-            'document_first_part_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-            'document_secound_part_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'document_first_part_photo' => 'required|image|mimes:jpeg,png,jpg',
+            'document_secound_part_photo' => 'required|image|mimes:jpeg,png,jpg',
         ]);
 
         // Upload first photo

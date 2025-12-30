@@ -19,12 +19,14 @@ use App\Http\Controllers\Backend\SettingController;
 use App\Http\Controllers\Backend\SliderController;
 use App\Http\Controllers\Backend\SupportControler;
 use App\Http\Controllers\Backend\TermsconditionController;
+use App\Http\Controllers\Backend\AdminkeyapprovedController;
 use App\Http\Controllers\Backend\UserlottryController;
 use App\Http\Controllers\Backend\WaletaSetupController;
 use App\Http\Controllers\Backend\WithdrawcommissonController;
 use App\Http\Controllers\Backend\AdminandchatuserController;
 use App\Http\Controllers\Backend\AdminsupportemailController;
 use App\Http\Controllers\Backend\FaqController;
+use App\Http\Controllers\Backend\TestimonialController;
 use App\Http\Controllers\Backend\UsertoadminchatController;
 use App\Http\Controllers\Backend\WhychooseusticketController;
 use App\Http\Controllers\Frontend\AdminDepositeApprovedController;
@@ -56,6 +58,7 @@ Route::get('/', [FrontendController::class, 'frontend'])->name('frontend');
 Route::get('contactpages', [FrontendController::class, 'contactpages'])->name('contact.pages');
 Route::get('privacy', [FrontendController::class, 'privacy'])->name('privacy.pages');
 Route::get('trmsandcondation', [FrontendController::class, 'trmsandcondation'])->name('trmsandcondation');
+Route::get('supportcontact', [FrontendController::class, 'supportcontact'])->name('supportcontact');
 Route::post('/supportemail', [SupportEmailController::class, 'supportemail'])->name('contact.message');
 
 
@@ -64,8 +67,8 @@ Route::get('frontend/login', [FrontendAuthController::class, 'frontend_login'])-
 Route::post('frontend/login/submit', [FrontendAuthController::class, 'frontend_login_submit'])->name('frontend.login.submit');
 
 Route::post('frontend/logout', [FrontendAuthController::class, 'frontend_logout'])->name('frontend.logout');
-Route::get('frontend/register', [FrontendAuthController::class, 'frontend_register'])->name('frontend.register');
-Route::post('frontend/register/submit', [FrontendAuthController::class, 'frontend_register_submit'])->name('frontend.register.submit');
+Route::get('register', [FrontendAuthController::class, 'frontend_register'])->name('frontend.register');
+Route::post('register', [FrontendAuthController::class, 'frontend_register_submit'])->name('frontend.register.submit');
 
 // Protect Dashboard (login required)
 Route::middleware(['user'])->group(function () {
@@ -201,12 +204,15 @@ Route::middleware(['admin'])->group(function () {
 
 
 
-   Route::get('contactmessages', [AdminsupportemailController::class, 'contact_messages'])->name('contact.messages');
-   Route::get('contactmessagesdelete/{id}', [AdminsupportemailController::class, 'contactmessagesdelete'])->name('contactmessagesdelete');
+  Route::get('contactmessages', [AdminsupportemailController::class, 'contact_messages'])->name('contact.messages');
+  Route::get('contactmessagesdelete/{id}', [AdminsupportemailController::class, 'contactmessagesdelete'])->name('contactmessagesdelete');
+  Route::resource('whychooseustickets',WhychooseusticketController::class);
+  Route::resource('faq',FaqController::class);
+  Route::resource('testimonial',TestimonialController::class);
+  Route::get('kyc/kyclist', [AdminkeyapprovedController::class,'kyclist'])->name('kyc.list');
+  Route::post('kyc/approve/{id}', [AdminkeyapprovedController::class,'approvedkey'])->name('admin.kyc.approve');
+  Route::post('kyc/reject/{id}', [AdminkeyapprovedController::class,'rejectapprovedkey'])->name('admin.kyc.reject');
 
-
-   Route::resource('whychooseustickets',WhychooseusticketController::class);
-   Route::resource('faq',FaqController::class);
 
 });
 // End Admin Auth Routes

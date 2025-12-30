@@ -45,7 +45,7 @@
     ABOUT SECTION
 ======================= --}}
 @foreach ($about as $item)
-<section class="about-section padding-top padding-bottom overflow-hidden">
+<section class="about-section padding-top padding-bottom overflow-hidden"id="about">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-6">
@@ -69,7 +69,7 @@
 {{-- =======================
     GAME SECTION
 ======================= --}}
-<section class="game-section padding-top padding-bottom bg_img" style="background: url(assets/images/game/bg3.jpg);">
+<section class="game-section padding-top padding-bottom bg_img" style="background: url(assets/images/game/bg3.jpg);"id="ticket">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-6 col-xl-5">
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function() {
 {{-- =======================
     FAQ SECTION
 ======================= --}}
-<section class="faq-section padding-top padding-bottom overflow-hidden">
+<section class="faq-section padding-top padding-bottom overflow-hidden"id="faq">
     <div class="container">
 
         <!-- Section Header -->
@@ -339,109 +339,142 @@ document.addEventListener('DOMContentLoaded', function() {
 {{-- =======================
     TOP INVESTOR & WINNER
 ======================= --}}
-<section class="top-section padding-top padding-bottom bg_img" style="background:url(assets/images/top/bg.png) center">
+<section class="top-section padding-top padding-bottom bg_img"
+    style="background:url({{ asset('assets/images/top/bg.png') }}) center">
+
     <div class="container">
         <div class="row align-items-center gy-5">
+
+            <!-- Latest Winner -->
             <div class="col-lg-4">
                 <h3 class="part-title mb-4">Latest Winner</h3>
+
                 <div class="top-investor-slider">
-                    @php
-                    $winners = [
-                        ['name' => 'Munna Ahmed', 'amount' => '$150', 'img' => 'item1.png'],
-                        ['name' => 'Fahad Bin', 'amount' => '$270', 'img' => 'item2.png'],
-                        ['name' => 'Rafuj Raiha', 'amount' => '$52000', 'img' => 'item3.png']
-                    ];
-                    @endphp
-                    @foreach($winners as $winner)
-                    <div class="investor-item">
-                        <div class="investor-item__thumb">
-                            <img src="{{asset('frontend')}}/assets/images/top/{{ $winner['img'] }}" alt="top">
-                            <p class="amount">{{ $winner['amount'] }}</p>
+                    @forelse($packageWinners as $winner)
+                        <div class="investor-item">
+                            <div class="investor-item__thumb">
+                                <img
+                                    src="{{ asset('uploads/profile/' . optional($winner->user)->profile_photo) }}"
+                                    alt="winner">
+
+                                <p class="amount">{{ $winner->amount }}</p>
+                            </div>
+
+                            <div class="investor-item__content">
+                                <h6 class="name">
+                                    {{ optional($winner->user)->name }}
+                                </h6>
+                            </div>
                         </div>
-                        <div class="investor-item__content">
-                            <h6 class="name">{{ $winner['name'] }}</h6>
-                        </div>
-                    </div>
-                    @endforeach
+                    @empty
+                        <p class="text-center">No winners found</p>
+                    @endforelse
                 </div>
             </div>
+
+            <!-- Center Banner -->
             <div class="col-lg-4">
                 <div class="cla-wrapper text-center">
-                    <h3 class="title mb-4">WIN !!! & <br> Get million dollars</h3>
-                    <a href="#0" class="cmn--btn active btn--md radius-0">Play Now</a>
-                    <div class="thumb">
-                        <img src="{{asset('frontend')}}/assets/images/top/bg2.png" alt="top">
+                    <h3 class="title mb-4">
+                        WIN !!! <br> Get million dollars
+                    </h3>
+
+                    <a href=""
+                        class="cmn--btn active btn--md radius-0">
+                        Play Now
+                    </a>
+
+                    <div class="thumb mt-4">
+                        <img src="{{ asset('frontend/assets/images/top/bg2.png') }}" alt="banner">
                     </div>
                 </div>
             </div>
+
+            <!-- Top Investor -->
             <div class="col-lg-4">
                 <h3 class="part-title mb-4">Top Investor</h3>
+
                 <div class="top-investor-slider">
-                    @foreach($winners as $winner)
-                    <div class="investor-item">
-                        <div class="investor-item__thumb">
-                            <img src="{{asset('frontend')}}/assets/images/top/{{ $winner['img'] }}" alt="top">
-                            <p class="amount">{{ $winner['amount'] }}</p>
+                    @forelse($packageWinners as $winner)
+                        <div class="investor-item">
+                            <div class="investor-item__thumb">
+                                <img
+                                    src="{{ asset('uploads/profile/' . optional($winner->user)->profile_photo) }}"
+                                    alt="investor">
+
+                                <p class="amount">{{ $winner->amount }}</p>
+                            </div>
+
+                            <div class="investor-item__content">
+                                <h6 class="name">
+                                    {{ optional($winner->user)->name }}
+                                </h6>
+                            </div>
                         </div>
-                        <div class="investor-item__content">
-                            <h6 class="name">{{ $winner['name'] }}</h6>
-                        </div>
-                    </div>
-                    @endforeach
+                    @empty
+                        <p class="text-center">No investors found</p>
+                    @endforelse
                 </div>
             </div>
+
         </div>
     </div>
 </section>
+
 
 {{-- =======================
     TESTIMONIAL SECTION
 ======================= --}}
 <section class="testimonial-section padding-top padding-bottom overflow-hidden">
     <div class="container">
+
+        <!-- Section Header -->
         <div class="row justify-content-center">
             <div class="col-lg-7 col-xl-6">
                 <div class="section-header text-center">
                     <h2 class="section-header__title">What Ticket Players Say</h2>
-                    <p>A Ticket is a facility for certain types of gambling. Ticket are often built combined with hotels, resorts.</p>
+                    <p>A Ticket is a facility for certain types of gambling. Tickets are often combined with hotels, resorts.</p>
                 </div>
             </div>
         </div>
+
+        <!-- Testimonial Slider -->
         <div class="testimonial-slider">
-            @php
-            $testimonials = [
-                ['name' => 'Suraiya Nesa', 'designation' => 'Top Pocker', 'img' => 'item1.png'],
-                ['name' => 'Munna Ahmed', 'designation' => 'Top Pocker', 'img' => 'item2.png'],
-                ['name' => 'Rafuj Raihan', 'designation' => 'Top Pocker', 'img' => 'item3.png'],
-                ['name' => 'Fahad Foiz', 'designation' => 'Top Pocker', 'img' => 'item2.png']
-            ];
-            @endphp
-            @foreach($testimonials as $testimonial)
-            <div class="single-slide">
-                <div class="testimonial-item bg_img" style="background: url(assets/images/testimonial/bg.png) center">
-                    <div class="testimonial-inner">
-                        <div class="testimonial-item__content">
-                            <div class="quote-icon"><i class="las la-quote-left"></i></div>
-                            <p>Ducimus ullam omnis eius unde ipsa minus excepturi pariatur! Vel sint cumque expedita eveniet commodi asp voluptas recusandae voluptatem, accusantium in.</p>
-                        </div>
-                        <div class="thumb-wrapper">
-                            <div class="thumb">
-                                <img src="{{asset('frontend')}}/assets/images/top/{{ $testimonial['img'] }}" alt="top">
+
+            @foreach($testmonail as $item)
+                <div class="single-slide">
+                    <div class="testimonial-item bg_img" style="background: url({{ asset('frontend/assets/images/testimonial/bg.png') }}) center / cover no-repeat;">
+                        <div class="testimonial-inner">
+
+                            <!-- Message -->
+                            <div class="testimonial-item__content">
+                                <div class="quote-icon"><i class="las la-quote-left"></i></div>
+                                <p>{{ $item->message }}</p>
                             </div>
-                            <div class="content">
-                                <h6 class="name">{{ $testimonial['name'] }}</h6>
-                                <span class="designation">{{ $testimonial['designation'] }}</span>
+
+                            <!-- User Info -->
+                            <div class="thumb-wrapper d-flex align-items-center mt-3">
+                                <div class="thumb me-3">
+                                    @if($item->photo && file_exists(public_path($item->photo)))
+                                        <img src="{{ asset($item->photo) }}" alt="{{ $item->name }}" class="rounded-circle" width="60" height="60">
+                                    @else
+                                        <img src="{{ asset('frontend/assets/images/testimonial/default.png') }}" alt="No Photo" class="rounded-circle" width="60" height="60">
+                                    @endif
+                                </div>
+                                <div class="content">
+                                    <h6 class="name mb-0">{{ $item->name }}</h6>
+                                    <span class="designation">{{ $item->designation }}</span>
+                                </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
-            </div>
             @endforeach
+
         </div>
     </div>
-    <div class="shapes">
-        <img src="{{asset('frontend')}}/assets/images/why/shape.png" alt="why" class="shape shape1">
-    </div>
 </section>
+
 
 @endsection

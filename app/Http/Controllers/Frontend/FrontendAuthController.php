@@ -58,62 +58,74 @@ class FrontendAuthController extends Controller
     /**
      * Show registration page
      */
-    public function frontend_register()
-    {
-        return view('frontend.auth.register');
-    }
+  /**
+ * Show registration page
+ */
+public function frontend_register(Request $request)
+{
+    // Get ref code from URL parameter
+    $refCode = $request->query('ref');
+
+    return view('frontend.auth.register', compact('refCode'));
+}
 
     /**
      * Handle registration form submit
      */
-    public function frontend_register_submit(Request $request)
-    {
-        $request->validate([
-            'first_name'            => 'required|string|max:255',
-            'last_name'             => 'required|string|max:255',
-            'email'                 => 'required|email|unique:users,email',
-            'username'              => 'required|string|max:255|unique:users,username',
-            'number'                => 'required|string|max:20|unique:users,number',
-            'country'               => 'required|string|max:255',
-            'ref_code'              => 'nullable|string|exists:users,ref_code',
-            'password'              => 'required|string|min:6|confirmed',
-        ]);
+ public function frontend_register_submit(Request $request)
+{
+    $request->validate([
+        'first_name'            => 'required|string|max:255',
+        'last_name'             => 'required|string|max:255',
+        'email'                 => 'required|email|unique:users,email',
+        'username'              => 'required|string|max:255|unique:users,username',
+        'number'                => 'required|string|max:20|unique:users,number',
+        'country'               => 'required|string|max:255',
+        'phone_code'            => 'required|string',
+        'ref_code'              => 'nullable|string|exists:users,ref_code', // Changed from number to string
+        'password'              => 'required|string|min:6|confirmed',
+    ]);
 
-        // Combine first and last name
-        $fullName = $request->first_name . ' ' . $request->last_name;
+    // Phone number with code
+    $fullPhone = $request->phone_code . $request->number;
 
-        // Referral logic
-        $referredBy = null;
-        if ($request->filled('ref_code')) {
-            $refUser = User::where('ref_code', $request->ref_code)->first();
-            if ($refUser) {
-                $referredBy = $refUser->id;
-            }
+    // Full name
+    $fullName = $request->first_name . ' ' . $request->last_name;
+
+    // Referral
+    $referredBy = null;
+    if ($request->filled('ref_code')) {
+        $refUser = User::where('ref_code', $request->ref_code)->first();
+        if ($refUser) {
+            $referredBy = $refUser->id;
         }
-
-        // Generate random referral code for new user
-        $randomRefCode = strtoupper(Str::random(8));
-
-        // Create new user
-        $user = User::create([
-            'first_name'  => $request->first_name,
-            'last_name'   => $request->last_name,
-            'name'        => $fullName,
-            'email'       => $request->email,
-            'username'    => $request->username,
-            'number'      => $request->number,
-            'country'     => $request->country,
-            'password'    => Hash::make($request->password),
-            'ref_code'    => $randomRefCode,
-            'referred_by' => $referredBy,
-            'status'      => 'active',
-            'role'        => 'user',
-        ]);
-
-        // Auto login the user after registration
-        Auth::login($user);
-
-        return redirect()->route('frontend.dashboard')
-            ->with('success', 'Registration successful! Welcome ' . $fullName);
     }
+
+    // Generate unique referral code
+    do {
+        $randomRefCode = strtoupper(Str::random(8));
+    } while (User::where('ref_code', $randomRefCode)->exists());
+
+    // Create new user
+    $user = User::create([
+        'first_name'  => $request->first_name,
+        'last_name'   => $request->last_name,
+        'name'        => $fullName,
+        'email'       => $request->email,
+        'username'    => $request->username,
+        'number'      => $fullPhone,
+        'country'     => $request->country,
+        'password'    => Hash::make($request->password),
+        'ref_code'    => $randomRefCode,
+        'referred_by' => $referredBy,
+        'status'      => 'active',
+        'role'        => 'user',
+    ]);
+
+    // Auto login
+    Auth::login($user);
+
+    return redirect()->route('frontend.dashboard')
+        ->with('success', 'Registration successful! Welcome ' . $fullName);
+}
 }

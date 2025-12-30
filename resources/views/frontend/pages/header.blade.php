@@ -56,7 +56,6 @@
 
                     <li><a href="{{ route('frontend') }}">{{ trans_db('nav_home','Home') }}</a></li>
                     <li><a href="#">{{ trans_db('nav_about','About') }}</a></li>
-                    <li><a href="#">{{ trans_db('nav_ticket','Ticket') }}</a></li>
                     <li><a href="#">{{ trans_db('nav_faq','FAQ') }}</a></li>
 
                     {{-- Pages --}}

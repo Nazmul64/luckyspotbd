@@ -9,6 +9,7 @@ use App\Models\LotteryResult;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class LotteryResultController extends Controller
 {
@@ -63,6 +64,7 @@ class LotteryResultController extends Controller
 
     /**
      * DECLARE LOTTERY RESULT AND UPDATE USER BALANCE
+     * Fully dynamic - no hardcoded values
      */
     public function declareResult(Request $request, $lotteryId)
     {
@@ -71,12 +73,10 @@ class LotteryResultController extends Controller
             'first_winner'   => 'nullable|exists:users,id',
             'second_winner'  => 'nullable|exists:users,id',
             'third_winner'   => 'nullable|exists:users,id',
-            'first_prize'    => 'nullable|numeric|min:0',
-            'second_prize'   => 'nullable|numeric|min:0',
-            'third_prize'    => 'nullable|numeric|min:0',
-            'multiple_title' => 'nullable|array',
-            'multiple_price' => 'nullable|array',
         ]);
+
+        // Load lottery with prize data from database
+        $lottery = Lottery::findOrFail($lotteryId);
 
         // Get all tickets for this lottery without results
         $tickets = Userpackagebuy::with('user')
@@ -88,11 +88,32 @@ class LotteryResultController extends Controller
             return back()->with('error', 'No eligible tickets found.');
         }
 
-        $multipleTitles = $request->multiple_title ?? [];
-        $multiplePrices = $request->multiple_price ?? [];
+        // Extract prize data from lottery table (database)
+        $prizes = [
+            'first'  => (float) ($lottery->first_prize ?? 0),
+            'second' => (float) ($lottery->second_prize ?? 0),
+            'third'  => (float) ($lottery->third_prize ?? 0),
+        ];
+
+        // Extract multiple prize data from lottery table (stored as JSON)
+        $multipleTitles = [];
+        $multiplePrices = [];
+        $totalMultiplePrize = 0;
+
+        if (!empty($lottery->multiple_title) && !empty($lottery->multiple_price)) {
+            $multipleTitles = is_array($lottery->multiple_title)
+                ? $lottery->multiple_title
+                : json_decode($lottery->multiple_title, true) ?? [];
+
+            $multiplePrices = is_array($lottery->multiple_price)
+                ? $lottery->multiple_price
+                : json_decode($lottery->multiple_price, true) ?? [];
+
+            $totalMultiplePrize = array_sum(array_map('floatval', $multiplePrices));
+        }
 
         // =========================
-        // SELECT WINNERS
+        // SELECT WINNERS (First, Second, Third)
         // =========================
         $winnerTickets = collect();
 
@@ -101,9 +122,15 @@ class LotteryResultController extends Controller
             $winnerTickets = $tickets->shuffle()->take(3);
         } else {
             // Manually selected winners
-            foreach (['first_winner', 'second_winner', 'third_winner'] as $key) {
-                if ($request->$key) {
-                    $ticket = $tickets->firstWhere('user_id', $request->$key);
+            $manualWinners = [
+                'first_winner'  => $request->first_winner,
+                'second_winner' => $request->second_winner,
+                'third_winner'  => $request->third_winner,
+            ];
+
+            foreach ($manualWinners as $key => $userId) {
+                if ($userId) {
+                    $ticket = $tickets->firstWhere('user_id', $userId);
                     if ($ticket) {
                         $winnerTickets->push($ticket);
                     }
@@ -111,35 +138,74 @@ class LotteryResultController extends Controller
             }
         }
 
-        // Collect all unique winning user IDs
-        $winningUserIds = $winnerTickets->pluck('user_id')->unique();
+        // Validate we have winners
+        if ($winnerTickets->isEmpty()) {
+            return back()->with('error', 'No winners selected.');
+        }
+
+        // =========================
+        // SELECT ONE RANDOM MULTIPLE PRIZE WINNER (optional)
+        // =========================
+        $multiplePrizeWinnerTicket = null;
+        if ($tickets->isNotEmpty() && $totalMultiplePrize > 0) {
+            $multiplePrizeWinnerTicket = $tickets->random();
+        }
 
         // =========================
         // DB TRANSACTION
         // =========================
-        DB::transaction(function () use ($tickets, $winnerTickets, $winningUserIds, $request, $multipleTitles, $multiplePrices) {
+        DB::transaction(function () use (
+            $tickets,
+            $winnerTickets,
+            $prizes,
+            $multipleTitles,
+            $multiplePrices,
+            $totalMultiplePrize,
+            $multiplePrizeWinnerTicket,
+            $lotteryId
+        ) {
+            // Track processed ticket IDs
+            $processedTicketIds = [];
 
-            $prizes = [
-                'first'  => $request->first_prize ?? 0,
-                'second' => $request->second_prize ?? 0,
-                'third'  => $request->third_prize ?? 0,
-            ];
+            // Position names array - fully dynamic
+            $positionNames = ['first', 'second', 'third'];
 
             // =========================
-            // HANDLE WINNERS
+            // STEP 1: PROCESS MAIN WINNERS (1st, 2nd, 3rd)
             // =========================
             foreach ($winnerTickets as $index => $ticket) {
-                $user = User::lockForUpdate()->find($ticket->user_id);
-                if (!$user) continue;
+                $position = $positionNames[$index] ?? null;
+                if (!$position) continue;
 
-                $position = ['first', 'second', 'third'][$index] ?? null;
+                // Get prize amount from database
+                $prizeAmount = (float) ($prizes[$position] ?? 0);
 
-                // Total gift = admin declared prize + sum of multiple_price
-                $giftAmount = ($prizes[$position] ?? 0) + array_sum($multiplePrices);
+                // Check if this ticket also won multiple prize
+                $isMultiplePrizeWinner = $multiplePrizeWinnerTicket
+                    && $ticket->id == $multiplePrizeWinnerTicket->id;
 
-                // Only add balance for winners
-                if ($giftAmount > 0) {
-                    $user->increment('balance', $giftAmount);
+                // Calculate total gift
+                $totalGift = $prizeAmount;
+                if ($isMultiplePrizeWinner) {
+                    $totalGift += $totalMultiplePrize;
+                }
+
+                // Update user balance
+                if ($totalGift > 0) {
+                    $user = User::lockForUpdate()->find($ticket->user_id);
+                    if ($user) {
+                        $oldBalance = $user->balance;
+                        $user->balance = $oldBalance + $totalGift;
+                        $user->save();
+
+                        Log::info("Winner balance updated", [
+                            'user_id' => $user->id,
+                            'position' => $position,
+                            'old_balance' => $oldBalance,
+                            'new_balance' => $user->balance,
+                            'gift_amount' => $totalGift
+                        ]);
+                    }
                 }
 
                 // Create lottery result record
@@ -148,43 +214,86 @@ class LotteryResultController extends Controller
                     'user_id'             => $ticket->user_id,
                     'win_status'          => 'won',
                     'win_amount'          => $ticket->price,
-                    'gift_amount'         => $giftAmount,
+                    'gift_amount'         => $totalGift,
                     'position'            => $position,
                     'draw_date'           => now(),
                     'status'              => 'active',
-                    'multiple_title'      => $multipleTitles,
-                    'multiple_price'      => $multiplePrices,
+                    'multiple_title'      => $isMultiplePrizeWinner ? json_encode($multipleTitles) : null,
+                    'multiple_price'      => $isMultiplePrizeWinner ? json_encode($multiplePrices) : null,
                 ]);
+
+                $processedTicketIds[] = $ticket->id;
             }
 
             // =========================
-            // HANDLE LOSERS
+            // STEP 2: PROCESS MULTIPLE PRIZE WINNER (if separate)
             // =========================
-            $losers = $tickets->filter(fn($ticket) => !$winningUserIds->contains($ticket->user_id));
+            if ($multiplePrizeWinnerTicket && !in_array($multiplePrizeWinnerTicket->id, $processedTicketIds)) {
 
-            foreach ($losers as $ticket) {
+                // Update user balance
+                if ($totalMultiplePrize > 0) {
+                    $user = User::lockForUpdate()->find($multiplePrizeWinnerTicket->user_id);
+                    if ($user) {
+                        $oldBalance = $user->balance;
+                        $user->balance = $oldBalance + $totalMultiplePrize;
+                        $user->save();
+
+                        Log::info("Multiple prize winner balance updated", [
+                            'user_id' => $user->id,
+                            'old_balance' => $oldBalance,
+                            'new_balance' => $user->balance,
+                            'gift_amount' => $totalMultiplePrize
+                        ]);
+                    }
+                }
+
+                // Create lottery result for multiple prize winner
+                LotteryResult::create([
+                    'user_package_buy_id' => $multiplePrizeWinnerTicket->id,
+                    'user_id'             => $multiplePrizeWinnerTicket->user_id,
+                    'win_status'          => 'won',
+                    'win_amount'          => $multiplePrizeWinnerTicket->price,
+                    'gift_amount'         => $totalMultiplePrize,
+                    'position'            => 'multiple',
+                    'draw_date'           => now(),
+                    'status'              => 'active',
+                    'multiple_title'      => json_encode($multipleTitles),
+                    'multiple_price'      => json_encode($multiplePrices),
+                ]);
+
+                $processedTicketIds[] = $multiplePrizeWinnerTicket->id;
+            }
+
+            // =========================
+            // STEP 3: PROCESS REMAINING LOSERS
+            // =========================
+            $remainingLosers = $tickets->filter(function($ticket) use ($processedTicketIds) {
+                return !in_array($ticket->id, $processedTicketIds);
+            });
+
+            foreach ($remainingLosers as $ticket) {
                 LotteryResult::create([
                     'user_package_buy_id' => $ticket->id,
                     'user_id'             => $ticket->user_id,
                     'win_status'          => 'lost',
                     'win_amount'          => $ticket->price,
-                    'gift_amount'         => 0, // no balance added
+                    'gift_amount'         => 0,
                     'position'            => null,
                     'draw_date'           => now(),
                     'status'              => 'active',
-                    'multiple_title'      => $multipleTitles,
-                    'multiple_price'      => $multiplePrices,
+                    'multiple_title'      => null,
+                    'multiple_price'      => null,
                 ]);
             }
 
             // =========================
-            // UPDATE LOTTERY STATUS
+            // STEP 4: UPDATE LOTTERY STATUS
             // =========================
-            $pending = Userpackagebuy::where('package_id', $tickets->first()->package_id)
+            $pending = Userpackagebuy::where('package_id', $lotteryId)
                 ->whereDoesntHave('results')
                 ->count();
 
-            $lottery = Lottery::lockForUpdate()->find($tickets->first()->package_id);
+            $lottery = Lottery::lockForUpdate()->find($lotteryId);
             if ($lottery) {
                 $lottery->status = $pending > 0 ? 'active' : 'completed';
                 $lottery->save();

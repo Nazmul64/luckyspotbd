@@ -52,9 +52,9 @@
                 {{-- Navigation --}}
                 <ul class="menu">
                     <li><a href="{{ route('frontend') }}">{{ trans_db('nav_home','Home') }}</a></li>
-                    <li><a href="#">{{ trans_db('nav_about','About') }}</a></li>
-                    <li><a href="#">{{ trans_db('nav_ticket','Ticket') }}</a></li>
-                    <li><a href="#">{{ trans_db('nav_faq','FAQ') }}</a></li>
+                    <li><a href="#about">{{ trans_db('nav_about','About') }}</a></li>
+                    <li><a href="#ticket">{{ trans_db('nav_ticket','Ticket') }}</a></li>
+                    <li><a href="#faq">{{ trans_db('nav_faq','FAQ') }}</a></li>
 
                     {{-- Pages --}}
                     <li>
