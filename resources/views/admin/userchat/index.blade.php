@@ -16,6 +16,7 @@
         flex-shrink: 0;
         position: relative;
         z-index: 1;
+        background: white;
     }
 
     .chat-sidebar::-webkit-scrollbar {
@@ -251,19 +252,129 @@
         border-radius: 8px;
     }
 
+    /* Back button for mobile */
+    .btn-back-mobile {
+        display: none;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back-mobile:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Mobile Responsive Styles */
     @media (max-width: 768px) {
         .chat-wrapper {
-            flex-direction: column;
+            flex-direction: row !important;
+            height: calc(100vh - 150px);
+            gap: 0 !important;
         }
 
+        /* Sidebar styles */
         .chat-sidebar {
             width: 100%;
-            max-height: 200px;
-            margin-bottom: 15px;
+            max-height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            z-index: 100;
+            transition: transform 0.3s ease;
+            border-radius: 8px;
+        }
+
+        .chat-sidebar.hide-mobile {
+            transform: translateX(-100%);
+        }
+
+        /* Chat main area */
+        .chat-main {
+            width: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            border-radius: 8px;
+        }
+
+        .chat-main.show-mobile {
+            transform: translateX(0);
+            z-index: 101;
+        }
+
+        /* Show back button on mobile */
+        .btn-back-mobile {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .message-bubble {
             max-width: 85%;
+        }
+
+        .chat-box {
+            max-height: calc(100vh - 350px);
+            min-height: 300px;
+        }
+
+        /* Adjust header for mobile */
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+        }
+
+        .message-image {
+            max-width: 200px;
+        }
+
+        .btn-send {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        /* Empty state adjustments */
+        .empty-state i {
+            font-size: 48px;
+        }
+
+        .empty-state h5 {
+            font-size: 16px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .chat-input {
+            font-size: 14px;
+            padding: 8px 15px;
+        }
+
+        .btn-send {
+            padding: 8px 15px;
+        }
+
+        .message-bubble {
+            padding: 10px 14px;
+            font-size: 14px;
+        }
+
+        .user-item {
+            padding: 10px !important;
+        }
+
+        .user-item .rounded-circle {
+            width: 30px !important;
+            height: 30px !important;
+            font-size: 12px !important;
         }
     }
 </style>
@@ -282,7 +393,7 @@
 
         <div class="chat-wrapper d-flex gap-3">
             {{-- User Sidebar --}}
-            <div class="chat-sidebar card">
+            <div class="chat-sidebar card" id="userSidebar">
                 <div class="p-3 border-bottom">
                     <h6 class="mb-0 fw-semibold">
                         <i class="fas fa-users me-2"></i>সকল ইউজার
@@ -315,9 +426,12 @@
             </div>
 
             {{-- Chat Area --}}
-            <div class="chat-main card flex-grow-1">
+            <div class="chat-main card flex-grow-1" id="chatMain">
                 <div class="chat-header">
-                    <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <button class="btn btn-back-mobile me-2" id="backBtn">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
                         <span class="online-indicator"></span>
                         <h6 class="mb-0 fw-semibold" id="chatUserName">একজন ইউজার নির্বাচন করুন</h6>
                     </div>
@@ -385,11 +499,34 @@ document.addEventListener("DOMContentLoaded", function() {
     const chatImage = document.getElementById("chatImage");
     const imagePreview = document.getElementById("imagePreview");
     const removeImageBtn = document.getElementById("removeImage");
+    const userSidebar = document.getElementById("userSidebar");
+    const chatMain = document.getElementById("chatMain");
+    const backBtn = document.getElementById("backBtn");
 
     let selectedUser = null;
     let lastMessageId = 0;
     let isLoading = false;
     let messageCheckInterval = null;
+
+    // Mobile view management
+    function showChatView() {
+        if (window.innerWidth <= 768) {
+            userSidebar.classList.add('hide-mobile');
+            chatMain.classList.add('show-mobile');
+        }
+    }
+
+    function showUserListView() {
+        if (window.innerWidth <= 768) {
+            userSidebar.classList.remove('hide-mobile');
+            chatMain.classList.remove('show-mobile');
+        }
+    }
+
+    // Back button click handler
+    backBtn.addEventListener('click', function() {
+        showUserListView();
+    });
 
     // Escape HTML to prevent XSS
     function escapeHtml(text) {
@@ -474,6 +611,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
             receiverInput.value = selectedUser;
             chatUserName.innerText = userName;
+
+            // Show chat view on mobile
+            showChatView();
 
             // Mark as read
             try {
@@ -571,7 +711,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         if (msg.image) {
-            content += `<img src="/storage/${msg.image}" class="message-image" onclick="window.open('/storage/${msg.image}', '_blank')" alt="Image">`;
+            content += `<img src="/${msg.image}" class="message-image" onclick="window.open('/${msg.image}', '_blank')" alt="Image">`;
         }
 
         content += `<div class="message-time">${msg.time}</div>`;
@@ -646,6 +786,14 @@ document.addEventListener("DOMContentLoaded", function() {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             chatForm.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            userSidebar.classList.remove('hide-mobile');
+            chatMain.classList.remove('show-mobile');
         }
     });
 

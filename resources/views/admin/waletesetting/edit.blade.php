@@ -1,78 +1,63 @@
 @extends('admin.master')
 @section('admin')
-
 <div class="row">
-    <div class="col-12 mx-auto">
-        <h6 class="mb-3 text-uppercase">Edit Walate</h6>
-
+    <div class="col-md-8 mx-auto">
         <div class="card">
+            <div class="card-header">Edit Wallet Setting</div>
             <div class="card-body">
-                <form action="{{ route('waletesetting.update', $Waleta_setup->id) }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    @method('PUT')
+                <form action="{{ route('waletesetting.update', $walate->id) }}" method="POST" enctype="multipart/form-data">
+                    @csrf @method('PUT')
 
-                    {{-- Bank Name --}}
                     <div class="mb-3">
-                        <label class="form-label">Bank Name</label>
-                        <input type="text" name="bankname" class="form-control"
-                               value="{{ old('bankname', $Waleta_setup->bankname) }}" placeholder="Enter bank name">
-                        @error('bankname') <span class="text-danger">{{ $message }}</span> @enderror
+                        <label>Bank Name (EN)</label>
+                        <input type="text" name="bankname_en" class="form-control" value="{{ old('bankname_en', $walate->bankname['en'] ?? '') }}">
                     </div>
 
-                    {{-- Account Number --}}
                     <div class="mb-3">
-                        <label class="form-label">Account Number</label>
-                        <input type="text" name="accountnumber" class="form-control"
-                               value="{{ old('accountnumber', $Waleta_setup->accountnumber) }}" placeholder="Enter account number">
-                        @error('accountnumber') <span class="text-danger">{{ $message }}</span> @enderror
+                        <label>Bank Name (BN)</label>
+                        <input type="text" name="bankname_bn" class="form-control" value="{{ old('bankname_bn', $walate->bankname['bn'] ?? '') }}">
                     </div>
 
-                    {{-- Photo --}}
                     <div class="mb-3">
-                        <label class="form-label">Photo</label>
-                        <input type="file" name="photo" id="photoInput" class="form-control" accept="image/*">
-                        @error('photo') <span class="text-danger">{{ $message }}</span> @enderror
+                        <label>Account Number (EN)</label>
+                        <input type="text" name="accountnumber_en" class="form-control" value="{{ old('accountnumber_en', $walate->accountnumber['en'] ?? '') }}">
                     </div>
 
-                    {{-- Image Preview --}}
                     <div class="mb-3">
-                        <label class="form-label">Image Preview</label><br>
-                        <img id="photoPreview"
-                             src="{{ $Waleta_setup->photo ? asset('uploads/waletesetting/' . $Waleta_setup->photo) : '#' }}"
-                             alt="Preview"
-                             style="max-width: 150px; {{ $Waleta_setup->photo ? '' : 'display:none;' }} border: 1px solid #ccc; padding: 5px; border-radius: 5px;">
+                        <label>Account Number (BN)</label>
+                        <input type="text" name="accountnumber_bn" class="form-control" value="{{ old('accountnumber_bn', $walate->accountnumber['bn'] ?? '') }}">
                     </div>
 
-                    {{-- Status --}}
                     <div class="mb-3">
-                        <label class="form-label">Status</label>
+                        <label>Photo</label>
+                        <input type="file" name="photo" id="photoInput" class="form-control">
+                        <img id="photoPreview" src="{{ $walate->photo ? asset('uploads/waletesetting/'.$walate->photo) : '#' }}"
+                             style="max-width:150px; {{ $walate->photo ? '' : 'display:none;' }}" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Status</label>
                         <select name="status" class="form-control">
-                            <option value="active" {{ old('status', $Waleta_setup->status) == 'active' ? 'selected' : '' }}>Active</option>
-                            <option value="inactive" {{ old('status', $Waleta_setup->status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            <option value="active" {{ $walate->status=='active' ? 'selected' : '' }}>Active</option>
+                            <option value="inactive" {{ $walate->status=='inactive' ? 'selected' : '' }}>Inactive</option>
                         </select>
-                        @error('status') <span class="text-danger">{{ $message }}</span> @enderror
                     </div>
 
-                    <button type="submit" class="btn btn-success">Update Walate</button>
+                    <button class="btn btn-success">Update</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-{{-- JavaScript for Live Preview --}}
 <script>
-document.getElementById('photoInput').addEventListener('change', function(event) {
-    let file = event.target.files[0];
+document.getElementById('photoInput').addEventListener('change', function(e){
+    let file = e.target.files[0];
     let preview = document.getElementById('photoPreview');
-
-    if (file) {
+    if(file){
         preview.src = URL.createObjectURL(file);
         preview.style.display = 'block';
-    } else {
-        preview.src = '#';
-        preview.style.display = 'none';
-    }
+    } else { preview.style.display='none'; }
 });
 </script>
 @endsection

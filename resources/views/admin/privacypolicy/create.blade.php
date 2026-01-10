@@ -1,33 +1,33 @@
 @extends('admin.master')
 
 @section('admin')
-<div class="row">
-    <div class="col-12 mx-auto">
-        <h6 class="mb-3 text-uppercase">Create Privacy Policy</h6>
+<div class="container">
+    <h4>Create Privacy Policy</h4>
 
-        <div class="card">
-            <div class="card-body">
-                <form action="{{ route('privacypolicy.store') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
+    <form action="{{ route('privacypolicy.store') }}" method="POST">
+        @csrf
 
-                    <div class="mb-3">
-                        <label class="form-label">Title</label>
-                        <input type="text" name="title" class="form-control"
-                               value="{{ old('title') }}" placeholder="Enter Title">
-                        @error('title') <span class="text-danger">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" id="description" class="form-control" rows="6">{{ old('description') }}</textarea>
-                        @error('description') <span class="text-danger">{{ $message }}</span> @enderror
-                    </div>
-
-                    <button type="submit" class="btn btn-success">Save Privacy Policy</button>
-                </form>
-            </div>
+        <div class="mb-3">
+            <label>Title (EN)</label>
+            <input type="text" name="title[en]" class="form-control" value="{{ old('title.en') }}">
         </div>
-    </div>
-</div>
 
+        <div class="mb-3">
+            <label>Title (BN)</label>
+            <input type="text" name="title[bn]" class="form-control" value="{{ old('title.bn') }}">
+        </div>
+
+        <div class="mb-3">
+            <label>Description (EN)</label>
+            <textarea name="description[en]" class="form-control" rows="4">{{ old('description.en') }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label>Description (BN)</label>
+            <textarea name="description[bn]" class="form-control" rows="4">{{ old('description.bn') }}</textarea>
+        </div>
+
+        <button type="submit" class="btn btn-success">Save</button>
+    </form>
+</div>
 @endsection

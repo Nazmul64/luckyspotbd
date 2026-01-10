@@ -16,17 +16,34 @@
             <form action="{{ route('lottery.store') }}" method="POST" enctype="multipart/form-data" id="lotteryForm">
                 @csrf
 
-                {{-- Name --}}
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">
-                        Ticket Name <span class="text-danger">*</span>
-                    </label>
-                    <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                        placeholder="Enter lottery name (e.g., Daily Mega Draw)"
-                        value="{{ old('name') }}" required>
-                    @error('name')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                {{-- Multilingual Name --}}
+                <h5 class="mt-4 mb-3 text-primary">
+                    <i class="bi bi-translate"></i> Ticket Name (Multilingual)
+                </h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">
+                            Name (English) <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="name_en" class="form-control @error('name_en') is-invalid @enderror"
+                            placeholder="Enter lottery name in English"
+                            value="{{ old('name_en') }}" required>
+                        @error('name_en')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">
+                            নাম (বাংলা) <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="name_bn" class="form-control @error('name_bn') is-invalid @enderror"
+                            placeholder="বাংলায় লটারির নাম লিখুন"
+                            value="{{ old('name_bn') }}" required>
+                        @error('name_bn')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
                 {{-- Price --}}
@@ -43,14 +60,28 @@
                     @enderror
                 </div>
 
-                {{-- Description --}}
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Description</label>
-                    <textarea name="description" class="form-control @error('description') is-invalid @enderror"
-                        rows="3" placeholder="Write lottery description...">{{ old('description') }}</textarea>
-                    @error('description')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                {{-- Multilingual Description --}}
+                <h5 class="mt-4 mb-3 text-primary">
+                    <i class="bi bi-card-text"></i> Description (Multilingual)
+                </h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Description (English)</label>
+                        <textarea name="description_en" class="form-control @error('description_en') is-invalid @enderror"
+                            rows="4" placeholder="Write description in English...">{{ old('description_en') }}</textarea>
+                        @error('description_en')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">বর্ণনা (বাংলা)</label>
+                        <textarea name="description_bn" class="form-control @error('description_bn') is-invalid @enderror"
+                            rows="4" placeholder="বাংলায় বর্ণনা লিখুন...">{{ old('description_bn') }}</textarea>
+                        @error('description_bn')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
                 {{-- Photo --}}
@@ -110,7 +141,7 @@
 
                 {{-- Multiple Packages --}}
                 <h5 class="mt-4 mb-3 text-primary">
-                    <i class="bi bi-box-seam"></i>Best Gift
+                    <i class="bi bi-box-seam"></i> Best Gift
                 </h5>
                 <div class="mb-3">
                     <div id="package-container">
@@ -256,9 +287,7 @@
 {{-- JavaScript --}}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // ============================================
-    // Image Preview with Validation
-    // ============================================
+    // Image Preview
     const photoInput = document.getElementById('photoInput');
     const imagePreview = document.getElementById('imagePreview');
     const previewImg = document.getElementById('previewImg');
@@ -267,7 +296,6 @@ document.addEventListener('DOMContentLoaded', () => {
     photoInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
-            // Validate file size (2MB)
             if (file.size > 2 * 1024 * 1024) {
                 alert('⚠️ File size must be less than 2MB!');
                 photoInput.value = '';
@@ -275,10 +303,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Validate file type
             const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
             if (!allowedTypes.includes(file.type)) {
-                alert('⚠️ Please select a valid image file (JPEG, PNG, JPG, GIF, WEBP)!');
+                alert('⚠️ Please select a valid image file!');
                 photoInput.value = '';
                 imagePreview.style.display = 'none';
                 return;
@@ -301,9 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
         previewImg.src = '';
     });
 
-    // ============================================
     // Countdown Timer
-    // ============================================
     const drawInput = document.getElementById('draw_date');
     const countdownEl = document.getElementById('countdown');
 
@@ -346,15 +371,12 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateCountdown, 1000);
     updateCountdown();
 
-    // Set minimum datetime to now
     const now = new Date();
     const minDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
     drawInput.min = minDateTime;
     document.getElementById('videoScheduledAt').min = minDateTime;
 
-    // ============================================
-    // Dynamic Multiple Packages
-    // ============================================
+    // Dynamic Packages
     const packageContainer = document.getElementById('package-container');
 
     packageContainer.addEventListener('click', function(e) {
@@ -389,9 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ============================================
-    // Form Validation Before Submit
-    // ============================================
+    // Form Validation
     const form = document.getElementById('lotteryForm');
     form.addEventListener('submit', function(e) {
         const drawDate = new Date(drawInput.value);
@@ -431,6 +451,11 @@ document.addEventListener('DOMContentLoaded', () => {
 #imagePreview img:hover {
     transform: scale(1.05);
     border-color: #0d6efd;
+}
+
+.text-primary {
+    border-bottom: 2px solid #0d6efd;
+    padding-bottom: 0.5rem;
 }
 </style>
 @endsection

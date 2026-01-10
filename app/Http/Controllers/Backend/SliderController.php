@@ -32,11 +32,20 @@ class SliderController extends Controller
      */
     public function store(Request $request)
     {
+        // ✅ Multilingual Validation
         $request->validate([
-            'title'       => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'photo'       => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'status'      => 'required|in:0,1',
+            'title_en'       => 'required|string|max:255',
+            'title_bn'       => 'required|string|max:255',
+            'description_en' => 'required|string',
+            'description_bn' => 'required|string',
+            'photo'          => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'status'         => 'required|in:0,1',
+        ], [
+            'title_en.required' => 'English title is required',
+            'title_bn.required' => 'Bangla title is required',
+            'description_en.required' => 'English description is required',
+            'description_bn.required' => 'Bangla description is required',
+            'photo.required' => 'Photo is required',
         ]);
 
         // Ensure upload directory exists
@@ -53,11 +62,18 @@ class SliderController extends Controller
             $photo->move($uploadPath, $photoName);
         }
 
+        // ✅ Create slider with multilingual data
         Slider::create([
-            'title'       => $request->title,
-            'description' => $request->description,
-            'photo'       => 'uploads/slider/' . $photoName,
-            'status'      => $request->status,
+            'title' => [
+                'en' => $request->title_en,
+                'bn' => $request->title_bn,
+            ],
+            'description' => [
+                'en' => $request->description_en,
+                'bn' => $request->description_bn,
+            ],
+            'photo'  => 'uploads/slider/' . $photoName,
+            'status' => $request->status,
         ]);
 
         return redirect()
@@ -81,22 +97,36 @@ class SliderController extends Controller
     {
         $slider = Slider::findOrFail($id);
 
+        // ✅ Multilingual Validation
         $request->validate([
-            'title'       => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'photo'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'status'      => 'required|in:0,1',
+            'title_en'       => 'required|string|max:255',
+            'title_bn'       => 'required|string|max:255',
+            'description_en' => 'required|string',
+            'description_bn' => 'required|string',
+            'photo'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'status'         => 'required|in:0,1',
+        ], [
+            'title_en.required' => 'English title is required',
+            'title_bn.required' => 'Bangla title is required',
+            'description_en.required' => 'English description is required',
+            'description_bn.required' => 'Bangla description is required',
         ]);
 
+        // ✅ Prepare multilingual data
         $data = [
-            'title'       => $request->title,
-            'description' => $request->description,
-            'status'      => $request->status,
+            'title' => [
+                'en' => $request->title_en,
+                'bn' => $request->title_bn,
+            ],
+            'description' => [
+                'en' => $request->description_en,
+                'bn' => $request->description_bn,
+            ],
+            'status' => $request->status,
         ];
 
         // Handle photo update
         if ($request->hasFile('photo')) {
-
             // Delete old photo
             if ($slider->photo && File::exists(public_path($slider->photo))) {
                 File::delete(public_path($slider->photo));

@@ -19,21 +19,41 @@ class FaqController extends Controller
         return view('admin.faq.create');
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'question' => 'required|max:255',
-            'answer'   => 'required',
-        ]);
+ public function store(Request $request)
+{
+    $request->validate([
+        'title_en' => 'nullable|string',
+        'title_bn' => 'nullable|string',
+        'description_en' => 'nullable|string',
+        'description_bn' => 'nullable|string',
+        'question_en' => 'required|string',
+        'question_bn' => 'required|string',
+        'answer_en' => 'required|string',
+        'answer_bn' => 'required|string',
+    ]);
 
-        Faq::create([
-            'question' => $request->question,
-            'answer'   => $request->answer,
-        ]);
+    Faq::create([
+        'title' => [
+            'en' => $request->title_en,
+            'bn' => $request->title_bn,
+        ],
+        'description' => [
+            'en' => $request->description_en,
+            'bn' => $request->description_bn,
+        ],
+        'question' => [
+            'en' => $request->question_en,
+            'bn' => $request->question_bn,
+        ],
+        'answer' => [
+            'en' => $request->answer_en,
+            'bn' => $request->answer_bn,
+        ],
+    ]);
 
-        return redirect()->route('faq.index')
-            ->with('success', 'FAQ created successfully');
-    }
+    return redirect()->route('faq.index')->with('success', 'FAQ created successfully.');
+}
+
 
     public function edit(Faq $faq)
     {
@@ -41,20 +61,41 @@ class FaqController extends Controller
     }
 
     public function update(Request $request, Faq $faq)
-    {
-        $request->validate([
-            'question' => 'required|max:255',
-            'answer'   => 'required',
-        ]);
+{
+    $request->validate([
+        'title_en'       => 'nullable|string',
+        'title_bn'       => 'nullable|string',
+        'description_en' => 'nullable|string',
+        'description_bn' => 'nullable|string',
+        'question_en'    => 'required|string|max:255',
+        'question_bn'    => 'required|string|max:255',
+        'answer_en'      => 'required|string',
+        'answer_bn'      => 'required|string',
+    ]);
 
-        $faq->update([
-            'question' => $request->question,
-            'answer'   => $request->answer,
-        ]);
+    $faq->update([
+        'title' => [
+            'en' => $request->title_en,
+            'bn' => $request->title_bn,
+        ],
+        'description' => [
+            'en' => $request->description_en,
+            'bn' => $request->description_bn,
+        ],
+        'question' => [
+            'en' => $request->question_en,
+            'bn' => $request->question_bn,
+        ],
+        'answer' => [
+            'en' => $request->answer_en,
+            'bn' => $request->answer_bn,
+        ],
+    ]);
 
-        return redirect()->route('faq.index')
-            ->with('success', 'FAQ updated successfully');
-    }
+    return redirect()->route('faq.index')
+                     ->with('success', 'FAQ updated successfully');
+}
+
 
     public function destroy(Faq $faq)
     {

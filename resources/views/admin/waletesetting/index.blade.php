@@ -1,64 +1,53 @@
 @extends('admin.master')
 @section('admin')
 <div class="container-fluid my-4">
-   <a href="{{ route('waletesetting.create') }}" class="btn btn-success mb-3">
+
+    <a href="{{ route('waletesetting.create') }}" class="btn btn-success mb-3">
         <i class="bi bi-plus-lg"></i> Create Wallet Setting
     </a>
 
     <div class="card shadow-lg border-0">
         <div class="card-body">
-
-            {{-- Custom Search --}}
-            <div class="mb-3 position-relative">
-                <input type="text" id="customSearchBox" class="form-control" placeholder="🔍 Search Commission Data...">
-                <small id="typingIndicator" class="text-muted position-absolute"
-                       style="right:10px; top:50%; transform:translateY(-50%); display:none;">
-                    ⌨️ Typing...
-                </small>
-            </div>
-
-            {{-- Data Table --}}
             <div class="table-responsive">
-                <table id="commissionTable" class="table table-hover table-bordered align-middle">
-                    <thead class="table-dark text-center">
+                <table class="table table-bordered text-center">
+                    <thead class="table-dark">
                         <tr>
-                            <th>Bank Name</th>
+                            <th>Bank Name (EN)</th>
+                            <th>Bank Name (BN)</th>
+                            <th>Account Number (EN)</th>
+                            <th>Account Number (BN)</th>
                             <th>Photo</th>
-                            <th>Account Number</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
                     </thead>
-                    <tbody class="text-center">
-                        @forelse ($walate as $item)
+                    <tbody>
+                        @forelse($walates as $walate)
                         <tr>
-                            <td>{{ $item->bankname ?? 'N/A' }}</td>
+                            <td>{{ $walate->bankname['en'] ?? '' }}</td>
+                            <td>{{ $walate->bankname['bn'] ?? '' }}</td>
+                            <td>{{ $walate->accountnumber['en'] ?? '' }}</td>
+                            <td>{{ $walate->accountnumber['bn'] ?? '' }}</td>
                             <td>
-                                @if(!empty($item->photo))
-                                    <img src="{{ asset('uploads/waletesetting/' . $item->photo) }}"
-                                         alt="Bank Photo" class="img-thumbnail" width="60">
+                                @if($walate->photo)
+                                    <img src="{{ asset('uploads/waletesetting/'.$walate->photo) }}"
+                                         width="60" class="img-thumbnail">
                                 @else
-                                    <span class="text-muted">No Photo</span>
+                                    N/A
                                 @endif
                             </td>
-                            <td>{{ $item->accountnumber ?? 'N/A' }}</td>
                             <td>
-                                <span class="badge {{ $item->status === 'active' ? 'bg-success' : 'bg-danger' }}">
-                                    {{ ucfirst($item->status ?? 'Inactive') }}
+                                <span class="badge {{ $walate->status == 'active' ? 'bg-success' : 'bg-danger' }}">
+                                    {{ ucfirst($walate->status) }}
                                 </span>
                             </td>
                             <td>
-                                <a href="{{ route('waletesetting.edit', $item->id) }}"
-                                   class="btn btn-sm btn-primary">
+                                <a href="{{ route('waletesetting.edit', $walate->id) }}" class="btn btn-sm btn-primary">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
-                                <form action="{{ route('waletesetting.destroy', $item->id) }}"
-                                      method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="btn btn-sm btn-danger"
-                                            onclick="return confirm('Are you sure you want to delete this?')">
+                                <form action="{{ route('waletesetting.destroy', $walate->id) }}" method="POST" style="display:inline;">
+                                    @csrf @method('DELETE')
+                                    <button onclick="return confirm('Are you sure?')" class="btn btn-sm btn-danger">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -66,7 +55,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-muted">No wallet settings found.</td>
+                            <td colspan="7">No wallet settings found.</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -76,4 +65,3 @@
     </div>
 </div>
 @endsection
-

@@ -12,6 +12,9 @@ use Exception;
 
 class LotterycreateController extends Controller
 {
+    /**
+     * Display a listing of lotteries
+     */
     public function index()
     {
         try {
@@ -23,17 +26,26 @@ class LotterycreateController extends Controller
         }
     }
 
+    /**
+     * Show the form for creating a new lottery
+     */
     public function create()
     {
         return view('admin.lottery.create');
     }
 
+    /**
+     * Store a newly created lottery in storage
+     */
     public function store(Request $request)
     {
+        // Validate incoming request
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name_en' => 'required|string|max:255',
+            'name_bn' => 'required|string|max:255',
+            'description_en' => 'nullable|string|max:5000',
+            'description_bn' => 'nullable|string|max:5000',
             'price' => 'required|numeric|min:0',
-            'description' => 'nullable|string|max:5000',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'first_prize' => 'nullable|numeric|min:0',
             'second_prize' => 'nullable|numeric|min:0',
@@ -44,75 +56,65 @@ class LotterycreateController extends Controller
             'multiple_price.*' => 'nullable|numeric|min:0',
             'video_url' => 'nullable|url|max:500',
             'video_enabled' => 'nullable|boolean',
-            'video_scheduled_at' => 'nullable|date|after:now',
-            'status' => 'required|in:active,inactive,completed',
+            'video_scheduled_at' => 'nullable|date',
             'draw_date' => 'required|date|after:now',
             'win_type' => 'required|string|max:50',
+            'status' => 'required|in:active,inactive,completed',
         ]);
 
         try {
-            $data = $validated;
-            $data['video_enabled'] = $request->has('video_enabled') ? 1 : 0;
+            // ✅ Prepare data - NO json_encode() needed because Model has 'array' cast
+            $data = [
+                'name' => [
+                    'en' => $request->name_en,
+                    'bn' => $request->name_bn,
+                ],
+                'description' => [
+                    'en' => $request->description_en ?? '',
+                    'bn' => $request->description_bn ?? '',
+                ],
+                'price' => $request->price,
+                'first_prize' => $request->first_prize ?? 0,
+                'second_prize' => $request->second_prize ?? 0,
+                'third_prize' => $request->third_prize ?? 0,
+                'video_url' => $request->video_url,
+                'video_enabled' => $request->has('video_enabled') ? 1 : 0,
+                'video_scheduled_at' => $request->video_scheduled_at,
+                'draw_date' => $request->draw_date,
+                'win_type' => $request->win_type,
+                'status' => $request->status,
+            ];
 
-            // Clean packages
-            if (isset($data['multiple_title']) && is_array($data['multiple_title'])) {
-                $cleanTitles = [];
-                $cleanPrices = [];
+            // Handle multiple packages - also as array (Model will auto-encode to JSON)
+            if ($request->has('multiple_title') && is_array($request->multiple_title)) {
+                $titles = array_filter($request->multiple_title, function($title) {
+                    return !empty(trim($title));
+                });
 
-                foreach ($data['multiple_title'] as $index => $title) {
-                    $trimmedTitle = trim($title ?? '');
-                    if (!empty($trimmedTitle)) {
-                        $cleanTitles[] = $trimmedTitle;
-                        $cleanPrices[] = floatval($data['multiple_price'][$index] ?? 0);
-                    }
+                $prices = [];
+                foreach ($titles as $key => $title) {
+                    $prices[$key] = $request->multiple_price[$key] ?? 0;
                 }
 
-                $data['multiple_title'] = !empty($cleanTitles) ? $cleanTitles : null;
-                $data['multiple_price'] = !empty($cleanPrices) ? $cleanPrices : null;
+                // Store as arrays - Model will handle JSON encoding
+                $data['multiple_title'] = array_values($titles);
+                $data['multiple_price'] = array_values($prices);
             } else {
-                $data['multiple_title'] = null;
-                $data['multiple_price'] = null;
+                $data['multiple_title'] = [];
+                $data['multiple_price'] = [];
             }
 
-            // Upload photo
+            // Handle photo upload
             if ($request->hasFile('photo')) {
                 $data['photo'] = $this->uploadPhoto($request->file('photo'));
             }
 
-            // ⭐ CRITICAL: Convert Bangladesh time to UTC for database storage
-            if (!empty($data['video_scheduled_at'])) {
-                // User enters Bangladesh time (BST = UTC+6)
-                // We need to convert to UTC for database
-                $bstTime = Carbon::parse($data['video_scheduled_at'], 'Asia/Dhaka');
-                $data['video_scheduled_at'] = $bstTime->setTimezone('UTC')->format('Y-m-d H:i:s');
-
-                Log::info('Video Scheduled Time Conversion', [
-                    'input_bst' => $request->input('video_scheduled_at'),
-                    'parsed_bst' => $bstTime->format('Y-m-d H:i:s'),
-                    'saved_utc' => $data['video_scheduled_at'],
-                ]);
-            }
-
-            if (!empty($data['draw_date'])) {
-                // User enters Bangladesh time (BST = UTC+6)
-                // We need to convert to UTC for database
-                $bstTime = Carbon::parse($data['draw_date'], 'Asia/Dhaka');
-                $data['draw_date'] = $bstTime->setTimezone('UTC')->format('Y-m-d H:i:s');
-
-                Log::info('Draw Date Conversion', [
-                    'input_bst' => $request->input('draw_date'),
-                    'parsed_bst' => $bstTime->format('Y-m-d H:i:s'),
-                    'saved_utc' => $data['draw_date'],
-                ]);
-            }
-
+            // Create lottery
             $lottery = Lottery::create($data);
 
             Log::info('✅ Lottery Created Successfully', [
                 'id' => $lottery->id,
-                'name' => $lottery->name,
-                'video_scheduled_at_utc' => $data['video_scheduled_at'] ?? null,
-                'draw_date_utc' => $data['draw_date'],
+                'name' => $lottery->name, // This will log as array
             ]);
 
             return redirect()
@@ -120,12 +122,9 @@ class LotterycreateController extends Controller
                 ->with('success', '✅ Lottery created successfully!');
 
         } catch (Exception $e) {
-            Log::error('❌ Lottery Store Error: ' . $e->getMessage());
-            Log::error('Stack Trace: ' . $e->getTraceAsString());
-
-            if (isset($data['photo'])) {
-                $this->deletePhoto($data['photo']);
-            }
+            Log::error('❌ Lottery Store Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
 
             return back()
                 ->withInput()
@@ -133,6 +132,9 @@ class LotterycreateController extends Controller
         }
     }
 
+    /**
+     * Show the form for editing the specified lottery
+     */
     public function edit($id)
     {
         try {
@@ -146,6 +148,9 @@ class LotterycreateController extends Controller
         }
     }
 
+    /**
+     * Update the specified lottery in storage
+     */
     public function update(Request $request, $id)
     {
         try {
@@ -157,9 +162,11 @@ class LotterycreateController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name_en' => 'required|string|max:255',
+            'name_bn' => 'required|string|max:255',
+            'description_en' => 'nullable|string|max:5000',
+            'description_bn' => 'nullable|string|max:5000',
             'price' => 'required|numeric|min:0',
-            'description' => 'nullable|string|max:5000',
             'new_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'first_prize' => 'nullable|numeric|min:0',
             'second_prize' => 'nullable|numeric|min:0',
@@ -171,36 +178,53 @@ class LotterycreateController extends Controller
             'video_url' => 'nullable|url|max:500',
             'video_enabled' => 'nullable|boolean',
             'video_scheduled_at' => 'nullable|date',
-            'status' => 'required|in:active,inactive,completed',
             'draw_date' => 'required|date',
             'win_type' => 'required|string|max:50',
+            'status' => 'required|in:active,inactive,completed',
         ]);
 
         try {
-            $data = $validated;
-            $data['video_enabled'] = $request->has('video_enabled') ? 1 : 0;
+            // ✅ Prepare data - NO json_encode() needed
+            $data = [
+                'name' => [
+                    'en' => $request->name_en,
+                    'bn' => $request->name_bn,
+                ],
+                'description' => [
+                    'en' => $request->description_en ?? '',
+                    'bn' => $request->description_bn ?? '',
+                ],
+                'price' => $request->price,
+                'first_prize' => $request->first_prize ?? 0,
+                'second_prize' => $request->second_prize ?? 0,
+                'third_prize' => $request->third_prize ?? 0,
+                'video_url' => $request->video_url,
+                'video_enabled' => $request->has('video_enabled') ? 1 : 0,
+                'video_scheduled_at' => $request->video_scheduled_at,
+                'draw_date' => $request->draw_date,
+                'win_type' => $request->win_type,
+                'status' => $request->status,
+            ];
 
-            // Clean packages
-            if (isset($data['multiple_title']) && is_array($data['multiple_title'])) {
-                $cleanTitles = [];
-                $cleanPrices = [];
+            // Handle multiple packages
+            if ($request->has('multiple_title') && is_array($request->multiple_title)) {
+                $titles = array_filter($request->multiple_title, function($title) {
+                    return !empty(trim($title));
+                });
 
-                foreach ($data['multiple_title'] as $index => $title) {
-                    $trimmedTitle = trim($title ?? '');
-                    if (!empty($trimmedTitle)) {
-                        $cleanTitles[] = $trimmedTitle;
-                        $cleanPrices[] = floatval($data['multiple_price'][$index] ?? 0);
-                    }
+                $prices = [];
+                foreach ($titles as $key => $title) {
+                    $prices[$key] = $request->multiple_price[$key] ?? 0;
                 }
 
-                $data['multiple_title'] = !empty($cleanTitles) ? $cleanTitles : null;
-                $data['multiple_price'] = !empty($cleanPrices) ? $cleanPrices : null;
+                $data['multiple_title'] = array_values($titles);
+                $data['multiple_price'] = array_values($prices);
             } else {
-                $data['multiple_title'] = null;
-                $data['multiple_price'] = null;
+                $data['multiple_title'] = [];
+                $data['multiple_price'] = [];
             }
 
-            // Handle new photo
+            // Handle photo upload
             if ($request->hasFile('new_photo')) {
                 if ($lottery->photo) {
                     $this->deletePhoto($lottery->photo);
@@ -208,33 +232,12 @@ class LotterycreateController extends Controller
                 $data['photo'] = $this->uploadPhoto($request->file('new_photo'));
             }
 
-            // ⭐ CRITICAL: Convert Bangladesh time to UTC for database
-            if (!empty($data['video_scheduled_at'])) {
-                $bstTime = Carbon::parse($data['video_scheduled_at'], 'Asia/Dhaka');
-                $data['video_scheduled_at'] = $bstTime->setTimezone('UTC')->format('Y-m-d H:i:s');
-
-                Log::info('Video Scheduled Time Update', [
-                    'input_bst' => $request->input('video_scheduled_at'),
-                    'saved_utc' => $data['video_scheduled_at'],
-                ]);
-            }
-
-            if (!empty($data['draw_date'])) {
-                $bstTime = Carbon::parse($data['draw_date'], 'Asia/Dhaka');
-                $data['draw_date'] = $bstTime->setTimezone('UTC')->format('Y-m-d H:i:s');
-
-                Log::info('Draw Date Update', [
-                    'input_bst' => $request->input('draw_date'),
-                    'saved_utc' => $data['draw_date'],
-                ]);
-            }
-
-            unset($data['new_photo']);
+            // Update lottery
             $lottery->update($data);
 
             Log::info('✅ Lottery Updated Successfully', [
                 'id' => $lottery->id,
-                'video_scheduled_at_utc' => $data['video_scheduled_at'] ?? null,
+                'name' => $lottery->name,
             ]);
 
             return redirect()
@@ -242,12 +245,9 @@ class LotterycreateController extends Controller
                 ->with('success', '✅ Lottery updated successfully!');
 
         } catch (Exception $e) {
-            Log::error('❌ Lottery Update Error: ' . $e->getMessage());
-            Log::error('Stack Trace: ' . $e->getTraceAsString());
-
-            if (isset($data['photo']) && $data['photo'] !== $lottery->photo) {
-                $this->deletePhoto($data['photo']);
-            }
+            Log::error('❌ Lottery Update Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
 
             return back()
                 ->withInput()
@@ -255,6 +255,9 @@ class LotterycreateController extends Controller
         }
     }
 
+    /**
+     * Remove the specified lottery from storage
+     */
     public function destroy($id)
     {
         try {
@@ -265,6 +268,7 @@ class LotterycreateController extends Controller
             }
 
             $lottery->delete();
+
             Log::info('✅ Lottery Deleted', ['id' => $id]);
 
             return redirect()
@@ -277,6 +281,9 @@ class LotterycreateController extends Controller
         }
     }
 
+    /**
+     * Upload photo to storage
+     */
     private function uploadPhoto($file)
     {
         try {
@@ -288,6 +295,9 @@ class LotterycreateController extends Controller
             }
 
             $file->move($uploadPath, $filename);
+
+            Log::info('✅ Photo Uploaded', ['filename' => $filename]);
+
             return $filename;
         } catch (Exception $e) {
             Log::error('Photo Upload Error: ' . $e->getMessage());
@@ -295,6 +305,9 @@ class LotterycreateController extends Controller
         }
     }
 
+    /**
+     * Delete photo from storage
+     */
     private function deletePhoto($filename)
     {
         try {
@@ -304,6 +317,7 @@ class LotterycreateController extends Controller
 
             if (File::exists($filePath)) {
                 File::delete($filePath);
+                Log::info('✅ Photo Deleted', ['filename' => $filename]);
                 return true;
             }
 
@@ -311,25 +325,6 @@ class LotterycreateController extends Controller
         } catch (Exception $e) {
             Log::error('Photo Delete Error: ' . $e->getMessage());
             return false;
-        }
-    }
-
-    public function statistics()
-    {
-        try {
-            $stats = [
-                'total' => Lottery::count(),
-                'active' => Lottery::where('status', 'active')->count(),
-                'inactive' => Lottery::where('status', 'inactive')->count(),
-                'completed' => Lottery::where('status', 'completed')->count(),
-                'upcoming' => Lottery::where('draw_date', '>', Carbon::now('Asia/Dhaka'))->count(),
-                'today' => Lottery::whereDate('draw_date', Carbon::today('Asia/Dhaka'))->count(),
-            ];
-
-            return response()->json($stats);
-        } catch (Exception $e) {
-            Log::error('Lottery Statistics Error: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to get statistics'], 500);
         }
     }
 }

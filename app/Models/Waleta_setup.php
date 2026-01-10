@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Waleta_setup extends Model
 {
    protected $casts = [
-    'status' => 'string',
-    'bankname' => 'string',
-    'accountnumber' => 'string',
-    'photo' => 'string',
-];
+        'bankname'      => 'array',  // JSON for multiple languages
+        'accountnumber' => 'array',  // JSON for multiple languages
+        'status'        => 'string',
+        'photo'         => 'string',
+    ];
 protected $fillable = [
     'status',
     'bankname',

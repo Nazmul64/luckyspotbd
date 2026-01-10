@@ -32,7 +32,10 @@ class UsertoadminchatController extends Controller
         $imagePath = null;
 
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('chat_images', 'public');
+            $image = $request->file('image');
+            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $image->move(public_path('uploads/admin_chat'), $imageName);
+            $imagePath = 'uploads/admin_chat/' . $imageName;
         }
 
         $chat = Usertoadminchat::create([
@@ -49,7 +52,7 @@ class UsertoadminchatController extends Controller
             'chat' => [
                 'id' => $chat->id,
                 'message' => $chat->message,
-                'image' => $imagePath ? asset('storage/' . $imagePath) : null,
+                'image' => $imagePath ? asset($imagePath) : null,
                 'time' => $chat->created_at->format('h:i A'),
                 'is_admin' => false,
             ]
@@ -83,7 +86,7 @@ class UsertoadminchatController extends Controller
             return [
                 'id' => $msg->id,
                 'message' => $msg->message,
-                'image' => $msg->image ? asset('storage/' . $msg->image) : null,
+                'image' => $msg->image ? asset($msg->image) : null,
                 'time' => $msg->created_at->format('h:i A'),
                 'is_admin' => $msg->sender_id == $adminId,
                 'is_read' => $msg->is_read,

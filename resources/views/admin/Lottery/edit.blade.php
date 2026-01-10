@@ -17,17 +17,37 @@
                 @csrf
                 @method('PUT')
 
-                {{-- Name --}}
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">
-                        Ticket Name <span class="text-danger">*</span>
-                    </label>
-                    <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                           value="{{ old('name', $lottery->name) }}"
-                           placeholder="Enter lottery name" required>
-                    @error('name')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                {{-- Multilingual Name - Admin Input (Both Languages) --}}
+                <h5 class="mt-4 mb-3 text-primary section-header">
+                    <i class="bi bi-translate"></i> Ticket Name (Multilingual)
+                </h5>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Edit names in both languages. Frontend will display based on user's language selection.
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">
+                            Name (English) <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="name_en" class="form-control @error('name_en') is-invalid @enderror"
+                            placeholder="Enter lottery name in English"
+                            value="{{ old('name_en', $lottery->getNameEnAttribute()) }}" required>
+                        @error('name_en')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">
+                            নাম (বাংলা) <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="name_bn" class="form-control @error('name_bn') is-invalid @enderror"
+                            placeholder="বাংলায় লটারির নাম লিখুন"
+                            value="{{ old('name_bn', $lottery->getNameBnAttribute()) }}" required>
+                        @error('name_bn')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
                 {{-- Price --}}
@@ -44,19 +64,36 @@
                     @enderror
                 </div>
 
-                {{-- Description --}}
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Description</label>
-                    <textarea name="description" class="form-control @error('description') is-invalid @enderror"
-                              rows="3" placeholder="Write lottery description...">{{ old('description', $lottery->description) }}</textarea>
-                    @error('description')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                {{-- Multilingual Description - Admin Input (Both Languages) --}}
+                <h5 class="mt-4 mb-3 text-primary section-header">
+                    <i class="bi bi-card-text"></i> Description (Multilingual)
+                </h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Description (English)</label>
+                        <textarea name="description_en" class="form-control @error('description_en') is-invalid @enderror"
+                            rows="4" placeholder="Write description in English...">{{ old('description_en', $lottery->getDescriptionEnAttribute()) }}</textarea>
+                        @error('description_en')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">বর্ণনা (বাংলা)</label>
+                        <textarea name="description_bn" class="form-control @error('description_bn') is-invalid @enderror"
+                            rows="4" placeholder="বাংলায় বর্ণনা লিখুন...">{{ old('description_bn', $lottery->getDescriptionBnAttribute()) }}</textarea>
+                        @error('description_bn')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
                 {{-- Photo --}}
+                <h5 class="mt-4 mb-3 text-primary section-header">
+                    <i class="bi bi-image"></i> Ticket Image
+                </h5>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Ticket Image</label>
+                    <label class="form-label fw-semibold">Upload New Image</label>
                     <input type="file" name="new_photo" class="form-control @error('new_photo') is-invalid @enderror"
                            accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" id="photoInput">
                     <small class="text-muted">Max size: 2MB. Formats: JPEG, PNG, JPG, GIF, WEBP</small>
@@ -66,20 +103,34 @@
 
                     {{-- Current Image --}}
                     @if($lottery->photo)
-                        <div class="mt-2" id="currentImage">
-                            <label class="form-label fw-semibold">Current Image:</label>
-                            <img src="{{ asset('uploads/lottery/'.$lottery->photo) }}"
-                                 class="img-thumbnail d-block"
-                                 style="max-width: 200px; max-height: 200px; object-fit: cover;"
-                                 alt="Current lottery image">
+                        <div class="mt-3" id="currentImage">
+                            <label class="form-label fw-semibold text-success">
+                                <i class="bi bi-check-circle"></i> Current Image:
+                            </label>
+                            <div class="position-relative d-inline-block">
+                                <img src="{{ asset('uploads/lottery/'.$lottery->photo) }}"
+                                     class="img-thumbnail d-block current-photo"
+                                     style="max-width: 200px; max-height: 200px; object-fit: cover;"
+                                     alt="Current lottery image">
+                                <span class="badge bg-success position-absolute top-0 start-0 m-2">
+                                    <i class="bi bi-image-fill"></i> Current
+                                </span>
+                            </div>
                         </div>
                     @endif
 
                     {{-- New Image Preview --}}
-                    <div id="imagePreview" class="mt-2" style="display: none;">
-                        <label class="form-label fw-semibold">New Image Preview:</label>
-                        <img id="previewImg" src="" alt="Preview" class="img-thumbnail d-block"
-                             style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                    <div id="imagePreview" class="mt-3" style="display: none;">
+                        <label class="form-label fw-semibold text-info">
+                            <i class="bi bi-eye"></i> New Image Preview:
+                        </label>
+                        <div class="position-relative d-inline-block">
+                            <img id="previewImg" src="" alt="Preview" class="img-thumbnail d-block new-photo"
+                                 style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                            <span class="badge bg-info position-absolute top-0 start-0 m-2">
+                                <i class="bi bi-star-fill"></i> New
+                            </span>
+                        </div>
                         <button type="button" class="btn btn-sm btn-danger mt-2" id="removePreview">
                             <i class="bi bi-x-circle"></i> Remove New Image
                         </button>
@@ -87,12 +138,14 @@
                 </div>
 
                 {{-- Prizes --}}
-                <h5 class="mt-4 mb-3 text-primary">
+                <h5 class="mt-4 mb-3 text-primary section-header">
                     <i class="bi bi-trophy"></i> Prize Information
                 </h5>
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label class="form-label fw-semibold">1st Prize (টাকা)</label>
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-trophy-fill text-warning"></i> 1st Prize (টাকা)
+                        </label>
                         <input type="number" step="0.01" min="0" name="first_prize"
                                class="form-control @error('first_prize') is-invalid @enderror"
                                value="{{ old('first_prize', $lottery->first_prize) }}"
@@ -102,7 +155,9 @@
                         @enderror
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label fw-semibold">2nd Prize (টাকা)</label>
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-award-fill text-secondary"></i> 2nd Prize (টাকা)
+                        </label>
                         <input type="number" step="0.01" min="0" name="second_prize"
                                class="form-control @error('second_prize') is-invalid @enderror"
                                value="{{ old('second_prize', $lottery->second_prize) }}"
@@ -112,7 +167,9 @@
                         @enderror
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label fw-semibold">3rd Prize (টাকা)</label>
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-star-fill text-info"></i> 3rd Prize (টাকা)
+                        </label>
                         <input type="number" step="0.01" min="0" name="third_prize"
                                class="form-control @error('third_prize') is-invalid @enderror"
                                value="{{ old('third_prize', $lottery->third_prize) }}"
@@ -124,8 +181,8 @@
                 </div>
 
                 {{-- Multiple Packages --}}
-                <h5 class="mt-4 mb-3 text-primary">
-                    <i class="bi bi-box-seam"></i> Multiple Packages (Optional)
+                <h5 class="mt-4 mb-3 text-primary section-header">
+                    <i class="bi bi-box-seam"></i> Best Gift (Optional)
                 </h5>
                 <div class="mb-3">
                     <div id="packages-wrapper">
@@ -133,7 +190,7 @@
                             $titles = old('multiple_title', $lottery->multiple_title ?? []);
                             $prices = old('multiple_price', $lottery->multiple_price ?? []);
                         @endphp
-                        @if(is_array($titles) && count($titles) > 0)
+                        @if(is_array($titles) && count($titles) > 0 && !empty(array_filter($titles)))
                             @foreach($titles as $i => $title)
                                 <div class="row mb-2 package-item">
                                     <div class="col-md-5">
@@ -164,21 +221,21 @@
                                            placeholder="Package Price (টাকা)">
                                 </div>
                                 <div class="col-md-2">
-                                    <button type="button" class="btn btn-success add-package w-100">
-                                        <i class="bi bi-plus-lg"></i>
+                                    <button type="button" class="btn btn-danger remove-package w-100">
+                                        <i class="bi bi-dash-lg"></i>
                                     </button>
                                 </div>
                             </div>
                         @endif
                     </div>
-                    <button type="button" class="btn btn-primary mb-3" id="add-package">
+                    <button type="button" class="btn btn-primary mt-2" id="add-package">
                         <i class="bi bi-plus-circle"></i> Add Package
                     </button>
-                    <small class="text-muted d-block">Add multiple package options with different prices</small>
+                    <small class="text-muted d-block mt-2">Add multiple package options with different prices</small>
                 </div>
 
                 {{-- Video Settings --}}
-                <h5 class="mt-4 mb-3 text-primary">
+                <h5 class="mt-4 mb-3 text-primary section-header">
                     <i class="bi bi-camera-video"></i> Video Settings (Live Draw)
                 </h5>
 
@@ -197,7 +254,7 @@
                     <input type="checkbox" name="video_enabled" value="1" class="form-check-input" id="video_enabled"
                         {{ old('video_enabled', $lottery->video_enabled) ? 'checked' : '' }}>
                     <label class="form-check-label fw-semibold" for="video_enabled">
-                        Enable Video Streaming
+                        <i class="bi bi-broadcast"></i> Enable Video Streaming
                     </label>
                 </div>
 
@@ -213,7 +270,7 @@
                 </div>
 
                 {{-- Draw Settings --}}
-                <h5 class="mt-4 mb-3 text-primary">
+                <h5 class="mt-4 mb-3 text-primary section-header">
                     <i class="bi bi-calendar-check"></i> Draw Settings
                 </h5>
 
@@ -274,7 +331,7 @@
                 </div>
 
                 {{-- Submit Button --}}
-                <div class="mt-4">
+                <div class="mt-4 d-flex gap-2">
                     <button type="submit" class="btn btn-success px-4 py-2">
                         <i class="bi bi-save"></i> Update Lottery
                     </button>
@@ -302,7 +359,6 @@ document.addEventListener('DOMContentLoaded', function() {
     photoInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
-            // Validate file size
             if (file.size > 2 * 1024 * 1024) {
                 alert('⚠️ File size must be less than 2MB!');
                 photoInput.value = '';
@@ -310,7 +366,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Validate file type
             const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
             if (!allowedTypes.includes(file.type)) {
                 alert('⚠️ Please select a valid image file!');
@@ -429,6 +484,12 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+.section-header {
+    border-bottom: 2px solid #0d6efd;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem !important;
+}
+
 .package-item {
     animation: slideIn 0.3s ease;
 }
@@ -444,16 +505,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
-#imagePreview img,
-#currentImage img {
+.current-photo, .new-photo {
     transition: all 0.3s ease;
     border: 2px solid #dee2e6;
 }
 
-#imagePreview img:hover,
-#currentImage img:hover {
+.current-photo:hover, .new-photo:hover {
     transform: scale(1.05);
     border-color: #0d6efd;
+    box-shadow: 0 4px 12px rgba(13,110,253,0.3);
+}
+
+#currentImage {
+    transition: opacity 0.3s ease;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 1px solid #2196f3;
+    color: #0d47a1;
+    font-size: 13px;
+    padding: 10px 15px;
+    border-radius: 8px;
 }
 </style>
 @endsection

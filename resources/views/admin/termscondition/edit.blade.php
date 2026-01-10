@@ -1,38 +1,30 @@
 @extends('admin.master')
 
 @section('admin')
-<div class="row">
-    <div class="col-12 mx-auto">
-        <h6 class="mb-3 text-uppercase">Edit Termscondition</h6>
+<div class="container mt-4">
+    <h4>Edit Terms & Conditions</h4>
 
-        <div class="card">
-            <div class="card-body">
-                <form action="{{ route('Termscondition.update', $termscondition->id) }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    @method('PUT')
-
-                    {{-- Title --}}
-                    <div class="mb-3">
-                        <label class="form-label">Title</label>
-                        <input type="text" name="title" class="form-control"
-                               value="{{ old('title', $termscondition->title) }}" placeholder="Enter Title">
-                        @error('title') <span class="text-danger">{{ $message }}</span> @enderror
-                    </div>
-
-                    {{-- Description --}}
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea name="description" id="description" class="form-control" rows="6">{{ old('description', $termscondition->description) }}</textarea>
-                        @error('description') <span class="text-danger">{{ $message }}</span> @enderror
-                    </div>
-
-                    <button type="submit" class="btn btn-success">Update Termscondition</button>
-                </form>
-            </div>
+    <form action="{{ route('Termscondition.update', $termscondition->id) }}" method="POST">
+        @csrf
+        @method('PUT')
+        <div class="mb-3">
+            <label>Title (EN)</label>
+            <input type="text" name="title_en" class="form-control" value="{{ old('title_en', $termscondition->title['en']) }}">
         </div>
-    </div>
+        <div class="mb-3">
+            <label>Title (BN)</label>
+            <input type="text" name="title_bn" class="form-control" value="{{ old('title_bn', $termscondition->title['bn']) }}">
+        </div>
+        <div class="mb-3">
+            <label>Description (EN)</label>
+            <textarea name="description_en" rows="5" class="form-control">{{ old('description_en', $termscondition->description['en']) }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label>Description (BN)</label>
+            <textarea name="description_bn" rows="5" class="form-control">{{ old('description_bn', $termscondition->description['bn']) }}</textarea>
+        </div>
+
+        <button type="submit" class="btn btn-success">Update</button>
+    </form>
 </div>
-
-
-
 @endsection

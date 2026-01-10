@@ -5,27 +5,34 @@
     <h4 class="mb-3">FAQ List</h4>
 
     <a href="{{ route('faq.create') }}" class="btn btn-primary mb-3">
-        + Add New FAQ
+        + Add FAQ
     </a>
 
-    <table class="table table-bordered table-striped">
+    <table class="table table-bordered">
         <thead>
             <tr>
-                <th width="5%">#</th>
-                <th>Question</th>
-                <th>Answer</th>
-                <th width="15%">Action</th>
+                <th>#</th>
+                <th>Title (EN)</th>
+                <th>Title (BN)</th>
+                <th>Question (EN)</th>
+                <th>Question (BN)</th>
+                <th>Answer (EN)</th>
+                <th>Answer (BN)</th>
+                <th width="20%">Action</th>
             </tr>
         </thead>
         <tbody>
             @forelse($faqs as $key => $faq)
             <tr>
-                <td>{{ $key + 1 }}</td>
-                <td>{{ $faq->question }}</td>
-                <td>{{ $faq->answer }}</td>
+                <td>{{ $faqs->firstItem() + $key }}</td>
+                <td>{{ $faq->title['en'] ?? '' }}</td>
+                <td>{{ $faq->title['bn'] ?? '' }}</td>
+                <td>{{ $faq->question['en'] ?? '' }}</td>
+                <td>{{ $faq->question['bn'] ?? '' }}</td>
+                <td>{{ Str::limit($faq->answer['en'] ?? '', 50) }}</td>
+                <td>{{ Str::limit($faq->answer['bn'] ?? '', 50) }}</td>
                 <td>
-                    <a href="{{ route('faq.edit',$faq->id) }}"
-                       class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{{ route('faq.edit',$faq->id) }}" class="btn btn-sm btn-warning">Edit</a>
 
                     <form action="{{ route('faq.destroy',$faq->id) }}"
                           method="POST" class="d-inline">
@@ -40,7 +47,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="4" class="text-center">No FAQ Found</td>
+                <td colspan="8" class="text-center">No FAQ Found</td>
             </tr>
             @endforelse
         </tbody>

@@ -130,10 +130,10 @@
                         <img src="{{ asset('frontend/assets/images/logo.png') }}" alt="logo">
                     </a>
                 </div>
-                <ul class="footer-links d-flex flex-wrap justify-content-center">
-                    <li><a href="{{ url('games') }}">Games</a></li>
-                    <li><a href="{{ url('terms-conditions') }}">Terms & Conditions</a></li>
-                    <li><a href="{{ url('policy') }}">Privacy Policy</a></li>
+                 <ul class="footer-links d-flex flex-wrap justify-content-center">
+                    <li><a href="#ticket">Ticket</a></li>
+                    <li><a href="{{route('trmsandcondation') }}">Terms & Conditions</a></li>
+                    <li><a href="{{ route('privacy.pages') }}">Privacy Policy</a></li>
                 </ul>
             </div>
         </div>

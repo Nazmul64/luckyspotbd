@@ -31,7 +31,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('frontend/assets/css/owl.carousel.min.css') }}">
-    <script src="{{ asset('frontend/assets/js/owl.carousel.min.js') }}"></script>
 
 </head>
 
@@ -67,7 +66,7 @@
                         </ul>
                     </li>
 
-                    <li><a href="{{ route('contact.pages') }}">{{ trans_db('nav_contact','contact') }}</a></li>
+                    <li><a href="{{ route('contact.pages') }}">{{ trans_db('nav_contact','Contact') }}</a></li>
 
                     @guest
                         <li><a href="{{ route('frontend.login') }}">{{ trans_db('nav_login','Login') }}</a></li>
@@ -127,28 +126,31 @@
 {{-- ================= JS ================= --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="{{ asset('frontend/assets/js/lib/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ asset('frontend/assets/js/owl.carousel.min.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
 <script>
-/* ---------- Toastr Config ---------- */
+/* ==================== Toastr Config ==================== */
 toastr.options = {
     closeButton: true,
     progressBar: true,
     positionClass: "toast-top-right",
     timeOut: 3000,
+    preventDuplicates: true
 };
 
-/* ---------- Session Alerts ---------- */
+/* ==================== Session Alerts ==================== */
 @foreach (['success','error','warning','info'] as $msg)
     @if(Session::has($msg))
         toastr["{{ $msg }}"]("{{ Session::get($msg) }}");
     @endif
 @endforeach
 
-/* ---------- Language Switch ---------- */
+/* ==================== Language Switch ==================== */
 function changeLanguage(lang) {
     const currentLang = "{{ app()->getLocale() }}";
 
+    // যদি একই language হয়
     if (lang === currentLang) {
         toastr.info(lang === 'en' ? 'Already in English' : 'ইতিমধ্যে বাংলায় আছে');
         return;
@@ -157,6 +159,7 @@ function changeLanguage(lang) {
     // Loading indicator
     toastr.info(lang === 'en' ? 'Changing to English...' : 'বাংলায় পরিবর্তন হচ্ছে...');
 
+    // AJAX Request
     $.ajax({
         url: "{{ route('language.change') }}",
         method: "POST",
@@ -164,35 +167,51 @@ function changeLanguage(lang) {
             _token: $('meta[name="csrf-token"]').attr('content'),
             lang: lang
         },
-        success: function (res) {
-            if (res.status) {
-                toastr.success(res.message);
+        success: function (response) {
+            console.log('Language change response:', response);
+
+            if (response.status) {
+                // Success notification
+                toastr.success(response.message);
 
                 // ✅ Page reload করুন নতুন language load করতে
                 setTimeout(() => {
-                    window.location.reload();
+                    window.location.reload(true); // Force reload from server
                 }, 800);
             } else {
-                toastr.error(res.message || 'Failed to change language');
+                toastr.error(response.message || 'Failed to change language');
             }
         },
-        error: function (xhr) {
-            console.error('Language change error:', xhr);
+        error: function (xhr, status, error) {
+            console.error('Language change error:', {
+                status: xhr.status,
+                statusText: xhr.statusText,
+                response: xhr.responseJSON,
+                error: error
+            });
 
+            // Handle different error types
             if (xhr.status === 419) {
-                toastr.error('Session expired. Reloading page...');
-                setTimeout(() => window.location.reload(), 1000);
+                toastr.error('Session expired. Please refresh the page.');
+                setTimeout(() => window.location.reload(true), 1500);
             } else if (xhr.status === 500) {
-                toastr.error('Server error. Please try again.');
+                toastr.error('Server error. Please try again later.');
+            } else if (xhr.status === 0) {
+                toastr.error('Network error. Please check your connection.');
             } else {
-                toastr.error('Failed to change language');
+                const errorMessage = xhr.responseJSON?.message || 'Failed to change language';
+                toastr.error(errorMessage);
             }
         }
     });
 }
 
-// ✅ Page load এ current language log করুন (debugging)
+/* ==================== Page Load Debug Info ==================== */
+console.log('=== Language Debug Info ===');
 console.log('Current Locale:', "{{ app()->getLocale() }}");
+console.log('Session Locale:', "{{ Session::get('locale', 'not set') }}");
+console.log('HTML Lang:', document.documentElement.lang);
+console.log('=========================');
 </script>
 </body>
 </html>

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('privacypolicies', function (Blueprint $table) {
             $table->id();
-            $table->string('title')->nullable();
+            $table->text('title')->nullable();
             $table->text('description')->nullable();
             $table->timestamps();
         });

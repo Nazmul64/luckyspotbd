@@ -6,136 +6,398 @@
     $secondaryColor = $activeTheme->secondary_color ?? '';
 @endphp
 
+<style>
+    .dashboard-sidebar-wrapper {
+        position: relative;
+    }
+
+    .dashboard-sidebar-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -3px;
+        left: -3px;
+        right: -3px;
+        bottom: -3px;
+        background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        border-radius: 18px;
+        z-index: 0;
+        box-shadow:
+            0 10px 40px rgba(51, 8, 103, 0.4),
+            0 6px 20px rgba(48, 207, 208, 0.3),
+            0 3px 10px rgba(0, 0, 0, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .dashboard-sidebar {
+        position: relative;
+        border-radius: 15px;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .dashboard-user-wrapper {
+        position: relative;
+    }
+
+    .dashboard-user-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        background: linear-gradient(135deg, rgba(48, 207, 208, 0.15) 0%, rgba(51, 8, 103, 0.15) 100%);
+        border-radius: 12px;
+        z-index: -1;
+        box-shadow:
+            0 8px 25px rgba(0, 0, 0, 0.12),
+            0 4px 12px rgba(0, 0, 0, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .user-thumb-shadow {
+        position: relative;
+        display: inline-block;
+        border-radius: 50%;
+    }
+
+    .user-thumb-shadow::before {
+        content: '';
+        position: absolute;
+        top: -3px;
+        left: -3px;
+        right: -3px;
+        bottom: -3px;
+        background: radial-gradient(circle, rgba(48, 207, 208, 0.3) 0%, rgba(51, 8, 103, 0.2) 70%, transparent 100%);
+        border-radius: 50%;
+        z-index: -1;
+        box-shadow:
+            0 6px 20px rgba(51, 8, 103, 0.3),
+            0 3px 10px rgba(48, 207, 208, 0.2);
+    }
+
+    .referral-input-shadow {
+        position: relative;
+    }
+
+    .referral-input-shadow::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(180deg, rgba(48, 207, 208, 0.05) 0%, rgba(51, 8, 103, 0.08) 100%);
+        border-radius: 6px;
+        z-index: -1;
+        box-shadow:
+            0 4px 12px rgba(51, 8, 103, 0.15),
+            inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .copy-btn-wrapper {
+        position: relative;
+    }
+
+    .copy-btn-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, rgba(48, 207, 208, 0.2) 0%, rgba(51, 8, 103, 0.3) 100%);
+        border-radius: 7px;
+        z-index: -1;
+        box-shadow:
+            0 6px 18px rgba(51, 8, 103, 0.3),
+            0 3px 8px rgba(48, 207, 208, 0.2),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .copy-btn-wrapper:hover::before {
+        box-shadow:
+            0 8px 25px rgba(51, 8, 103, 0.4),
+            0 5px 12px rgba(48, 207, 208, 0.3),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .dashboard-link-wrapper {
+        position: relative;
+        margin-bottom: 8px;
+    }
+
+    .dashboard-link-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -1px;
+        left: -1px;
+        right: -1px;
+        bottom: -1px;
+        background: linear-gradient(135deg, rgba(48, 207, 208, 0.08) 0%, rgba(51, 8, 103, 0.12) 100%);
+        border-radius: 9px;
+        z-index: -1;
+        box-shadow:
+            0 3px 10px rgba(51, 8, 103, 0.15),
+            0 1px 4px rgba(48, 207, 208, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .dashboard-link-wrapper:hover::before {
+        box-shadow:
+            0 6px 20px rgba(51, 8, 103, 0.25),
+            0 3px 8px rgba(48, 207, 208, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .dashboard-link-wrapper.active::before {
+        background: linear-gradient(135deg, rgba(48, 207, 208, 0.15) 0%, rgba(51, 8, 103, 0.2) 100%);
+        box-shadow:
+            0 4px 15px rgba(51, 8, 103, 0.25),
+            0 2px 6px rgba(48, 207, 208, 0.15),
+            inset 0 -1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .admin-back-wrapper {
+        position: relative;
+        margin-bottom: 15px;
+    }
+
+    .admin-back-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, rgba(48, 207, 208, 0.2) 0%, rgba(51, 8, 103, 0.3) 100%);
+        border-radius: 52px;
+        z-index: -1;
+        box-shadow:
+            0 8px 30px rgba(51, 8, 103, 0.3),
+            0 4px 15px rgba(48, 207, 208, 0.2),
+            inset 0 -2px 5px rgba(0, 0, 0, 0.15);
+    }
+
+    .activity-section.deposits {
+        background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+    }
+
+    /* Sidebar Toggle for Mobile */
+    @media (max-width: 991.98px) {
+        .dashboard-sidebar-wrapper {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 280px;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .dashboard-sidebar-wrapper.active {
+            left: 0;
+        }
+
+        .dashboard-sidebar {
+            background-color: transparent !important;
+        }
+
+        /* Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* Close button visible on mobile */
+        .close-dashboard {
+            display: block !important;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10000;
+            color: #fff !important;
+        }
+    }
+
+    @media (min-width: 992px) {
+        .close-dashboard {
+            display: none !important;
+        }
+    }
+</style>
+
+<!-- Sidebar Overlay for Mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <div class="col-lg-3">
-    <div class="dashboard-sidebar" style="background-color: {{ $primaryColor }}10;">
-        <div class="close-dashboard d-lg-none" style="color: {{ $secondaryColor }};">
-            <i class="las la-times"></i>
-        </div>
-
-        {{-- User Info --}}
-        <div class="dashboard-user" style="background-color: {{ $primaryColor }}20; border: 1px solid {{ $primaryColor }};">
-            <div class="user-thumb">
-                <img src="{{ $user && $user->profile_photo ? asset('uploads/profile/' . $user->profile_photo) : asset('assets/images/account/user.png') }}"
-                     alt="profile"
-                     style="border: 3px solid {{ $primaryColor }};">
+    <div class="dashboard-sidebar-wrapper" id="dashboardSidebar">
+        <div class="dashboard-sidebar" style="background-color: {{ $primaryColor }}10; padding: 20px;">
+            <div class="close-dashboard" id="closeSidebar" style="color: {{ $secondaryColor }};">
+                <i class="las la-times"></i>
             </div>
-            <div class="user-content">
-                <span class="fs-sm" style="color: {{ $secondaryColor }};">Welcome</span>
-                <h5 class="name" style="color: {{ $secondaryColor }};">{{ $user->name ?? 'User' }}</h5>
 
-                {{-- Referral URL --}}
-                <label for="referral-url" style="color: {{ $secondaryColor }};">Referral URL</label>
-                <input id="referral-url" type="text" readonly
-                       value="{{ $user && $user->ref_code ? url('/register?ref=' . $user->ref_code) : 'Referral code not available' }}"
-                       style="border: 1px solid {{ $primaryColor }}; background-color: #fff; padding: 8px; border-radius: 5px; width: 100%; {{ !$user || !$user->ref_code ? 'color:red;' : 'color:' . $secondaryColor . ';' }}" />
+            {{-- User Info --}}
+            <div class="dashboard-user-wrapper">
+                <div class="dashboard-user" style="background-color: {{ $primaryColor }}20; border: 1px solid {{ $primaryColor }}; border-radius: 10px; padding: 20px;">
+                    <div class="user-thumb-shadow">
+                        <div class="user-thumb">
+                            <img src="{{ $user && $user->profile_photo ? asset('uploads/profile/' . $user->profile_photo) : asset('assets/images/account/user.png') }}"
+                                 alt="profile"
+                                 style="border: 3px solid {{ $primaryColor }}; border-radius: 50%; width: 80px; height: 80px; object-fit: cover;">
+                        </div>
+                    </div>
+                    <div class="user-content" style="margin-top: 15px;">
+                        <span class="fs-sm" style="color: {{ $secondaryColor }};">{{ trans_db('Welcome', 'Welcome') }}</span>
+                        <h5 class="name" style="color: {{ $secondaryColor }}; margin: 5px 0 15px 0;">{{ $user->name ?? trans_db('User', 'User') }}</h5>
 
-                <button type="button"
-                        class="copy-btn"
-                        id="copyReferralBtn"
-                        style="background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 10px; cursor: pointer; width: 100%; font-weight: 600;">
-                    Copy
-                </button>
+                        {{-- Referral URL --}}
+                        <label for="referral-url" style="color: {{ $secondaryColor }}; display: block; margin-bottom: 8px; font-weight: 500;">{{ trans_db('Referral URL', 'Referral URL') }}</label>
+                        <div class="referral-input-shadow">
+                            <input id="referral-url" type="text" readonly
+                                   value="{{ $user && $user->ref_code ? url('/register?ref=' . $user->ref_code) : trans_db('Referral code not available', 'Referral code not available') }}"
+                                   style="border: 1px solid {{ $primaryColor }}; background-color: #fff; padding: 10px 12px; border-radius: 5px; width: 100%; {{ !$user || !$user->ref_code ? 'color:red;' : 'color:' . $secondaryColor . ';' }} font-size: 14px;" />
+                        </div>
+
+                        <div class="copy-btn-wrapper">
+                            <button type="button"
+                                    class="copy-btn"
+                                    id="copyReferralBtn"
+                                    style="background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; border: none; padding: 12px 20px; border-radius: 5px; margin-top: 12px; cursor: pointer; width: 100%; font-weight: 600; transition: all 0.3s ease;">
+                                {{ trans_db('Copy', 'Copy') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        {{-- Dashboard Links --}}
-        <ul class="user-dashboard-tab" style="list-style: none; padding: 0;">
-            {{-- Impersonate / Admin Back Button --}}
-            @if(session()->has('impersonate'))
-                <div class="header-controls mb-3">
-                    <a href="{{ route('admin.stopImpersonate') }}"
-                       style="background: {{ $primaryColor }}; color: {{ $secondaryColor }}; padding: 14px; border-radius: 50px; display: block; text-align: center; text-decoration: none; font-weight: 600;">
-                        Back to Admin
+            {{-- Dashboard Links --}}
+            <ul class="user-dashboard-tab" style="list-style: none; padding: 0; margin-top: 20px;">
+                {{-- Impersonate / Admin Back Button --}}
+                @if(session()->has('impersonate'))
+                    <div class="admin-back-wrapper">
+                        <a href="{{ route('admin.stopImpersonate') }}"
+                           style="background: {{ $primaryColor }}; color: {{ $secondaryColor }}; padding: 14px; border-radius: 50px; display: block; text-align: center; text-decoration: none; font-weight: 600;">
+                            {{ trans_db('Back to Admin', 'Back to Admin') }}
+                        </a>
+                    </div>
+                @endif
+
+                <div class="dashboard-link-wrapper active">
+                    <a href="{{ route('frontend.dashboard') }}"
+                       class="dashboard-link active"
+                       style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
+                        {{ trans_db('Dashboard', 'Dashboard') }}
                     </a>
                 </div>
-            @endif
 
-            <li style="margin-bottom: 5px;">
-                <a href="{{ route('frontend.dashboard') }}"
-                   class="dashboard-link active"
-                   style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
-                    Dashboard
-                </a>
-            </li>
-            <li style="margin-bottom: 5px;">
-                <a href="{{ route('deposte.index') }}"
-                   class="dashboard-link"
-                   style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
-                    Deposit Now
-                </a>
-            </li>
-            <li style="margin-bottom: 5px;">
-                <a href="{{route('Withdraw.index')}}"
-                   class="dashboard-link"
-                   style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
-                    Withdraw
-                </a>
-            </li>
-            <li style="margin-bottom: 5px;">
-                <a href="{{route('all.ticket')}}"
-                   class="dashboard-link"
-                   style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
-                    Ticket History
-                </a>
-            </li>
-            <li style="margin-bottom: 5px;">
-                <a href="{{ route('profile.index') }}"
-                   class="dashboard-link"
-                   style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
-                    Profile Settings
-                </a>
-            </li>
-             <li style="margin-bottom: 5px;">
-                <a href="{{ route('winnerlist.index') }}"
-                   class="dashboard-link"
-                   style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
-                    Winner List
-                </a>
-            </li>
-
-            <li style="margin-bottom: 5px;">
-                <a href="{{ route('password.index') }}"
-                   class="dashboard-link"
-                   style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
-                    Password Change
-                </a>
-            </li>
-             <li style="margin-bottom: 5px;">
-                <a href="{{ route('frontend.key') }}"
-                   class="dashboard-link"
-                   style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
-                    KYC Verification
-                </a>
-            </li>
-               <li style="margin-bottom: 5px;">
-                <a href="{{ route('supportcontact') }}"
-                   class="dashboard-link"
-                   style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
-                    Support Contact
-                </a>
-            </li>
-
-
-
-
-            {{-- Logout --}}
-            @auth
-                <li style="margin-bottom: 5px;">
-                    <a href="{{ route('frontend.logout') }}"
+                <div class="dashboard-link-wrapper">
+                    <a href="{{ route('deposte.index') }}"
                        class="dashboard-link"
-                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
                        style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
-                        Sign Out
+                        {{ trans_db('Deposit Now', 'Deposit Now') }}
                     </a>
-                </li>
-                <form id="logout-form" action="{{ route('frontend.logout') }}" method="POST" class="d-none">
-                    @csrf
-                </form>
-            @endauth
-        </ul>
+                </div>
+
+                <div class="dashboard-link-wrapper">
+                    <a href="{{route('Withdraw.index')}}"
+                       class="dashboard-link"
+                       style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
+                        {{ trans_db('Withdraw', 'Withdraw') }}
+                    </a>
+                </div>
+
+                <div class="dashboard-link-wrapper">
+                    <a href="{{route('all.ticket')}}"
+                       class="dashboard-link"
+                       style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
+                        {{ trans_db('Ticket History', 'Ticket History') }}
+                    </a>
+                </div>
+
+                <div class="dashboard-link-wrapper">
+                    <a href="{{ route('profile.index') }}"
+                       class="dashboard-link"
+                       style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
+                        {{ trans_db('Profile Settings', 'Profile Settings') }}
+                    </a>
+                </div>
+
+                <div class="dashboard-link-wrapper">
+                    <a href="{{ route('winnerlist.index') }}"
+                       class="dashboard-link"
+                       style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
+                        {{ trans_db('Winner List', 'Winner List') }}
+                    </a>
+                </div>
+
+                <div class="dashboard-link-wrapper">
+                    <a href="{{ route('password.index') }}"
+                       class="dashboard-link"
+                       style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
+                        {{ trans_db('Password Change', 'Password Change') }}
+                    </a>
+                </div>
+
+                <div class="dashboard-link-wrapper">
+                    <a href="{{ route('frontend.key') }}"
+                       class="dashboard-link"
+                       style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
+                        {{ trans_db('KYC Verification', 'KYC Verification') }}
+                    </a>
+                </div>
+
+                <div class="dashboard-link-wrapper">
+                    <a href="{{ route('supportcontact') }}"
+                       class="dashboard-link"
+                       style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
+                        {{ trans_db('Support Contact', 'Support Contact') }}
+                    </a>
+                </div>
+
+                <div class="dashboard-link-wrapper">
+                    <a href="{{ route('my.referrals') }}"
+                       class="dashboard-link"
+                       style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
+                        {{ trans_db('My Referrals', 'My Referrals') }}
+                    </a>
+                </div>
+
+                {{-- Logout --}}
+                @auth
+                    <div class="dashboard-link-wrapper">
+                        <a href="{{ route('frontend.logout') }}"
+                           class="dashboard-link"
+                           onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                           style="display: block; padding: 12px 20px; border-radius: 8px; text-decoration: none; color: {{ $secondaryColor }}; font-weight: 500; transition: all 0.3s ease;">
+                            {{ trans_db('Sign Out', 'Sign Out') }}
+                        </a>
+                    </div>
+                    <form id="logout-form" action="{{ route('frontend.logout') }}" method="POST" class="d-none">
+                        @csrf
+                    </form>
+                @endauth
+            </ul>
+        </div>
     </div>
 </div>
-
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -146,43 +408,95 @@
         const copyBtn = document.getElementById('copyReferralBtn');
         const referralInput = document.getElementById('referral-url');
 
-        copyBtn.addEventListener('click', function () {
-            if (!referralInput.value || referralInput.value === 'Referral code not available') {
-                alert('Referral code not available!');
-                return;
-            }
+        if (copyBtn && referralInput) {
+            copyBtn.addEventListener('click', function () {
+                const unavailableText = '{{ trans_db("Referral code not available", "Referral code not available") }}';
 
-            referralInput.select();
-            referralInput.setSelectionRange(0, 99999);
-            document.execCommand('copy');
-            alert('Referral link copied to clipboard!');
-        });
+                if (!referralInput.value || referralInput.value === unavailableText) {
+                    alert(unavailableText + '!');
+                    return;
+                }
+
+                referralInput.select();
+                referralInput.setSelectionRange(0, 99999);
+                document.execCommand('copy');
+
+                alert('{{ trans_db("Referral link copied to clipboard", "Referral link copied to clipboard!") }}');
+            });
+        }
 
         // Dynamic hover effects for dashboard links
         const dashboardLinks = document.querySelectorAll('.dashboard-link');
 
-        dashboardLinks.forEach(link => {
+        dashboardLinks.forEach((link) => {
             // Skip active link
             if (!link.classList.contains('active')) {
                 link.addEventListener('mouseenter', function() {
                     this.style.backgroundColor = primaryColor + '20';
                     this.style.color = secondaryColor;
+                    this.style.transform = 'translateX(5px)';
                 });
 
                 link.addEventListener('mouseleave', function() {
                     this.style.backgroundColor = 'transparent';
                     this.style.color = secondaryColor;
+                    this.style.transform = 'translateX(0)';
                 });
             }
         });
 
         // Copy button hover effect
-        copyBtn.addEventListener('mouseenter', function() {
-            this.style.opacity = '0.8';
-        });
+        if (copyBtn) {
+            copyBtn.addEventListener('mouseenter', function() {
+                this.style.opacity = '0.9';
+                this.style.transform = 'scale(1.02)';
+            });
 
-        copyBtn.addEventListener('mouseleave', function() {
-            this.style.opacity = '1';
-        });
+            copyBtn.addEventListener('mouseleave', function() {
+                this.style.opacity = '1';
+                this.style.transform = 'scale(1)';
+            });
+        }
+
+        // Mobile Sidebar Toggle
+        const userToggler = document.querySelector('.user-toggler');
+        const dashboardSidebar = document.getElementById('dashboardSidebar');
+        const closeSidebar = document.getElementById('closeSidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (userToggler) {
+            userToggler.addEventListener('click', function() {
+                dashboardSidebar.classList.add('active');
+                sidebarOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        }
+
+        if (closeSidebar) {
+            closeSidebar.addEventListener('click', function() {
+                dashboardSidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', function() {
+                dashboardSidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+        }
+
+        // Close sidebar when clicking on a link (mobile)
+        if (window.innerWidth < 992) {
+            dashboardLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    dashboardSidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                });
+            });
+        }
     });
 </script>

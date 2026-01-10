@@ -1,4 +1,5 @@
 <?php
+// app/Helpers/TranslationHelper.php (অথবা আপনার helper file)
 
 use App\Models\Text;
 use Illuminate\Support\Facades\App;
@@ -16,34 +17,41 @@ if (!function_exists('trans_db')) {
     function trans_db($key, $default = '')
     {
         if (empty($key)) {
-            return $default;
+            return $default ?: $key;
         }
 
+        // Current locale নিন
         $locale = App::getLocale();
 
         try {
             // Cache key তৈরি করুন
-            $cacheKey = "trans_db_{$locale}_{$key}";
+            $cacheKey = "trans_{$locale}_{$key}";
 
-            // Cache থেকে চেষ্টা করুন (5 minutes)
-            $value = Cache::remember($cacheKey, 300, function () use ($key, $locale, $default) {
+            // Cache থেকে চেষ্টা করুন (1 minute cache)
+            $value = Cache::remember($cacheKey, 60, function () use ($key, $locale, $default) {
+
+                // Database থেকে translation খুঁজুন
                 $text = Text::where('key', $key)
                            ->where('language_code', $locale)
                            ->first();
 
-                if ($text) {
+                if ($text && !empty($text->value)) {
                     return $text->value;
                 }
 
-                // ❗ Auto insert missing translation
+                // যদি না পাওয়া যায়, auto-create করুন
                 try {
-                    Text::create([
-                        'key' => $key,
-                        'language_code' => $locale,
-                        'value' => $default ?: $key,
-                    ]);
+                    Text::updateOrCreate(
+                        [
+                            'key' => $key,
+                            'language_code' => $locale
+                        ],
+                        [
+                            'value' => $default ?: $key
+                        ]
+                    );
                 } catch (\Exception $e) {
-                    Log::warning('Failed to auto-create translation', [
+                    Log::warning('Failed to create translation', [
                         'key' => $key,
                         'locale' => $locale,
                         'error' => $e->getMessage()
@@ -59,7 +67,8 @@ if (!function_exists('trans_db')) {
             Log::error('trans_db error', [
                 'key' => $key,
                 'locale' => $locale,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return $default ?: $key;

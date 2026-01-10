@@ -1,25 +1,36 @@
 <?php
+// app/Models/Text.php
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\App;
 
 class Text extends Model
 {
-    protected $fillable = ['key', 'language_code', 'value'];
+    use HasFactory;
+
+    protected $fillable = [
+        'key',
+        'language_code',
+        'value'
+    ];
 
     /**
-     * Get text by key for current locale
+     * Get translations by language
      */
-    public static function get($key, $default = '')
+    public static function getByLanguage($languageCode)
     {
-        $locale = App::getLocale();
+        return self::where('language_code', $languageCode)->get();
+    }
 
-        $text = self::where('key', $key)
-                   ->where('language_code', $locale)
+    /**
+     * Get translation by key
+     */
+    public static function getTranslation($key, $languageCode)
+    {
+        return self::where('key', $key)
+                   ->where('language_code', $languageCode)
                    ->first();
-
-        return $text ? $text->value : $default;
     }
 }

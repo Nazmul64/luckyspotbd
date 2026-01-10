@@ -13,8 +13,13 @@ return new class extends Migration
     {
         Schema::create('faqs', function (Blueprint $table) {
             $table->id();
-            $table->string('question');
-            $table->text('answer');
+
+            // Multilingual JSON columns
+            $table->json('title')->nullable();
+            $table->json('description')->nullable();
+            $table->json('question');
+            $table->json('answer');
+
             $table->timestamps();
         });
     }

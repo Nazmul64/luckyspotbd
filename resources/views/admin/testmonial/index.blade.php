@@ -4,65 +4,59 @@
 <div class="container mt-4">
     <h4 class="mb-3">Testimonial List</h4>
 
-    <a href="{{ route('testimonial.create') }}" class="btn btn-primary mb-3">
-        + Add Testimonial
-    </a>
+    <a href="{{ route('testimonial.create') }}" class="btn btn-primary mb-3">+ Add Testimonial</a>
 
     <table class="table table-bordered table-striped align-middle">
         <thead class="table-dark">
             <tr>
-                <th width="5%">#</th>
-                <th>Name</th>
-                <th>Designation</th>
-                <th>Message</th>
-                <th width="15%">Photo</th>
-                <th width="15%">Action</th>
+                <th>#</th>
+                <th>Name (EN)</th>
+                <th>Name (BN)</th>
+                <th>Designation (EN)</th>
+                <th>Designation (BN)</th>
+                <th>Message (EN)</th>
+                <th>Message (BN)</th>
+                <th>Title (EN)</th>
+                <th>Title (BN)</th>
+                <th>Description (EN)</th>
+                <th>Description (BN)</th>
+                <th>Photo</th>
+                <th>Action</th>
             </tr>
         </thead>
-
         <tbody>
             @forelse($testimonials as $key => $item)
             <tr>
                 <td>{{ $key + 1 }}</td>
-                <td>{{ $item->name }}</td>
-                <td>{{ $item->designation }}</td>
-                <td>{{ Str::limit($item->message, 50) }}</td>
-
-                {{-- Photo column --}}
+                <td>{{ $item->name['en'] ?? '' }}</td>
+                <td>{{ $item->name['bn'] ?? '' }}</td>
+                <td>{{ $item->designation['en'] ?? '' }}</td>
+                <td>{{ $item->designation['bn'] ?? '' }}</td>
+                <td>{{ Str::limit($item->message['en'] ?? '', 50) }}</td>
+                <td>{{ Str::limit($item->message['bn'] ?? '', 50) }}</td>
+                <td>{{ $item->title['en'] ?? '' }}</td>
+                <td>{{ $item->title['bn'] ?? '' }}</td>
+                <td>{{ $item->description['en'] ?? '' }}</td>
+                <td>{{ $item->description['bn'] ?? '' }}</td>
                 <td>
                     @if($item->photo)
-                        <img src="{{ asset($item->photo) }}"
-                             alt="photo"
-                             width="60"
-                             class="rounded">
+                        <img src="{{ asset($item->photo) }}" width="60" class="rounded">
                     @else
                         <span class="text-muted">No Photo</span>
                     @endif
                 </td>
-
-                {{-- Action column --}}
                 <td>
-                    <a href="{{ route('testimonial.edit', $item->id) }}"
-                       class="btn btn-sm btn-warning mb-1">
-                        Edit
-                    </a>
-
-                    <form action="{{ route('testimonial.destroy', $item->id) }}"
-                          method="POST" class="d-inline">
+                    <a href="{{ route('testimonial.edit', $item->id) }}" class="btn btn-sm btn-warning mb-1">Edit</a>
+                    <form action="{{ route('testimonial.destroy', $item->id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')
-                        <button onclick="return confirm('Are you sure?')"
-                                class="btn btn-sm btn-danger">
-                            Delete
-                        </button>
+                        <button onclick="return confirm('Are you sure?')" class="btn btn-sm btn-danger">Delete</button>
                     </form>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="6" class="text-center text-muted">
-                    No Data Found
-                </td>
+                <td colspan="13" class="text-center text-muted">No Data Found</td>
             </tr>
             @endforelse
         </tbody>

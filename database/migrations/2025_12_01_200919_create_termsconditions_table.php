@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('termsconditions', function (Blueprint $table) {
             $table->id();
-            $table->string('title')->nullable();
-            $table->text('description')->nullable();
+            $table->json('title')->nullable();
+            $table->json('description')->nullable();
             $table->timestamps();
         });
     }

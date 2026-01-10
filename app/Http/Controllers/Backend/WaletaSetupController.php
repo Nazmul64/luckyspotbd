@@ -2,137 +2,107 @@
 
 namespace App\Http\Controllers\Backend;
 
-use App\Models\cr;
 use App\Http\Controllers\Controller;
 use App\Models\Waleta_setup;
 use Illuminate\Http\Request;
 
 class WaletaSetupController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // Index - List all wallet settings
     public function index()
     {
-        $walate = Waleta_setup::all();
-        return view('admin.waletesetting.index',compact('walate'));
+        $walates = Waleta_setup::all();
+        return view('admin.waletesetting.index', compact('walates'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    // Create form
     public function create()
     {
-         return view('admin.waletesetting.create');
+        return view('admin.waletesetting.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-   public function store(Request $request)
-{
-    $request->validate([
-        'bankname'      => 'required|string|max:255',
-        'accountnumber' => 'required|string|max:255',
-        'photo'         => 'required|image|mimes:jpg,jpeg,webp,web,png,gif|max:2048',
-        'status'        => 'required|in:active,inactive',
-    ]);
-
-    // Handle file upload
-    $photoName = null;
-    if ($request->hasFile('photo')) {
-        $photoName = time() . '.' . $request->photo->extension();
-        $request->photo->move(public_path('uploads/waletesetting'), $photoName);
-    }
-
-    // Save data
-    Waleta_setup::create([
-        'bankname'      => $request->bankname,
-        'accountnumber' => $request->accountnumber,
-        'photo'         => $photoName,
-        'status'        => $request->status,
-    ]);
-
-    return redirect()->route('waletesetting.index')->with('success', 'Wallet setting created successfully.');
-}
-
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(cr $cr)
+    // Store
+    public function store(Request $request)
     {
-        //
-    }
+        $request->validate([
+            'bankname_en'      => 'required|string|max:255',
+            'bankname_bn'      => 'required|string|max:255',
+            'accountnumber_en' => 'required|string|max:255',
+            'accountnumber_bn' => 'required|string|max:255',
+            'photo'            => 'required|image|mimes:jpg,jpeg,png,webp,gif|max:2048',
+            'status'           => 'required|in:active,inactive',
+        ]);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-       $Waleta_setup=Waleta_setup::find($id);
-       return view('admin.waletesetting.edit',compact('Waleta_setup'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
- public function update(Request $request, $id)
-{
-    $Waleta_setup = Waleta_setup::findOrFail($id);
-
-    // Validate inputs
-    $request->validate([
-        'bankname'      => 'required|string|max:255',
-        'accountnumber' => 'required|string|max:255',
-        'photo'         => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-        'status'        => 'required|in:active,inactive',
-    ]);
-
-    // Prepare photo name
-    $photoName = $Waleta_setup->photo; // keep old photo by default
-
-    // If new photo uploaded
-    if ($request->hasFile('photo')) {
-        // Delete old photo if exists
-        if ($Waleta_setup->photo && file_exists(public_path('uploads/waletesetting/' . $Waleta_setup->photo))) {
-            unlink(public_path('uploads/waletesetting/' . $Waleta_setup->photo));
+        // Handle photo upload
+        $photoName = null;
+        if ($request->hasFile('photo')) {
+            $photoName = time().'.'.$request->photo->extension();
+            $request->photo->move(public_path('uploads/waletesetting'), $photoName);
         }
 
-        // Save new photo
-        $photoName = time() . '.' . $request->photo->extension();
-        $request->photo->move(public_path('uploads/waletesetting'), $photoName);
+        // Save
+        Waleta_setup::create([
+            'bankname'      => ['en' => $request->bankname_en, 'bn' => $request->bankname_bn],
+            'accountnumber' => ['en' => $request->accountnumber_en, 'bn' => $request->accountnumber_bn],
+            'photo'         => $photoName,
+            'status'        => $request->status,
+        ]);
+
+        return redirect()->route('waletesetting.index')->with('success', 'Wallet setting created successfully.');
     }
 
-    // Update record
-    $Waleta_setup->update([
-        'bankname'      => $request->bankname,
-        'accountnumber' => $request->accountnumber,
-        'photo'         => $photoName,
-        'status'        => $request->status,
-    ]);
-
-    return redirect()->route('waletesetting.index')->with('success', 'Wallet setting updated successfully.');
-}
-
-
-    /**
-     * Remove the specified resource from storage.
-     */
-  public function destroy($id)
-{
-    $Waleta_setup = Waleta_setup::findOrFail($id);
-
-    // Delete photo from server if exists
-    if ($Waleta_setup->photo && file_exists(public_path('uploads/waletesetting/' . $Waleta_setup->photo))) {
-        unlink(public_path('uploads/waletesetting/' . $Waleta_setup->photo));
+    // Edit form
+    public function edit($id)
+    {
+        $walate = Waleta_setup::findOrFail($id);
+        return view('admin.waletesetting.edit', compact('walate'));
     }
 
-    // Delete record from database
-    $Waleta_setup->delete();
+    // Update
+    public function update(Request $request, $id)
+    {
+        $walate = Waleta_setup::findOrFail($id);
 
-    return redirect()->route('waletesetting.index')
-                     ->with('success', 'Wallet setting deleted successfully.');
-}
+        $request->validate([
+            'bankname_en'      => 'required|string|max:255',
+            'bankname_bn'      => 'required|string|max:255',
+            'accountnumber_en' => 'required|string|max:255',
+            'accountnumber_bn' => 'required|string|max:255',
+            'photo'            => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:2048',
+            'status'           => 'required|in:active,inactive',
+        ]);
 
+        // Handle photo
+        $photoName = $walate->photo;
+        if ($request->hasFile('photo')) {
+            if ($walate->photo && file_exists(public_path('uploads/waletesetting/'.$walate->photo))) {
+                unlink(public_path('uploads/waletesetting/'.$walate->photo));
+            }
+            $photoName = time().'.'.$request->photo->extension();
+            $request->photo->move(public_path('uploads/waletesetting'), $photoName);
+        }
+
+        $walate->update([
+            'bankname'      => ['en' => $request->bankname_en, 'bn' => $request->bankname_bn],
+            'accountnumber' => ['en' => $request->accountnumber_en, 'bn' => $request->accountnumber_bn],
+            'photo'         => $photoName,
+            'status'        => $request->status,
+        ]);
+
+        return redirect()->route('waletesetting.index')->with('success', 'Wallet setting updated successfully.');
+    }
+
+    // Delete
+    public function destroy($id)
+    {
+        $walate = Waleta_setup::findOrFail($id);
+
+        if ($walate->photo && file_exists(public_path('uploads/waletesetting/'.$walate->photo))) {
+            unlink(public_path('uploads/waletesetting/'.$walate->photo));
+        }
+
+        $walate->delete();
+
+        return redirect()->route('waletesetting.index')->with('success', 'Wallet setting deleted successfully.');
+    }
 }

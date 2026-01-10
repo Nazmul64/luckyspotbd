@@ -6,14 +6,14 @@
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="mb-0">
-            <i class="bi bi-ticket-perforated"></i>  Tickets Management
+            <i class="bi bi-ticket-perforated"></i> Lottery Tickets Management
         </h4>
         <a href="{{ route('lottery.create') }}" class="btn btn-success">
             <i class="bi bi-plus-lg"></i> Create New Ticket
         </a>
     </div>
 
-    {{-- Success Message --}}
+    {{-- Success/Error Messages --}}
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
@@ -21,7 +21,6 @@
         </div>
     @endif
 
-    {{-- Error Message --}}
     @if(session('error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             {{ session('error') }}
@@ -99,7 +98,7 @@
                                 <td class="text-center">
                                     @if($lottery->photo)
                                         <img src="{{ asset('uploads/lottery/'.$lottery->photo) }}"
-                                             alt="{{ $lottery->name }}"
+                                             alt="{{ $lottery->getTranslatedName() }}"
                                              class="img-thumbnail lottery-thumb"
                                              width="60" height="60"
                                              style="object-fit: cover; cursor: pointer;"
@@ -112,11 +111,19 @@
                                     @endif
                                 </td>
 
-                                {{-- Name & Description --}}
+                                {{-- Name (Single Language Based on App Locale) --}}
                                 <td>
-                                    <strong class="text-dark">{{ $lottery->name }}</strong>
-                                    @if($lottery->description)
-                                        <br><small class="text-muted">{{ Str::limit($lottery->description, 50) }}</small>
+                                    <strong class="text-dark d-block mb-2" style="font-size: 15px;">
+                                        {{ $lottery->getTranslatedName() }}
+                                    </strong>
+
+                                    @php
+                                        $description = $lottery->getTranslatedDescription();
+                                    @endphp
+                                    @if($description)
+                                        <small class="text-muted d-block">
+                                            {{ Str::limit($description, 60) }}
+                                        </small>
                                     @endif
                                 </td>
 
@@ -152,7 +159,7 @@
                                                 <div class="modal-content">
                                                     <div class="modal-header bg-primary text-white">
                                                         <h5 class="modal-title">
-                                                            <i class="bi bi-box-seam"></i> {{ $lottery->name }} - Packages
+                                                            <i class="bi bi-box-seam"></i> {{ $lottery->getTranslatedName() }} - Packages
                                                         </h5>
                                                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                                     </div>
@@ -201,8 +208,6 @@
                                                 <i class="bi bi-clock"></i>
                                                 {{ $lottery->video_scheduled_at->format('h:i A') }}
                                             </small>
-                                        @else
-                                            <br><small class="text-muted">Not scheduled</small>
                                         @endif
                                     @else
                                         <span class="badge bg-secondary">
@@ -325,16 +330,13 @@
 
 {{-- JavaScript --}}
 <script>
-// Image Modal Preview
 function showImageModal(imageSrc) {
     document.getElementById('modalImage').src = imageSrc;
     const modal = new bootstrap.Modal(document.getElementById('imageModal'));
     modal.show();
 }
 
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-dismiss alerts after 5 seconds
     const alerts = document.querySelectorAll('.alert-dismissible');
     alerts.forEach(alert => {
         setTimeout(() => {
@@ -343,7 +345,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     });
 
-    // Initialize tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
@@ -352,27 +353,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-/* Card hover animations */
-.card {
-    transition: all 0.3s ease;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
-}
-
-/* Table row hover effect */
-.table-hover tbody tr {
-    transition: all 0.2s ease;
-}
-
-.table-hover tbody tr:hover {
-    background-color: #f8f9fa;
-    transform: scale(1.01);
-}
-
-/* Image thumbnail hover effect */
 .lottery-thumb {
     transition: all 0.3s ease;
     border: 2px solid #dee2e6;
@@ -385,61 +365,17 @@ document.addEventListener('DOMContentLoaded', function() {
     z-index: 10;
 }
 
-/* Status badges */
-.badge {
-    font-size: 0.85rem;
-    padding: 0.35rem 0.65rem;
-    font-weight: 500;
+.card {
+    transition: all 0.3s ease;
 }
 
-/* Action buttons */
-.btn-group .btn {
-    margin: 0;
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
 }
 
-.btn-group .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-/* Modal animations */
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-50px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.modal-dialog {
-    animation: slideDown 0.3s ease;
-}
-
-/* Empty state styling */
-.empty-state {
-    padding: 3rem;
-}
-
-.empty-state i {
-    color: #dee2e6;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .table-responsive {
-        font-size: 0.875rem;
-    }
-
-    .btn-group {
-        flex-direction: column;
-    }
-
-    .btn-group .btn {
-        margin-bottom: 2px;
-    }
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
 }
 </style>
 @endsection

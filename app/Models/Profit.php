@@ -16,6 +16,8 @@ class Profit extends Model
         'amount' => 'decimal:2',
         'level' => 'integer',
     ];
-
+   public function fromUser() {
+        return $this->belongsTo(User::class, 'from_user_id');
+    }
 
 }

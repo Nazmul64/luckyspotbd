@@ -94,7 +94,7 @@
                             <input id="check1" type="checkbox" name="remember">
                             <label for="check1">Remember me</label>
                         </div>
-                        <a href="#" class="forgot-pass d-block text--base">Forgot Password ?</a>
+                        <a href="{{route('password.forget')}}" class="forgot-pass d-block text--base">Forgot Password ?</a>
                     </div>
                 </form>
             </div>

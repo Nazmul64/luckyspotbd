@@ -1,217 +1,576 @@
-{{-- resources/views/frontend/dashboard/maincontent.blade.php --}}
-
 @php
     use Carbon\Carbon;
+
+    // ============================================
+    // CONFIGURATION & SETUP
+    // ============================================
 
     // Fetch active theme colors from database
     $activeTheme = \App\Models\ThemeSetting::where('status', 1)->first();
     $primaryColor = $activeTheme->primary_color ?? '#F5CE0D';
     $secondaryColor = $activeTheme->secondary_color ?? '#000000';
 
-    // Set timezone to Bangladesh
+    // Set timezone to Bangladesh Standard Time (BST = UTC+6)
     date_default_timezone_set('Asia/Dhaka');
+
+    // Get current locale for translations
+    $currentLocale = app()->getLocale();
+
+    // Get current server time in Bangladesh timezone
+    $serverNow = Carbon::now('Asia/Dhaka');
+    $serverTimestamp = $serverNow->timestamp * 1000; // JavaScript timestamp
 @endphp
 
-<div class="user-toggler-wrapper d-flex align-items-center d-lg-none" style="background-color: {{ $primaryColor }}20; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-    <h4 class="title m-0" style="color: {{ $secondaryColor }}; flex: 1;">User Dashboard</h4>
-    <div class="user-toggler" style="background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; padding: 10px; border-radius: 5px; cursor: pointer;">
-        <i class="las la-sliders-h"></i>
+    <style>
+        /* ====================================
+           GLOBAL STYLES & VARIABLES
+        ==================================== */
+        :root {
+            --primary-color: {{ $primaryColor }};
+            --secondary-color: {{ $secondaryColor }};
+            --primary-rgb: {{ hexToRgb($primaryColor) }};
+            --secondary-rgb: {{ hexToRgb($secondaryColor) }};
+            --transition-speed: 0.3s;
+            --border-radius-sm: 8px;
+            --border-radius-md: 12px;
+            --border-radius-lg: 15px;
+            --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ====================================
+           GRADIENT SHADOW EFFECTS
+        ==================================== */
+        .gradient-shadow {
+            position: relative;
+        }
+
+        .gradient-shadow::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+            border-radius: inherit;
+            z-index: -1;
+            opacity: 0.8;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .gradient-shadow-sm::before {
+            box-shadow: 0 6px 20px rgba(51, 8, 103, 0.25),
+                        0 3px 10px rgba(48, 207, 208, 0.15);
+        }
+
+        .gradient-shadow-md::before {
+            box-shadow: 0 8px 30px rgba(51, 8, 103, 0.3),
+                        0 4px 15px rgba(48, 207, 208, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-shadow-lg::before {
+            box-shadow: 0 12px 40px rgba(51, 8, 103, 0.35),
+                        0 6px 20px rgba(48, 207, 208, 0.25),
+                        inset 0 2px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .gradient-shadow:hover::before {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 50px rgba(51, 8, 103, 0.45),
+                        0 8px 25px rgba(48, 207, 208, 0.35);
+        }
+
+        /* ====================================
+           ANIMATIONS
+        ==================================== */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .blink-icon {
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        .pulse-icon {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* ====================================
+           COMPONENT STYLES
+        ==================================== */
+
+        /* User Toggler */
+        .user-toggler-wrapper {
+            background: linear-gradient(135deg,
+                        rgba(var(--primary-rgb), 0.1) 0%,
+                        rgba(var(--primary-rgb), 0.2) 100%);
+            padding: 15px;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 20px;
+            border: 2px solid var(--primary-color);
+        }
+
+        .user-toggler {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 10px 15px;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .user-toggler:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        /* Dashboard Cards */
+        .dashboard-card {
+            background: linear-gradient(135deg,
+                        rgba(var(--primary-rgb), 0.15) 0%,
+                        rgba(var(--primary-rgb), 0.25) 100%);
+            border: 2px solid var(--primary-color);
+            border-radius: var(--border-radius-md);
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .dashboard-card-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3em;
+            color: var(--primary-color);
+            opacity: 0.3;
+        }
+
+        /* Game Cards */
+        .game-card {
+            background: linear-gradient(135deg,
+                        rgba(var(--primary-rgb), 0.1) 0%,
+                        rgba(var(--secondary-rgb), 0.1) 100%);
+            border: 2px solid var(--primary-color);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            transition: all var(--transition-speed) ease;
+            position: relative;
+        }
+
+        .game-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .game-card-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: var(--border-radius-md);
+            border: 3px solid var(--primary-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Buttons */
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            border: none;
+            padding: 15px 30px;
+            border-radius: var(--border-radius-sm);
+            width: 100%;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary-custom:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+
+        /* Prize Information Box */
+        .prize-info-box {
+            background-color: rgba(var(--secondary-rgb), 0.05);
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            border-radius: var(--border-radius-sm);
+            margin: 15px 0;
+        }
+
+        /* Video Container */
+        .video-container {
+            border-radius: var(--border-radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            border: 3px solid var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .video-responsive {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            background: #000;
+        }
+
+        .video-responsive iframe,
+        .video-responsive video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Video Coming Soon Box */
+        .video-coming-soon {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            padding: 30px;
+            border-radius: var(--border-radius-md);
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Transaction Table */
+        .transaction-table-container {
+            background: linear-gradient(135deg,
+                        rgba(var(--primary-rgb), 0.05) 0%,
+                        rgba(var(--secondary-rgb), 0.05) 100%);
+            border-radius: var(--border-radius-lg);
+            padding: 25px;
+            border: 2px solid var(--primary-color);
+        }
+
+        .transaction-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+
+        .transaction-table thead th {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .transaction-table thead th:first-child {
+            border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
+        }
+
+        .transaction-table thead th:last-child {
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+        }
+
+        .transaction-table tbody tr {
+            background-color: rgba(var(--secondary-rgb), 0.03);
+            transition: all var(--transition-speed) ease;
+        }
+
+        .transaction-table tbody tr:hover {
+            background-color: rgba(var(--primary-rgb), 0.1);
+            transform: scale(1.01);
+        }
+
+        .transaction-table tbody td {
+            padding: 15px;
+            color: var(--secondary-color);
+        }
+
+        .transaction-table tbody td:first-child {
+            border-left: 3px solid var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-approved {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-pending {
+            background-color: #ffc107;
+            color: var(--secondary-color);
+        }
+
+        .status-rejected {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .dashboard-card {
+                padding: 20px;
+            }
+
+            .game-card {
+                margin-bottom: 20px;
+            }
+
+            .transaction-table-container {
+                overflow-x: auto;
+            }
+        }
+
+        /* Utility Classes */
+        .text-primary { color: var(--primary-color) !important; }
+        .text-secondary { color: var(--secondary-color) !important; }
+        .bg-primary { background-color: var(--primary-color) !important; }
+        .bg-secondary { background-color: var(--secondary-color) !important; }
+    </style>
+</head>
+<body>
+
+<!-- ====================================
+     USER TOGGLER (Mobile Only)
+==================================== -->
+<div class="gradient-shadow gradient-shadow-sm" style="border-radius: var(--border-radius-sm);">
+    <div class="user-toggler-wrapper d-flex align-items-center d-lg-none">
+        <h4 class="title m-0 text-secondary" style="flex: 1;">
+            {{ trans_db('User Dashboard', 'User Dashboard') }}
+        </h4>
+        <div class="user-toggler">
+            <i class="las la-sliders-h"></i>
+        </div>
     </div>
 </div>
 
+<!-- ====================================
+     DASHBOARD STATISTICS CARDS
+==================================== -->
 <div class="row justify-content-center g-4">
 
-    <!-- Total Deposit -->
+    <!-- Total Deposit Card -->
     <div class="col-lg-6 col-xl-4 col-md-6 col-sm-10">
-        <div class="dashboard-card" style="background: linear-gradient(135deg, {{ $primaryColor }}20 0%, {{ $primaryColor }}40 100%); border: 2px solid {{ $primaryColor }}; border-radius: 12px; padding: 25px; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s ease;">
-            <div style="position: relative; z-index: 2;">
-                <h2 style="color: {{ $secondaryColor }}; font-size: 2em; font-weight: bold; margin-bottom: 10px;">
-                    {{ round($total_deposite ?? 0) }} {{(trans_db('টাকা','টাকা'))}}
-                </h2>
-                <p style="color: {{ $secondaryColor }}; opacity: 0.8; font-size: 1.1em; margin: 0;">
-                    {{ trans_db('Total Deposit','Total Deposit') }}
-
-                </p>
-            </div>
-            <div style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 3em; color: {{ $primaryColor }}; opacity: 0.3;">
-                <i class="las la-wallet"></i>
+        <div class="gradient-shadow gradient-shadow-md fade-in" style="border-radius: var(--border-radius-md); margin-bottom: 20px;">
+            <div class="dashboard-card">
+                <div style="position: relative; z-index: 2;">
+                    <h2 class="text-secondary" style="font-size: 2em; font-weight: bold; margin-bottom: 10px;">
+                        {{ number_format(round($total_deposite ?? 0)) }} {{ trans_db('টাকা','টাকা') }}
+                    </h2>
+                    <p class="text-secondary" style="opacity: 0.8; font-size: 1.1em; margin: 0;">
+                        {{ trans_db('Total Deposit','Total Deposit') }}
+                    </p>
+                </div>
+                <div class="dashboard-card-icon">
+                    <i class="las la-wallet"></i>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Total Balance -->
+    <!-- Total Balance Card -->
     <div class="col-lg-6 col-xl-4 col-md-6 col-sm-10">
-        <div class="dashboard-card" style="background: linear-gradient(135deg, {{ $primaryColor }}20 0%, {{ $primaryColor }}40 100%); border: 2px solid {{ $primaryColor }}; border-radius: 12px; padding: 25px; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s ease;">
-            <div style="position: relative; z-index: 2;">
-                <h2 style="color: {{ $secondaryColor }}; font-size: 2em; font-weight: bold; margin-bottom: 10px;">
-                    {{ round($total_balance ?? 0) }} {{(trans_db('টাকা','টাকা'))}}
-                </h2>
-                <p style="color: {{ $secondaryColor }}; opacity: 0.8; font-size: 1.1em; margin: 0;">
-                    {{ trans_db('Total Balance','Total Balance') }}
-                </p>
-            </div>
-            <div style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 3em; color: {{ $primaryColor }}; opacity: 0.3;">
-                <i class="las la-wallet"></i>
+        <div class="gradient-shadow gradient-shadow-md fade-in" style="border-radius: var(--border-radius-md); margin-bottom: 20px; animation-delay: 0.1s;">
+            <div class="dashboard-card">
+                <div style="position: relative; z-index: 2;">
+                    <h2 class="text-secondary" style="font-size: 2em; font-weight: bold; margin-bottom: 10px;">
+                        {{ number_format(round($total_balance ?? 0)) }} {{ trans_db('টাকা','টাকা') }}
+                    </h2>
+                    <p class="text-secondary" style="opacity: 0.8; font-size: 1.1em; margin: 0;">
+                        {{ trans_db('Total Balance','Total Balance') }}
+                    </p>
+                </div>
+                <div class="dashboard-card-icon">
+                    <i class="las la-coins"></i>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Total Withdraw -->
+    <!-- Total Withdraw Card -->
     <div class="col-lg-6 col-xl-4 col-md-6 col-sm-10">
-        <div class="dashboard-card" style="background: linear-gradient(135deg, {{ $primaryColor }}20 0%, {{ $primaryColor }}40 100%); border: 2px solid {{ $primaryColor }}; border-radius: 12px; padding: 25px; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s ease;">
-            <div style="position: relative; z-index: 2;">
-                <h2 style="color: {{ $secondaryColor }}; font-size: 2em; font-weight: bold; margin-bottom: 10px;">
-                    {{ round($total_withdraw ?? 0) }} {{(trans_db('টাকা','টাকা'))}}
-                </h2>
-                <p style="color: {{ $secondaryColor }}; opacity: 0.8; font-size: 1.1em; margin: 0;">
-                    {{ trans_db('Total Withdraw','Total Withdraw') }}
-                </p>
-            </div>
-            <div style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 3em; color: {{ $primaryColor }}; opacity: 0.3;">
-                <i class="las la-wallet"></i>
+        <div class="gradient-shadow gradient-shadow-md fade-in" style="border-radius: var(--border-radius-md); margin-bottom: 20px; animation-delay: 0.2s;">
+            <div class="dashboard-card">
+                <div style="position: relative; z-index: 2;">
+                    <h2 class="text-secondary" style="font-size: 2em; font-weight: bold; margin-bottom: 10px;">
+                        {{ number_format(round($total_withdraw ?? 0)) }} {{ trans_db('টাকা','টাকা') }}
+                    </h2>
+                    <p class="text-secondary" style="opacity: 0.8; font-size: 1.1em; margin: 0;">
+                        {{ trans_db('Total Withdraw','Total Withdraw') }}
+                    </p>
+                </div>
+                <div class="dashboard-card-icon">
+                    <i class="las la-hand-holding-usd"></i>
+                </div>
             </div>
         </div>
     </div>
 
 </div>
 
-<!-- LOTTERY PACKAGES SECTION -->
+<!-- ====================================
+     LOTTERY PACKAGES SECTION
+==================================== -->
 <div class="row gy-4 justify-content-center pt-5">
-    @forelse($package_show as $package)
+    @forelse($package_show as $index => $package)
+        @php
+            // Calculate times in Bangladesh timezone
+            $drawDate = $package->draw_date
+                ? Carbon::parse($package->draw_date, 'UTC')->setTimezone('Asia/Dhaka')
+                : null;
+            $drawTimestamp = $drawDate ? $drawDate->timestamp * 1000 : 0;
+
+            $videoScheduledAt = $package->video_scheduled_at
+                ? Carbon::parse($package->video_scheduled_at, 'UTC')->setTimezone('Asia/Dhaka')
+                : null;
+            $videoTimestamp = $videoScheduledAt ? $videoScheduledAt->timestamp * 1000 : 0;
+
+            // Determine if video should be shown
+            $shouldShowVideo = false;
+            if ($package->video_enabled && $package->video_url && $videoScheduledAt) {
+                $shouldShowVideo = $serverNow->gte($videoScheduledAt);
+            }
+
+            // Prepare video embed URL
+            $embedUrl = '';
+            $isYouTube = false;
+            if ($package->video_url) {
+                $videoUrl = trim($package->video_url);
+                if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/', $videoUrl, $matches)) {
+                    $videoId = $matches[1];
+                    $embedUrl = "https://www.youtube.com/embed/{$videoId}?autoplay=1&mute=0&rel=0&modestbranding=1&controls=1";
+                    $isYouTube = true;
+                } else {
+                    $embedUrl = $videoUrl;
+                }
+            }
+
+            // Get translated content
+            $lotteryName = $package->getTranslatedName();
+            $lotteryDescription = $package->getTranslatedDescription();
+
+            // Animation delay for staggered effect
+            $animationDelay = $index * 0.1;
+        @endphp
+
         <div class="col-lg-6 col-xl-4 col-md-6 col-sm-6">
-            <div class="game-card" style="background: linear-gradient(135deg, {{ $primaryColor }}15 0%, {{ $secondaryColor }}15 100%); border: 2px solid {{ $primaryColor }}; border-radius: 15px; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.15); transition: all 0.3s ease; position: relative;">
-                <div style="padding: 20px;">
+            <div class="gradient-shadow gradient-shadow-lg fade-in" style="border-radius: var(--border-radius-lg); margin-bottom: 25px; animation-delay: {{ $animationDelay }}s;">
+                <div class="game-card">
+                    <div style="padding: 20px;">
 
-                    @php
-                        // ========================================
-                        // BANGLADESH TIME ZONE (BST = UTC+6)
-                        // ========================================
+                        @auth
+                            {{-- AUTHENTICATED USER VIEW --}}
+                            <form method="POST" action="{{ route('buy.package', $package->id) }}">
+                                @csrf
 
-                        // Current server time in Bangladesh timezone
-                        $serverNow = Carbon::now('Asia/Dhaka');
-                        $serverTimestamp = $serverNow->timestamp * 1000;
+                                <!-- Lottery Image -->
+                                <div style="margin-bottom: 20px;">
+                                    <img src="{{ asset('uploads/Lottery/' . ($package->photo ?? 'default.png')) }}"
+                                         alt="{{ $lotteryName }}"
+                                         class="game-card-image"
+                                         onerror="this.src='{{ asset('uploads/lottery/default.png') }}'">
+                                </div>
 
-                        // Draw Date in Bangladesh timezone
-                        $drawDate = $package->draw_date
-                            ? Carbon::parse($package->draw_date, 'UTC')->setTimezone('Asia/Dhaka')
-                            : null;
-                        $drawTimestamp = $drawDate ? $drawDate->timestamp * 1000 : 0;
-
-                        // Video Scheduled Time in Bangladesh timezone
-                        $videoScheduledAt = $package->video_scheduled_at
-                            ? Carbon::parse($package->video_scheduled_at, 'UTC')->setTimezone('Asia/Dhaka')
-                            : null;
-                        $videoTimestamp = $videoScheduledAt ? $videoScheduledAt->timestamp * 1000 : 0;
-
-                        // Video Show Logic
-                        $shouldShowVideo = false;
-                        if ($package->video_enabled && $package->video_url && $videoScheduledAt) {
-                            $shouldShowVideo = $serverNow->gte($videoScheduledAt);
-                        }
-
-                        // Video Embed URL
-                        $embedUrl = '';
-                        if ($package->video_url) {
-                            $videoUrl = trim($package->video_url);
-                            if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/', $videoUrl, $matches)) {
-                                $videoId = $matches[1];
-                                $embedUrl = "https://www.youtube.com/embed/{$videoId}?autoplay=1&mute=0&rel=0&modestbranding=1&controls=1";
-                            } else {
-                                $embedUrl = $videoUrl;
-                            }
-                        }
-
-                        $isYouTube = $package->video_url && (str_contains($package->video_url, 'youtube.com') || str_contains($package->video_url, 'youtu.be'));
-
-                        // Debug Log
-                        \Log::info("Package {$package->id} - Bangladesh Time", [
-                            'server_now_bst' => $serverNow->format('Y-m-d H:i:s'),
-                            'video_scheduled_bst' => $videoScheduledAt ? $videoScheduledAt->format('Y-m-d H:i:s') : 'null',
-                            'draw_date_bst' => $drawDate ? $drawDate->format('Y-m-d H:i:s') : 'null',
-                            'should_show' => $shouldShowVideo ? 'YES' : 'NO',
-                            'time_diff' => $videoScheduledAt ? $serverNow->diffInSeconds($videoScheduledAt, false) . ' seconds' : 'N/A',
-                        ]);
-                    @endphp
-
-                    {{-- 🐛 DEBUG INFO (Admin Only) --}}
-                    @if(auth()->check() && auth()->user()->email === 'admin@example.com')
-                        <div style="font-size: 0.8em; margin: 10px; padding: 10px; background-color: {{ $primaryColor }}20; border: 1px solid {{ $primaryColor }}; border-radius: 5px; color: {{ $secondaryColor }};">
-                            <strong style="color: {{ $secondaryColor }};">🐛 Debug Info (ID: {{ $package->id }})</strong><br>
-                            <span style="color: {{ $secondaryColor }};">Server Time (BST): {{ $serverNow->format('Y-m-d H:i:s') }}</span><br>
-                            <span style="color: {{ $secondaryColor }};">Video Time (BST): {{ $videoScheduledAt ? $videoScheduledAt->format('Y-m-d H:i:s') : 'null' }}</span><br>
-                            <span style="color: {{ $secondaryColor }};">Draw Time (BST): {{ $drawDate ? $drawDate->format('Y-m-d H:i:s') : 'null' }}</span><br>
-                            <span style="color: {{ $secondaryColor }};">Should Show: {{ $shouldShowVideo ? 'YES ✅' : 'NO ❌' }}</span><br>
-                            <span style="color: {{ $secondaryColor }};">Server Timestamp: {{ $serverTimestamp }}</span><br>
-                            <span style="color: {{ $secondaryColor }};">Video Timestamp: {{ $videoTimestamp }}</span><br>
-                            <span style="color: {{ $secondaryColor }};">Draw Timestamp: {{ $drawTimestamp }}</span>
-                        </div>
-                    @endif
-
-                    {{-- AUTHENTICATED USER --}}
-                    @auth
-                        <form method="POST" action="{{ route('buy.package', $package->id) }}">
-                            @csrf
-
-                            <div style="border-radius: 12px; overflow: hidden; margin-bottom: 20px; border: 3px solid {{ $primaryColor }}; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-                                <img src="{{ asset('uploads/Lottery/' . ($package->photo ?? 'default.png')) }}"
-                                     alt="{{ $package->name }}"
-                                     style="width: 100%; height: auto; display: block;"
-                                     onerror="this.src='{{ asset('assets/images/default-lottery.png') }}'">
-                            </div>
-
-                            <div>
-                                <h4 style="color: {{ $secondaryColor }}; font-size: 1.5em; font-weight: bold; margin-bottom: 10px;">
-                                    {{ $package->name ?? 'N/A' }}
+                                <!-- Lottery Title & Description -->
+                                <h4 class="text-secondary" style="font-size: 1.5em; font-weight: bold; margin-bottom: 10px;">
+                                    {{ $lotteryName ?: trans_db('N/A', 'N/A') }}
                                 </h4>
 
-                                <p style="background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 0.9em; font-weight: 600; margin-bottom: 10px;">
-                                    {{ ucfirst($package->win_type ?? 'N/A') }}
-                                </p>
-
-                                <p style="color: {{ $primaryColor }}; font-size: 1.8em; font-weight: bold; margin-bottom: 15px;">
-                                    {{ $package->price ? number_format($package->price, 0) . ' টাকা' : '0 টাকা' }}
-                                </p>
-
-                                <p style="color: {{ $secondaryColor }}; margin-bottom: 10px; font-size: 0.95em;">
-                                    <i class="fas fa-calendar-alt" style="color: {{ $primaryColor }};"></i>
-                                    <span style="font-weight: 600;">Draw Date:</span> {{ $drawDate ? $drawDate->format('d M, Y h:i A') : 'Not Set' }}
-                                </p>
-
-                                {{-- Prize Information --}}
-                                <div style="background-color: {{ $secondaryColor }}10; border-left: 4px solid {{ $primaryColor }}; padding: 15px; border-radius: 8px; margin-top: 15px; margin-bottom: 15px;">
-                                    <p style="color: {{ $secondaryColor }}; margin-bottom: 8px; font-size: 0.95em;">
-                                        <i class="fas fa-trophy" style="color: {{ $primaryColor }};"></i>
-                                        <span style="font-weight: 600;">1st Prize:</span> {{ number_format($package->first_prize ?? 0, 0) }} টাকা
+                                @if($lotteryDescription)
+                                    <p class="text-secondary" style="opacity: 0.8; margin-bottom: 15px; font-size: 0.95em;">
+                                        {{ Str::limit($lotteryDescription, 100) }}
                                     </p>
-                                    <p style="color: {{ $secondaryColor }}; margin-bottom: 8px; font-size: 0.95em;">
-                                        <i class="fas fa-medal" style="color: {{ $primaryColor }};"></i>
-                                        <span style="font-weight: 600;">2nd Prize:</span> {{ number_format($package->second_prize ?? 0, 0) }} টাকা
+                                @endif
+
+                                <!-- Win Type Badge -->
+                                <p style="background-color: var(--primary-color); color: var(--secondary-color); display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 0.9em; font-weight: 600; margin-bottom: 10px;">
+                                    {{ ucfirst($package->win_type ?? trans_db('N/A', 'N/A')) }}
+                                </p>
+
+                                <!-- Price -->
+                                <p class="text-primary" style="font-size: 1.8em; font-weight: bold; margin-bottom: 15px;">
+                                    {{ number_format($package->price ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}
+                                </p>
+
+                                <!-- Draw Date -->
+                                <p class="text-secondary" style="margin-bottom: 15px; font-size: 0.95em;">
+                                    <i class="fas fa-calendar-alt text-primary"></i>
+                                    <span style="font-weight: 600;">{{ trans_db('Draw Date', 'Draw Date') }}:</span>
+                                    {{ $drawDate ? $drawDate->format('d M, Y h:i A') : trans_db('Not Set', 'Not Set') }}
+                                </p>
+
+                                <!-- Prize Information -->
+                                <div class="prize-info-box">
+                                    <p class="text-secondary" style="margin-bottom: 8px; font-size: 0.95em;">
+                                        <i class="fas fa-trophy text-primary"></i>
+                                        <span style="font-weight: 600;">{{ trans_db('1st Prize', '1st Prize') }}:</span>
+                                        {{ number_format($package->first_prize ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}
                                     </p>
-                                    <p style="color: {{ $secondaryColor }}; margin-bottom: 0; font-size: 0.95em;">
-                                        <i class="fas fa-award" style="color: {{ $primaryColor }};"></i>
-                                        <span style="font-weight: 600;">3rd Prize:</span> {{ number_format($package->third_prize ?? 0, 0) }} টাকা
+                                    <p class="text-secondary" style="margin-bottom: 8px; font-size: 0.95em;">
+                                        <i class="fas fa-medal text-primary"></i>
+                                        <span style="font-weight: 600;">{{ trans_db('2nd Prize', '2nd Prize') }}:</span>
+                                        {{ number_format($package->second_prize ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}
+                                    </p>
+                                    <p class="text-secondary" style="margin-bottom: 0; font-size: 0.95em;">
+                                        <i class="fas fa-award text-primary"></i>
+                                        <span style="font-weight: 600;">{{ trans_db('3rd Prize', '3rd Prize') }}:</span>
+                                        {{ number_format($package->third_prize ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}
                                     </p>
                                 </div>
 
-                                <div style="background-color: {{ $primaryColor }}15; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                                    <p style="color: {{ $secondaryColor }}; margin-bottom: 0; font-size: 0.95em;">
-                                        <i class="fas fa-users" style="color: {{ $primaryColor }};"></i>
-                                        <span style="font-weight: 600;">Total Participants:</span> {{ $total_buyer }}
+                                <!-- Total Participants -->
+                                <div style="background-color: rgba(var(--primary-rgb), 0.1); padding: 12px; border-radius: var(--border-radius-sm); margin-bottom: 15px;">
+                                    <p class="text-secondary" style="margin-bottom: 0; font-size: 0.95em;">
+                                        <i class="fas fa-users text-primary"></i>
+                                        <span style="font-weight: 600;">{{ trans_db('Total Participants', 'Total Participants') }}:</span>
+                                        {{ $total_buyer }}
                                     </p>
                                 </div>
 
-                                {{-- Multiple Packages --}}
+                                <!-- Multiple Packages/Gifts -->
                                 @if(is_array($package->multiple_title) && count($package->multiple_title) > 0)
-                                    <div style="background: linear-gradient(135deg, {{ $primaryColor }}15 0%, {{ $secondaryColor }}10 100%); padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid {{ $primaryColor }};">
-                                        <h6 style="color: {{ $secondaryColor }}; margin-bottom: 12px; font-weight: bold; font-size: 1.1em;">
-                                            <i class="fas fa-box-open" style="color: {{ $primaryColor }};"></i> Best Gift:
+                                    <div style="background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1) 0%, rgba(var(--secondary-rgb), 0.05) 100%); padding: 15px; border-radius: var(--border-radius-sm); margin-top: 15px; border: 1px solid var(--primary-color);">
+                                        <h6 class="text-secondary" style="margin-bottom: 12px; font-weight: bold; font-size: 1.1em;">
+                                            <i class="fas fa-box-open text-primary"></i>
+                                            {{ trans_db('Best Gift', 'Best Gift') }}:
                                         </h6>
                                         <ul style="list-style: none; padding: 0; margin: 0;">
-                                            @foreach($package->multiple_title as $index => $title)
+                                            @foreach($package->multiple_title as $idx => $title)
                                                 @if($title)
-                                                    <li style="color: {{ $secondaryColor }}; margin-bottom: 8px; padding-left: 25px; position: relative; font-size: 0.9em;">
-                                                        <i class="fas fa-check-circle" style="color: {{ $primaryColor }}; position: absolute; left: 0; top: 2px;"></i>
-                                                        <strong>{{ $title }}</strong> - {{ number_format($package->multiple_price[$index] ?? 0, 0) }} টাকা
+                                                    <li class="text-secondary" style="margin-bottom: 8px; padding-left: 25px; position: relative; font-size: 0.9em;">
+                                                        <i class="fas fa-check-circle text-primary" style="position: absolute; left: 0; top: 2px;"></i>
+                                                        <strong>{{ $title }}</strong> - {{ number_format($package->multiple_price[$idx] ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}
                                                     </li>
                                                 @endif
                                             @endforeach
@@ -219,7 +578,7 @@
                                     </div>
                                 @endif
 
-                                {{-- Video Section --}}
+                                <!-- Video Section -->
                                 @if($package->video_enabled && $embedUrl)
                                     <div class="video-section" style="margin-top: 20px;"
                                          id="video-section-{{ $package->id }}"
@@ -230,36 +589,36 @@
                                          data-embed-url="{{ $embedUrl }}">
 
                                         @if($shouldShowVideo)
-                                            {{-- Video is LIVE --}}
-                                            <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.3); margin-bottom: 15px; border: 3px solid {{ $primaryColor }};">
+                                            <!-- LIVE Video Display -->
+                                            <div class="video-container">
                                                 @if($isYouTube)
-                                                    <div style="position: relative; padding-bottom: 56.25%; height: 0; background: #000;">
-                                                        <iframe
-                                                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
-                                                            src="{{ $embedUrl }}"
-                                                            title="Lottery Live Draw"
-                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                            allowfullscreen>
+                                                    <div class="video-responsive">
+                                                        <iframe src="{{ $embedUrl }}"
+                                                                title="Lottery Live Draw"
+                                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                                allowfullscreen>
                                                         </iframe>
                                                     </div>
                                                 @else
                                                     <video controls autoplay playsinline
-                                                        style="width: 100%; border-radius: 12px; background: #000;"
-                                                        poster="{{ asset('uploads/Lottery/' . ($package->photo ?? 'default.png')) }}">
+                                                           style="width: 100%; border-radius: var(--border-radius-md); background: #000;"
+                                                           poster="{{ asset('uploads/Lottery/' . ($package->photo ?? 'default.png')) }}">
                                                         <source src="{{ $package->video_url }}" type="video/mp4">
                                                         Your browser does not support the video tag.
                                                     </video>
                                                 @endif
                                             </div>
-                                            <p style="color: {{ $primaryColor }}; margin-top: 10px; font-weight: bold; font-size: 1.1em; text-align: center;">
-                                                <i class="fas fa-circle blink-icon" style="color: #ff0000;"></i> LIVE NOW
+                                            <p class="text-primary" style="margin-top: 10px; font-weight: bold; font-size: 1.1em; text-align: center;">
+                                                <i class="fas fa-circle blink-icon" style="color: #ff0000;"></i>
+                                                {{ trans_db('LIVE NOW', 'LIVE NOW') }}
                                             </p>
                                         @else
-                                            {{-- Video Coming Soon --}}
-                                            <div style="background: linear-gradient(135deg, {{ $primaryColor }} 0%, {{ $secondaryColor }} 100%); padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.2);">
+                                            <!-- Video Coming Soon -->
+                                            <div class="video-coming-soon">
                                                 <i class="fas fa-video pulse-icon" style="font-size: 3.5em; color: white; margin-bottom: 20px; display: block;"></i>
                                                 <h5 style="color: white; margin-bottom: 15px; font-size: 1.3em; font-weight: bold;">
-                                                    <i class="fas fa-broadcast-tower"></i> Live Draw Coming Soon!
+                                                    <i class="fas fa-broadcast-tower"></i>
+                                                    {{ trans_db('Live Draw Coming Soon', 'Live Draw Coming Soon!') }}
                                                 </h5>
                                                 @if($videoTimestamp > 0)
                                                     <p class="video-countdown"
@@ -267,435 +626,415 @@
                                                        data-server-time="{{ $serverTimestamp }}"
                                                        data-package-id="{{ $package->id }}"
                                                        style="color: white; font-size: 1.2em; font-weight: bold; margin-bottom: 15px;">
-                                                       <i class="fas fa-clock"></i> Calculating...
+                                                       <i class="fas fa-clock"></i> {{ trans_db('Calculating', 'Calculating...') }}
                                                     </p>
                                                 @endif
                                                 <p style="color: white; font-size: 0.95em; opacity: 0.95; margin-bottom: 0;">
                                                     <i class="fas fa-calendar-check"></i>
-                                                    Video Start: {{ $videoScheduledAt ? $videoScheduledAt->format('d M, Y h:i A') : 'Not Set' }}
+                                                    {{ trans_db('Video Start', 'Video Start') }}:
+                                                    {{ $videoScheduledAt ? $videoScheduledAt->format('d M, Y h:i A') : trans_db('Not Set', 'Not Set') }}
                                                 </p>
                                             </div>
                                         @endif
                                     </div>
                                 @endif
 
-                                <button type="submit"
-                                        class="buy-btn"
-                                        style="background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; border: none; padding: 15px 30px; border-radius: 8px; margin-top: 20px; width: 100%; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                                    <i class="fas fa-ticket-alt"></i> Buy Ticket
-                                </button>
-                            </div>
-                        </form>
-                    @else
-                        {{-- GUEST USER --}}
-                        <div style="border-radius: 12px; overflow: hidden; margin-bottom: 20px; border: 3px solid {{ $primaryColor }};">
-                            <img src="{{ asset('uploads/Lottery/' . ($package->photo ?? 'default.png')) }}"
-                                 alt="{{ $package->name }}"
-                                 style="width: 100%; height: auto; display: block;">
-                        </div>
+                                <!-- Buy Ticket Button -->
+                                <div class="gradient-shadow gradient-shadow-sm" style="margin-top: 20px; border-radius: var(--border-radius-sm);">
+                                    <button type="submit" class="btn-primary-custom">
+                                        <i class="fas fa-ticket-alt"></i> {{ trans_db('Buy Ticket', 'Buy Ticket') }}
+                                    </button>
+                                </div>
 
-                        <div>
-                            <h4 style="color: {{ $secondaryColor }}; font-size: 1.5em; font-weight: bold; margin-bottom: 15px;">
-                                {{ $package->name ?? 'N/A' }}
+                            </form>
+
+                        @else
+                            {{-- GUEST USER VIEW --}}
+                            <div style="margin-bottom: 20px;">
+                                <img src="{{ asset('uploads/Lottery/' . ($package->photo ?? 'default.png')) }}"
+                                     alt="{{ $lotteryName }}"
+                                     class="game-card-image">
+                            </div>
+
+                            <h4 class="text-secondary" style="font-size: 1.5em; font-weight: bold; margin-bottom: 15px;">
+                                {{ $lotteryName ?: trans_db('N/A', 'N/A') }}
                             </h4>
 
+                            @if($lotteryDescription)
+                                <p class="text-secondary" style="opacity: 0.8; margin-bottom: 15px; font-size: 0.95em;">
+                                    {{ Str::limit($lotteryDescription, 100) }}
+                                </p>
+                            @endif
+
+                            <!-- Show Video if LIVE for Guest Users -->
                             @if($package->video_enabled && $embedUrl && $shouldShowVideo)
-                                <div style="margin-top: 20px; margin-bottom: 20px;">
-                                    <div style="border-radius: 12px; overflow: hidden; border: 3px solid {{ $primaryColor }};">
-                                        @if($isYouTube)
-                                            <div style="position: relative; padding-bottom: 56.25%; height: 0;">
-                                                <iframe
-                                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
-                                                    src="{{ $embedUrl }}"
+                                <div class="video-container" style="margin-top: 20px; margin-bottom: 20px;">
+                                    @if($isYouTube)
+                                        <div class="video-responsive">
+                                            <iframe src="{{ $embedUrl }}"
                                                     allowfullscreen>
-                                                </iframe>
-                                            </div>
-                                        @else
-                                            <video controls autoplay src="{{ $package->video_url }}" style="width: 100%;"></video>
-                                        @endif
-                                    </div>
+                                            </iframe>
+                                        </div>
+                                    @else
+                                        <video controls autoplay src="{{ $package->video_url }}" style="width: 100%;"></video>
+                                    @endif
                                 </div>
                             @endif
 
-                            <a href="{{ route('frontend.login') }}"
-                               class="login-btn"
-                               style="background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; border: none; padding: 15px 30px; border-radius: 8px; margin-top: 20px; width: 100%; display: block; text-align: center; text-decoration: none; font-size: 1.1em; font-weight: bold; transition: all 0.3s ease;">
-                                <i class="fas fa-sign-in-alt"></i> Login to Play
-                            </a>
-                        </div>
-                    @endauth
+                            <!-- Login to Play Button -->
+                            <div class="gradient-shadow gradient-shadow-sm" style="margin-top: 20px; border-radius: var(--border-radius-sm);">
+                                <a href="{{ route('frontend.login') }}" class="btn-primary-custom">
+                                    <i class="fas fa-sign-in-alt"></i> {{ trans_db('Login to Play', 'Login to Play') }}
+                                </a>
+                            </div>
+                        @endauth
 
+                    </div>
+
+                    <!-- Decorative Circle -->
+                    <div style="position: absolute; width: 60px; height: 60px; background-color: var(--primary-color); opacity: 0.1; border-radius: 50%; bottom: -30px; right: -30px;"></div>
                 </div>
-                <div style="position: absolute; width: 60px; height: 60px; background-color: {{ $primaryColor }}; opacity: 0.1; border-radius: 50%; bottom: -30px; right: -30px;"></div>
             </div>
         </div>
+
     @empty
+        <!-- No Packages Available -->
         <div class="col-12">
-            <div class="text-center py-5" style="background-color: {{ $primaryColor }}10; border-radius: 15px; padding: 50px; border: 2px dashed {{ $primaryColor }};">
-                <i class="fas fa-inbox" style="font-size: 64px; color: {{ $primaryColor }}; opacity: 0.5; margin-bottom: 20px;"></i>
-                <h4 style="color: {{ $secondaryColor }}; margin-top: 20px;">No lottery packages available</h4>
+            <div class="fade-in" style="text-align: center; padding: 50px; background-color: {{ $primaryColor }}15; border-radius: var(--border-radius-lg); border: 2px dashed {{ $primaryColor }};">
+                <i class="fas fa-inbox" style="font-size: 64px; color: {{ $primaryColor }}; opacity: 0.5; margin-bottom: 20px; display: block;"></i>
+                <h4 style="color: {{ $secondaryColor }}; margin-top: 20px; font-size: 1.3em;">
+                    {{ trans_db('No lottery packages available', 'No lottery packages available') }}
+                </h4>
+                <p style="color: {{ $secondaryColor }}; opacity: 0.7; margin-top: 10px;">
+                    {{ trans_db('Please check back later for new lottery packages', 'Please check back later for new lottery packages') }}
+                </p>
             </div>
         </div>
     @endforelse
 </div>
 
-<!-- =======================
+<!-- ====================================
      TRANSACTION HISTORY
-=========================== -->
-<div class="mt-5" style="background: linear-gradient(135deg, {{ $primaryColor }}10 0%, {{ $secondaryColor }}10 100%); border-radius: 15px; padding: 25px; border: 2px solid {{ $primaryColor }}; box-shadow: 0 6px 20px rgba(0,0,0,0.1);">
-    <h3 style="color: {{ $secondaryColor }}; margin-bottom: 25px; font-weight: bold; padding-bottom: 15px; border-bottom: 3px solid {{ $primaryColor }};">
-        <i class="fas fa-history" style="color: {{ $primaryColor }};"></i> Transaction History
-    </h3>
+==================================== -->
+<div class="mt-5">
+    <div class="gradient-shadow gradient-shadow-md fade-in" style="border-radius: var(--border-radius-lg);">
+        <div class="transaction-table-container">
+            <h3 class="text-secondary" style="margin-bottom: 25px; font-weight: bold; padding-bottom: 15px; border-bottom: 3px solid var(--primary-color);">
+                <i class="fas fa-history text-primary"></i>
+                {{ trans_db('Transaction History', 'Transaction History') }}
+            </h3>
 
-    <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: separate; border-spacing: 0 10px;">
-            <thead>
-                <tr>
-                    <th style="background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; padding: 15px; text-align: left; font-weight: bold; border-radius: 8px 0 0 8px;">Transaction ID</th>
-                    <th style="background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; padding: 15px; text-align: left; font-weight: bold;">Type</th>
-                    <th style="background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; padding: 15px; text-align: left; font-weight: bold;">Date</th>
-                    <th style="background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; padding: 15px; text-align: left; font-weight: bold;">Amount</th>
-                    <th style="background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; padding: 15px; text-align: left; font-weight: bold; border-radius: 0 8px 8px 0;">Status</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @forelse($deposite_history as $deposit)
-                    <tr class="table-row" style="background-color: {{ $secondaryColor }}05; transition: all 0.3s ease;">
-                        <td style="padding: 15px; color: {{ $secondaryColor }}; border-left: 3px solid {{ $primaryColor }}; font-weight: 600;">
-                            {{ $deposit->transaction_id ?? '#' . $deposit->id }}
-                        </td>
-                        <td style="padding: 15px; color: {{ $secondaryColor }};">
-                            <span style="background-color: {{ $deposit->amount > 0 ? $primaryColor : $secondaryColor }}20; padding: 5px 12px; border-radius: 15px; font-size: 0.9em; font-weight: 600;">
-                                {{ $deposit->amount > 0 ? 'Deposit' : 'Withdraw' }}
-                            </span>
-                        </td>
-                        <td style="padding: 15px; color: {{ $secondaryColor }};">
-                            {{ $deposit->created_at ? $deposit->created_at->format('d M, Y h:i A') : 'N/A' }}
-                        </td>
-                        <td style="padding: 15px; color: {{ $primaryColor }}; font-weight: bold; font-size: 1.1em;">
-                            ${{ number_format($deposit->amount, 2) }}
-                        </td>
-                        <td style="padding: 15px;">
-                            @if($deposit->status == 'approved')
-                                <span style="background-color: #28a745; color: white; padding: 6px 15px; border-radius: 20px; font-size: 0.85em; font-weight: 600; display: inline-block;">
-                                    <i class="fas fa-check-circle"></i> Approved
-                                </span>
-                            @elseif($deposit->status == 'pending')
-                                <span style="background-color: #ffc107; color: {{ $secondaryColor }}; padding: 6px 15px; border-radius: 20px; font-size: 0.85em; font-weight: 600; display: inline-block;">
-                                    <i class="fas fa-clock"></i> Pending
-                                </span>
-                            @else
-                                <span style="background-color: #dc3545; color: white; padding: 6px 15px; border-radius: 20px; font-size: 0.85em; font-weight: 600; display: inline-block;">
-                                    <i class="fas fa-times-circle"></i> Rejected
-                                </span>
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 40px; color: {{ $secondaryColor }}; font-size: 1.1em;">
-                            <i class="fas fa-inbox" style="font-size: 3em; color: {{ $primaryColor }}; opacity: 0.3; display: block; margin-bottom: 15px;"></i>
-                            No transaction history found.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+            <div style="overflow-x: auto;">
+                <table class="transaction-table">
+                    <thead>
+                        <tr>
+                            <th>{{ trans_db('Transaction ID', 'Transaction ID') }}</th>
+                            <th>{{ trans_db('Type', 'Type') }}</th>
+                            <th>{{ trans_db('Date', 'Date') }}</th>
+                            <th>{{ trans_db('Amount', 'Amount') }}</th>
+                            <th>{{ trans_db('Status', 'Status') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($deposite_history as $deposit)
+                            <tr>
+                                <td>{{ $deposit->transaction_id ?? '#' . $deposit->id }}</td>
+                                <td>
+                                    <span style="background-color: {{ $deposit->amount > 0 ? 'var(--primary-color)' : 'rgba(var(--secondary-rgb), 0.2)' }}; padding: 5px 12px; border-radius: 15px; font-size: 0.9em; font-weight: 600;">
+                                        {{ $deposit->amount > 0 ? trans_db('Deposit', 'Deposit') : trans_db('Withdraw', 'Withdraw') }}
+                                    </span>
+                                </td>
+                                <td>{{ $deposit->created_at ? $deposit->created_at->format('d M, Y h:i A') : trans_db('N/A', 'N/A') }}</td>
+                                <td class="text-primary" style="font-weight: bold; font-size: 1.1em;">
+                                    {{ number_format($deposit->amount, 2) }} {{ trans_db('টাকা','টাকা') }}
+                                </td>
+                                <td>
+                                    @if($deposit->status == 'approved')
+                                        <span class="status-badge status-approved">
+                                            <i class="fas fa-check-circle"></i> {{ trans_db('Approved', 'Approved') }}
+                                        </span>
+                                    @elseif($deposit->status == 'pending')
+                                        <span class="status-badge status-pending">
+                                            <i class="fas fa-clock"></i> {{ trans_db('Pending', 'Pending') }}
+                                        </span>
+                                    @else
+                                        <span class="status-badge status-rejected">
+                                            <i class="fas fa-times-circle"></i> {{ trans_db('Rejected', 'Rejected') }}
+                                        </span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 40px; color: var(--secondary-color); font-size: 1.1em;">
+                                    <i class="fas fa-inbox" style="font-size: 3em; color: var(--primary-color); opacity: 0.3; display: block; margin-bottom: 15px;"></i>
+                                    {{ trans_db('No transaction history found', 'No transaction history found.') }}
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
+<!-- ====================================
+     JAVASCRIPT - TIMER & INTERACTIONS
+==================================== -->
 <script>
 (function() {
     'use strict';
 
-    const DEBUG = true;
-    const primaryColor = '{{ $primaryColor }}';
-    const secondaryColor = '{{ $secondaryColor }}';
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    const CONFIG = {
+        DEBUG: true,
+        TIMEZONE: 'Asia/Dhaka',
+        LOCALE: '{{ $currentLocale }}',
+        COLORS: {
+            primary: '{{ $primaryColor }}',
+            secondary: '{{ $secondaryColor }}'
+        },
+        INTERVALS: {
+            countdown: 1000,        // 1 second
+            videoCheck: 1000        // 1 second
+        },
+        RELOAD_THRESHOLD: 3000,     // 3 seconds before video time
+        RELOAD_COOLDOWN: 30000      // 30 seconds cooldown
+    };
 
-    function log(msg, data = null) {
-        if (DEBUG) {
-            console.log('[Lottery]', msg, data || '');
+    // ============================================
+    // UTILITIES
+    // ============================================
+    const Utils = {
+        log: function(message, data = null) {
+            if (CONFIG.DEBUG) {
+                const timestamp = new Date().toLocaleTimeString('en-US', {
+                    timeZone: CONFIG.TIMEZONE,
+                    hour12: false
+                });
+                console.log(`[${timestamp}] 🎰 Lottery:`, message, data || '');
+            }
+        },
+
+        formatTime: function(milliseconds) {
+            if (milliseconds <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+
+            const seconds = Math.floor(milliseconds / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            return {
+                days: days,
+                hours: hours % 24,
+                minutes: minutes % 60,
+                seconds: seconds % 60
+            };
+        },
+
+        getTranslation: function(key) {
+            const translations = {
+                'en': {
+                    'LIVE': 'LIVE NOW',
+                    'Calculating': 'Calculating...',
+                    'Video is LIVE': 'Video is LIVE!'
+                },
+                'bn': {
+                    'LIVE': 'লাইভ চলছে',
+                    'Calculating': 'গণনা করা হচ্ছে...',
+                    'Video is LIVE': 'ভিডিও লাইভ!'
+                }
+            };
+            return translations[CONFIG.LOCALE]?.[key] || key;
         }
-    }
+    };
 
     // ============================================
-    // ANIMATIONS - Blink & Pulse
+    // TIME SYNCHRONIZATION
     // ============================================
-    function initAnimations() {
-        // Blink Animation for LIVE indicator
-        const blinkIcons = document.querySelectorAll('.blink-icon');
-        blinkIcons.forEach(icon => {
-            let opacity = 1;
-            let decreasing = true;
+    const TimeSync = {
+        offset: 0,
+        initialized: false,
 
-            setInterval(() => {
-                if (decreasing) {
-                    opacity -= 0.1;
-                    if (opacity <= 0.3) decreasing = false;
-                } else {
-                    opacity += 0.1;
-                    if (opacity >= 1) decreasing = true;
-                }
-                icon.style.opacity = opacity;
-            }, 100);
-        });
+        init: function() {
+            const firstTimer = document.querySelector('[data-server-time]');
+            if (!firstTimer) {
+                Utils.log('⚠️ No server time found, using browser time');
+                this.initialized = true;
+                return;
+            }
 
-        // Pulse Animation for video icon
-        const pulseIcons = document.querySelectorAll('.pulse-icon');
-        pulseIcons.forEach(icon => {
-            let scale = 1;
-            let increasing = true;
-
-            setInterval(() => {
-                if (increasing) {
-                    scale += 0.01;
-                    if (scale >= 1.1) increasing = false;
-                } else {
-                    scale -= 0.01;
-                    if (scale <= 1) increasing = true;
-                }
-                icon.style.transform = `scale(${scale})`;
-            }, 50);
-        });
-    }
-
-    // ============================================
-    // HOVER EFFECTS
-    // ============================================
-    function initHoverEffects() {
-        // Dashboard Cards Hover
-        const dashboardCards = document.querySelectorAll('.dashboard-card');
-        dashboardCards.forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-3px)';
-                this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.2)';
-            });
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0)';
-                this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
-            });
-        });
-
-        // Game Cards Hover
-        const gameCards = document.querySelectorAll('.game-card');
-        gameCards.forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-5px)';
-                this.style.boxShadow = '0 12px 35px rgba(0,0,0,0.25)';
-            });
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0)';
-                this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-            });
-        });
-
-        // Buy/Login Buttons Hover
-        const buyButtons = document.querySelectorAll('.buy-btn, .login-btn');
-        buyButtons.forEach(btn => {
-            btn.addEventListener('mouseenter', function() {
-                this.style.opacity = '0.9';
-                this.style.transform = 'translateY(-2px)';
-                this.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
-            });
-            btn.addEventListener('mouseleave', function() {
-                this.style.opacity = '1';
-                this.style.transform = 'translateY(0)';
-                this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
-            });
-        });
-
-        // Table Rows Hover
-        const tableRows = document.querySelectorAll('.table-row');
-        tableRows.forEach(row => {
-            row.addEventListener('mouseenter', function() {
-                this.style.backgroundColor = primaryColor + '15';
-                this.style.transform = 'scale(1.01)';
-            });
-            row.addEventListener('mouseleave', function() {
-                this.style.backgroundColor = secondaryColor + '05';
-                this.style.transform = 'scale(1)';
-            });
-        });
-    }
-
-    // ============================================
-    // BANGLADESH TIME SYNC
-    // ============================================
-    let serverTimeOffset = 0;
-
-    function initializeServerTime() {
-        const firstTimer = document.querySelector('[data-server]');
-        if (firstTimer) {
-            const serverTime = parseInt(firstTimer.getAttribute('data-server'), 10);
+            const serverTime = parseInt(firstTimer.getAttribute('data-server-time'), 10);
             const browserTime = Date.now();
-            serverTimeOffset = serverTime - browserTime;
+            this.offset = serverTime - browserTime;
+            this.initialized = true;
 
-            log('✅ Time Sync Initialized', {
-                server_time: new Date(serverTime).toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }),
-                browser_time: new Date(browserTime).toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }),
-                offset_seconds: Math.round(serverTimeOffset / 1000)
+            Utils.log('✅ Time Sync Initialized', {
+                server_time: new Date(serverTime).toLocaleString('en-US', { timeZone: CONFIG.TIMEZONE }),
+                browser_time: new Date(browserTime).toLocaleString('en-US', { timeZone: CONFIG.TIMEZONE }),
+                offset_ms: this.offset,
+                offset_seconds: Math.round(this.offset / 1000)
             });
+        },
+
+        getServerTime: function() {
+            return Date.now() + this.offset;
         }
-    }
-
-    function getServerTime() {
-        return Date.now() + serverTimeOffset;
-    }
+    };
 
     // ============================================
-    // DRAW COUNTDOWN
+    // VIDEO COUNTDOWN MANAGER
     // ============================================
-    function updateCountdowns() {
-        const timers = document.querySelectorAll('.countdown-timer');
+    const VideoCountdown = {
+        countdowns: [],
 
-        timers.forEach(function(timer) {
-            const drawTime = parseInt(timer.getAttribute('data-draw'), 10);
-            const packageId = timer.getAttribute('data-package-id');
+        init: function() {
+            this.countdowns = Array.from(document.querySelectorAll('.video-countdown'));
+            Utils.log(`Found ${this.countdowns.length} video countdowns`);
+        },
 
-            if (!drawTime || isNaN(drawTime) || drawTime <= 0) {
-                timer.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Invalid draw date';
-                timer.style.color = '#dc3545';
-                log('❌ Invalid draw time for package ' + packageId);
-                return;
-            }
+        update: function() {
+            this.countdowns.forEach(countdown => {
+                const videoTime = parseInt(countdown.getAttribute('data-video-time'), 10);
+                const packageId = countdown.getAttribute('data-package-id');
 
-            const now = getServerTime();
-            const diff = drawTime - now;
+                if (!videoTime || isNaN(videoTime) || videoTime <= 0) {
+                    countdown.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Video time not set';
+                    countdown.style.color = '#dc3545';
+                    return;
+                }
 
-            if (diff <= 0) {
-                timer.innerHTML = '<i class="fas fa-check-circle"></i> Draw completed!';
-                timer.style.color = '#28a745';
-                return;
-            }
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            timer.innerHTML = `<i class="fas fa-hourglass-half"></i> ${days}d ${hours}h ${minutes}m ${seconds}s`;
-            timer.style.color = primaryColor;
-
-            if (DEBUG && Math.random() < 0.01) {
-                log('Draw Countdown (Package ' + packageId + ')', {
-                    days, hours, minutes, seconds,
-                    total_seconds: Math.floor(diff / 1000)
-                });
-            }
-        });
-    }
-
-    // ============================================
-    // VIDEO COUNTDOWN
-    // ============================================
-    function updateVideoCountdowns() {
-        const videoCountdowns = document.querySelectorAll('.video-countdown');
-
-        videoCountdowns.forEach(function(countdown) {
-            const videoTime = parseInt(countdown.getAttribute('data-video-time'), 10);
-            const packageId = countdown.getAttribute('data-package-id');
-
-            if (!videoTime || isNaN(videoTime) || videoTime <= 0) {
-                countdown.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Video time not set';
-                countdown.style.color = '#dc3545';
-                log('❌ Invalid video time for package ' + packageId);
-                return;
-            }
-
-            const now = getServerTime();
-            const diff = videoTime - now;
-
-            if (diff <= 0) {
-                countdown.innerHTML = '<i class="fas fa-circle" style="color: #ff0000;"></i> Video is LIVE!';
-                countdown.style.color = '#00ff00';
-                return;
-            }
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            countdown.innerHTML = `<i class="fas fa-clock"></i> ${days}d ${hours}h ${minutes}m ${seconds}s`;
-
-            if (DEBUG && Math.random() < 0.01) {
-                log('Video Countdown (Package ' + packageId + ')', {
-                    days, hours, minutes, seconds,
-                    total_seconds: Math.floor(diff / 1000)
-                });
-            }
-        });
-    }
-
-    // ============================================
-    // AUTO RELOAD WHEN VIDEO TIME COMES
-    // ============================================
-    function checkAndShowVideos() {
-        const videoSections = document.querySelectorAll('.video-section');
-        let needsReload = false;
-
-        videoSections.forEach(function(section) {
-            const shouldShow = section.getAttribute('data-should-show');
-            const videoTime = parseInt(section.getAttribute('data-video-time'), 10);
-            const packageId = section.getAttribute('data-package-id');
-
-            if (shouldShow === 'false' && videoTime && !isNaN(videoTime) && videoTime > 0) {
-                const now = getServerTime();
+                const now = TimeSync.getServerTime();
                 const diff = videoTime - now;
 
-                if (diff <= 3000 && diff > -1000) {
-                    log(`🔄 Package ${packageId}: Video time reached! Reloading...`);
-                    needsReload = true;
+                if (diff <= 0) {
+                    countdown.innerHTML = `<i class="fas fa-circle blink-icon" style="color: #ff0000;"></i> ${Utils.getTranslation('Video is LIVE')}`;
+                    countdown.style.color = '#00ff00';
+                    return;
                 }
-            }
-        });
 
-        if (needsReload) {
-            const reloadKey = 'video_reload_triggered';
-            const lastReload = sessionStorage.getItem(reloadKey);
-
-            if (!lastReload || (Date.now() - parseInt(lastReload)) > 30000) {
-                sessionStorage.setItem(reloadKey, Date.now().toString());
-                log('🔄 Reloading page to show video...');
-                setTimeout(() => window.location.reload(true), 1000);
-            }
+                const time = Utils.formatTime(diff);
+                countdown.innerHTML = `<i class="fas fa-clock"></i> ${time.days}d ${time.hours}h ${time.minutes}m ${time.seconds}s`;
+            });
         }
-    }
+    };
 
     // ============================================
-    // INITIALIZE EVERYTHING
+    // VIDEO AUTO-RELOAD MANAGER
     // ============================================
-    function init() {
-        log('=== 🚀 Lottery System Initialized ===');
-        log('Timezone: Asia/Dhaka (BST = UTC+6)');
-        log('Theme Colors:', { primary: primaryColor, secondary: secondaryColor });
+    const VideoAutoReload = {
+        storageKey: 'lottery_video_reload_triggered',
 
-        // Initialize animations and hover effects
-        initAnimations();
-        initHoverEffects();
+        check: function() {
+            const videoSections = document.querySelectorAll('.video-section');
+            let needsReload = false;
 
-        // Initialize time sync
-        initializeServerTime();
-        updateCountdowns();
-        updateVideoCountdowns();
-        checkAndShowVideos();
+            videoSections.forEach(section => {
+                const shouldShow = section.getAttribute('data-should-show');
+                const videoTime = parseInt(section.getAttribute('data-video-time'), 10);
+                const packageId = section.getAttribute('data-package-id');
 
-        // Update every second
-        setInterval(function() {
-            updateCountdowns();
-            updateVideoCountdowns();
-            checkAndShowVideos();
-        }, 1000);
+                if (shouldShow === 'false' && videoTime && !isNaN(videoTime) && videoTime > 0) {
+                    const now = TimeSync.getServerTime();
+                    const diff = videoTime - now;
 
-        log('✅ System running with Bangladesh time sync');
-    }
+                    // Check if we're within threshold
+                    if (diff <= CONFIG.RELOAD_THRESHOLD && diff > -1000) {
+                        Utils.log(`🎬 Package ${packageId}: Video time reached!`);
+                        needsReload = true;
+                    }
+                }
+            });
 
-    // Start when DOM is ready
+            if (needsReload) {
+                this.performReload();
+            }
+        },
+
+        performReload: function() {
+            const lastReload = sessionStorage.getItem(this.storageKey);
+            const now = Date.now();
+
+            // Check cooldown
+            if (lastReload && (now - parseInt(lastReload)) < CONFIG.RELOAD_COOLDOWN) {
+                Utils.log('⏳ Reload on cooldown, skipping...');
+                return;
+            }
+
+            sessionStorage.setItem(this.storageKey, now.toString());
+            Utils.log('🔄 Reloading page to show video...');
+
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 1000);
+        }
+    };
+
+    // ============================================
+    // UI INTERACTIONS
+    // ============================================
+    const UIInteractions = {
+        init: function() {
+            // No need for manual hover effects as CSS handles them
+            Utils.log('✅ UI Interactions ready (CSS-based)');
+        }
+    };
+
+    // ============================================
+    // MAIN APPLICATION
+    // ============================================
+    const App = {
+        init: function() {
+            Utils.log('=== 🚀 Lottery System Starting ===');
+            Utils.log('Configuration:', CONFIG);
+
+            // Initialize modules
+            TimeSync.init();
+            VideoCountdown.init();
+            UIInteractions.init();
+
+            // Initial updates
+            VideoCountdown.update();
+            VideoAutoReload.check();
+
+            // Start intervals
+            setInterval(() => {
+                VideoCountdown.update();
+                VideoAutoReload.check();
+            }, CONFIG.INTERVALS.countdown);
+
+            Utils.log('✅ All systems operational');
+            Utils.log('============================');
+        }
+    };
+
+    // ============================================
+    // START APPLICATION
+    // ============================================
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', () => App.init());
     } else {
-        init();
+        App.init();
     }
+
 })();
 </script>
+
+
+
+@php
+// Helper function to convert hex to RGB
+function hexToRgb($hex) {
+    $hex = ltrim($hex, '#');
+    if (strlen($hex) == 3) {
+        $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+    }
+    $r = hexdec(substr($hex, 0, 2));
+    $g = hexdec(substr($hex, 2, 2));
+    $b = hexdec(substr($hex, 4, 2));
+    return "$r, $g, $b";
+}
+@endphp

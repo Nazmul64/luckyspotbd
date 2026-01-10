@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Backend\AboutController;
 use App\Http\Controllers\Backend\AdminAuthController;
 use App\Http\Controllers\Backend\AdminBlanceController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\Backend\WithdrawcommissonController;
 use App\Http\Controllers\Backend\AdminandchatuserController;
 use App\Http\Controllers\Backend\AdminsupportemailController;
 use App\Http\Controllers\Backend\FaqController;
+use App\Http\Controllers\Backend\HowtoticketController;
 use App\Http\Controllers\Backend\TestimonialController;
 use App\Http\Controllers\Backend\UsertoadminchatController;
 use App\Http\Controllers\Backend\WhychooseusticketController;
@@ -39,9 +41,13 @@ use App\Http\Controllers\Frontend\PaswordchangeController;
 use App\Http\Controllers\Frontend\UserprofileController;
 use App\Http\Controllers\Frontend\WithdrawController;
 use App\Http\Controllers\Frontend\LanguageController;
+use App\Http\Controllers\Frontend\TotalreferreduseController;
 use App\Http\Controllers\Frontend\WinnerListController;
 use App\Http\Controllers\Frontend\UserchatController;
 use App\Http\Controllers\SupportEmailController;
+use App\Http\Controllers\Frontend\UserForgotPasswordController;
+
+
 use App\Models\CommissionSetting;
 use Illuminate\Support\Facades\Session;
 use App\Models\Deposite;
@@ -61,6 +67,7 @@ Route::get('trmsandcondation', [FrontendController::class, 'trmsandcondation'])-
 Route::get('supportcontact', [FrontendController::class, 'supportcontact'])->name('supportcontact');
 Route::post('/supportemail', [SupportEmailController::class, 'supportemail'])->name('contact.message');
 
+Route::get('/test-translation', function () { return view('test-translation'); }); // Test Translation Route
 
 Route::get('frontend/login', [FrontendAuthController::class, 'frontend_login'])->name('frontend.login');
 
@@ -69,17 +76,19 @@ Route::post('frontend/login/submit', [FrontendAuthController::class, 'frontend_l
 Route::post('frontend/logout', [FrontendAuthController::class, 'frontend_logout'])->name('frontend.logout');
 Route::get('register', [FrontendAuthController::class, 'frontend_register'])->name('frontend.register');
 Route::post('register', [FrontendAuthController::class, 'frontend_register_submit'])->name('frontend.register.submit');
-
-// Protect Dashboard (login required)
-Route::middleware(['user'])->group(function () {
-
-    Route::get('/get-locale', [LanguageController::class, 'getLocale'])->name('language.locale');
-    Route::get('/get-texts', [LanguageController::class, 'getText'])->name('language.get_texts');
-
-
+Route::get('/get-locale', [LanguageController::class, 'getLocale'])->name('language.locale');
+Route::get('/get-texts', [LanguageController::class, 'getText'])->name('language.get_texts');
 // Language Route
 Route::post('/language/change', [LanguageController::class, 'changeLanguage'])->name('language.change');
 
+  Route::get('password/forget', [UserForgotPasswordController::class, 'showForgetForm'])->name('password.forget');
+  Route::post('password/forget', [UserForgotPasswordController::class, 'submitForgetForm'])->name('password.forget.post');
+  Route::get('password/reset/{token}', [UserForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+  Route::post('password/reset', [UserForgotPasswordController::class, 'submitResetForm'])->name('password.reset.post');
+
+// Protect Dashboard (login required)
+Route::middleware(['user'])->group(function () {
+    Route::get('/my-referrals', [TotalreferreduseController::class, 'myReferrals'])->name('my.referrals');
     Route::get('frontend/dashboard', [FrontendDashboardController::class, 'frontend'])->name('frontend.dashboard');
     Route::get('user/deposte', [DepositeController::class, 'deposte_index'])->name('deposte.index');
     Route::post('user/deposte/store', [DepositeController::class, 'store'])->name('frontend.deposit.store');
@@ -157,6 +166,8 @@ Route::middleware(['admin'])->group(function () {
      Route::resource('slider',SliderController::class);
      Route::resource('supportlink',SupportControler::class);
      Route::resource('notices',NoticesController::class);
+     Route::resource('howtoticket',HowtoticketController::class);
+
      Route::get('/admin/user/depositebalances', [AdmindepositeblanceaddController::class, 'adminuserdepositecheck'])->name('admin.depositeblanceadd');
      Route::get('/admin/user/{id}/depositebalances',[AdmindepositeblanceaddController::class, 'depositebalanceEdit'])->name('admin.deposite.edit');
      Route::put('/admin/user/{id}/depositebalances',[AdmindepositeblanceaddController::class, 'depositebalanceUpdate'])->name('admin.deposite.update');
@@ -212,7 +223,6 @@ Route::middleware(['admin'])->group(function () {
   Route::get('kyc/kyclist', [AdminkeyapprovedController::class,'kyclist'])->name('kyc.list');
   Route::post('kyc/approve/{id}', [AdminkeyapprovedController::class,'approvedkey'])->name('admin.kyc.approve');
   Route::post('kyc/reject/{id}', [AdminkeyapprovedController::class,'rejectapprovedkey'])->name('admin.kyc.reject');
-
 
 });
 // End Admin Auth Routes

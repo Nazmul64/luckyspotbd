@@ -1,69 +1,68 @@
 @extends('admin.master')
 @section('admin')
 <div class="row">
-    <div class="col-12 mx-auto">
-        <h6 class="mb-3 text-uppercase">Create Walate</h6>
-
+    <div class="col-md-8 mx-auto">
         <div class="card">
+            <div class="card-header">Create Wallet Setting</div>
             <div class="card-body">
                 <form action="{{ route('waletesetting.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
                     <div class="mb-3">
-                        <label class="form-label">Bank Name</label>
-                        <input type="text" name="bankname" class="form-control"
-                               value="{{ old('bankname') }}" placeholder="Enter bank name">
-                        @error('bankname') <span class="text-danger">{{ $message }}</span> @enderror
+                        <label>Bank Name (EN)</label>
+                        <input type="text" name="bankname_en" class="form-control" value="{{ old('bankname_en') }}">
+                        @error('bankname_en') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Account Number</label>
-                        <input type="text" name="accountnumber" class="form-control"
-                               value="{{ old('accountnumber') }}" placeholder="Enter account number">
-                        @error('accountnumber') <span class="text-danger">{{ $message }}</span> @enderror
+                        <label>Bank Name (BN)</label>
+                        <input type="text" name="bankname_bn" class="form-control" value="{{ old('bankname_bn') }}">
+                        @error('bankname_bn') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Photo</label>
-                        <input type="file" name="photo" id="photoInput" class="form-control" accept="image/*">
-                        @error('photo') <span class="text-danger">{{ $message }}</span> @enderror
+                        <label>Account Number (EN)</label>
+                        <input type="text" name="accountnumber_en" class="form-control" value="{{ old('accountnumber_en') }}">
+                        @error('accountnumber_en') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Image Preview</label><br>
-                        <img id="photoPreview" src="#" alt="Preview"
-                             style="max-width: 150px; display: none; border: 1px solid #ccc; padding: 5px; border-radius: 5px;">
+                        <label>Account Number (BN)</label>
+                        <input type="text" name="accountnumber_bn" class="form-control" value="{{ old('accountnumber_bn') }}">
+                        @error('accountnumber_bn') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Status</label>
+                        <label>Photo</label>
+                        <input type="file" name="photo" id="photoInput" class="form-control">
+                        <img id="photoPreview" style="max-width:150px; display:none;" />
+                        @error('photo') <small class="text-danger">{{ $message }}</small> @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Status</label>
                         <select name="status" class="form-control">
-                            <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Active</option>
-                            <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
                         </select>
-                        @error('status') <span class="text-danger">{{ $message }}</span> @enderror
+                        @error('status') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
 
-                    <button type="submit" class="btn btn-success">Save Walate</button>
+                    <button class="btn btn-success">Save</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-{{-- JavaScript for Live Preview --}}
 <script>
-document.getElementById('photoInput').addEventListener('change', function(event) {
-    let file = event.target.files[0];
+document.getElementById('photoInput').addEventListener('change', function(e){
+    let file = e.target.files[0];
     let preview = document.getElementById('photoPreview');
-
-    if (file) {
+    if(file){
         preview.src = URL.createObjectURL(file);
         preview.style.display = 'block';
-    } else {
-        preview.src = '#';
-        preview.style.display = 'none';
-    }
+    } else { preview.style.display='none'; }
 });
 </script>
 @endsection

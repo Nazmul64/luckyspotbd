@@ -33,10 +33,17 @@ class User extends Authenticatable
         'ref_code',
         'balance',
         'refer_income',
+        'generation_income',  // ✅ শুধু এটি যোগ করা হয়েছে
         'address',
         'status',
         'zip_code',
-
+         'reset_token',
+    'reset_token_expires_at',
+    ];
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'reset_token_expires_at' => 'datetime',
+        'password' => 'hashed',
     ];
 
     /**
@@ -47,6 +54,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'reset_token',
     ];
 
     /**
@@ -61,38 +69,44 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
     public function referrer() {
-    return $this->belongsTo(User::class, 'referred_by');
-}
-public function referrals() {
-    return $this->hasMany(User::class, 'referred_by');
-}
-public function deposits() {
-    return $this->hasMany(Deposite::class, 'user_id');
-}
-public function profits() {
-    return $this->hasMany(Profit::class, 'user_id');
-}
+        return $this->belongsTo(User::class, 'referred_by');
+    }
 
+    public function referrals() {
+        return $this->hasMany(User::class, 'referred_by');
+    }
 
-public function withdrawals()
+    public function deposits() {
+        return $this->hasMany(Deposite::class, 'user_id');
+    }
+
+    public function profits() {
+        return $this->hasMany(Profit::class, 'user_id');
+    }
+
+    public function withdrawals()
     {
         return $this->hasMany(User_widthdraw::class);
     }
 
- public function lotteryResults()
+    public function lotteryResults()
     {
         return $this->hasMany(LotteryResult::class, 'user_id', 'id');
     }
+
     public function userWidthdraws()
-{
-    return $this->hasMany(User_widthdraw::class);
-}
+    {
+        return $this->hasMany(User_widthdraw::class);
+    }
+
     public function userdeposite()
-{
-    return $this->hasMany(Deposite::class);
-}
-  public function user()
+    {
+        return $this->hasMany(Deposite::class);
+    }
+
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
@@ -103,20 +117,17 @@ public function withdrawals()
         return $this->hasMany(LotteryResult::class, 'user_package_buy_id');
     }
 
-public function userPackageBuys()
-{
-    return $this->hasMany(Userpackagebuy::class, 'user_id');
-}
+    public function userPackageBuys()
+    {
+        return $this->hasMany(Userpackagebuy::class, 'user_id');
+    }
 
-public function kyc()
-{
-    return $this->hasOne(Kyc::class);
-}
-public function kycagent(){
-    return $this->belongsTo(User::class, 'user_id');
-}
+    public function kyc()
+    {
+        return $this->hasOne(Kyc::class);
+    }
 
-
-
-
+    public function kycagent(){
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

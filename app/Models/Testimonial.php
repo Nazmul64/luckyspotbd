@@ -12,5 +12,14 @@ class Testimonial extends Model
         'message',
         'photo',
         'new_photo',
+        'title',
+        'description',
+    ];
+  protected $casts = [
+        'name'        => 'array',
+        'designation' => 'array',
+        'message'     => 'array',
+        'title'       => 'array',
+        'description' => 'array',
     ];
 }

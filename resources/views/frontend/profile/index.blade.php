@@ -3,10 +3,95 @@
 @section('content')
 
 @php
-    // Fetch active theme colors from database
+    // ============================================
+    // THEME CONFIGURATION
+    // ============================================
     $activeTheme = \App\Models\ThemeSetting::where('status', 1)->first();
     $primaryColor = $activeTheme->primary_color ?? '#F5CE0D';
     $secondaryColor = $activeTheme->secondary_color ?? '#000000';
+    $user = auth()->user();
+
+    // ============================================
+    // LANGUAGE DETECTION
+    // ============================================
+    $currentLang = app()->getLocale() ?? session('locale', 'en');
+    $isBangla = ($currentLang === 'bn');
+
+    // ============================================
+    // TRANSLATIONS
+    // ============================================
+    $translations = [
+        'en' => [
+            'page_title' => 'Edit Profile',
+            'upload_photo' => 'Upload Photo',
+            'photo_note' => 'Recommended size: 500×500px',
+            'first_name' => 'First Name',
+            'last_name' => 'Last Name',
+            'username' => 'Username',
+            'email' => 'Email',
+            'phone' => 'Phone',
+            'address' => 'Address',
+            'zip_code' => 'Zip Code',
+            'country' => 'Country',
+            'update_profile' => 'Update Profile',
+            'security_tips' => 'Security Tips',
+            'tip_1' => 'Keep your email updated',
+            'tip_2' => 'Use strong password',
+            'tip_3' => 'Never share login details',
+            'tip_4' => 'Review profile regularly',
+            'countries' => [
+                'Bangladesh' => 'Bangladesh',
+                'India' => 'India',
+                'Pakistan' => 'Pakistan',
+                'Other' => 'Other',
+            ],
+            // Validation messages
+            'first_name_required' => 'First name is required',
+            'last_name_required' => 'Last name is required',
+            'username_required' => 'Username is required',
+            'email_invalid' => 'Please enter a valid email address',
+            'phone_invalid' => 'Phone number is not valid',
+            'image_invalid' => 'Please select a valid image file',
+            'updating' => 'Updating...',
+            'success' => 'Profile updated successfully!',
+        ],
+        'bn' => [
+            'page_title' => 'প্রোফাইল সম্পাদনা',
+            'upload_photo' => 'ছবি আপলোড করুন',
+            'photo_note' => 'প্রস্তাবিত সাইজ: ৫০০×৫০০px',
+            'first_name' => 'প্রথম নাম',
+            'last_name' => 'শেষ নাম',
+            'username' => 'ইউজারনেম',
+            'email' => 'ইমেইল',
+            'phone' => 'ফোন',
+            'address' => 'ঠিকানা',
+            'zip_code' => 'জিপ কোড',
+            'country' => 'দেশ',
+            'update_profile' => 'প্রোফাইল আপডেট করুন',
+            'security_tips' => 'নিরাপত্তা টিপস',
+            'tip_1' => 'আপনার ইমেইল আপডেট রাখুন',
+            'tip_2' => 'শক্তিশালী পাসওয়ার্ড ব্যবহার করুন',
+            'tip_3' => 'লগইন তথ্য কখনো শেয়ার করবেন না',
+            'tip_4' => 'নিয়মিত প্রোফাইল পর্যালোচনা করুন',
+            'countries' => [
+                'Bangladesh' => 'বাংলাদেশ',
+                'India' => 'ভারত',
+                'Pakistan' => 'পাকিস্তান',
+                'Other' => 'অন্যান্য',
+            ],
+            // Validation messages
+            'first_name_required' => 'প্রথম নাম প্রয়োজন',
+            'last_name_required' => 'শেষ নাম প্রয়োজন',
+            'username_required' => 'ইউজারনেম প্রয়োজন',
+            'email_invalid' => 'সঠিক ইমেইল ঠিকানা লিখুন',
+            'phone_invalid' => 'ফোন নম্বর সঠিক নয়',
+            'image_invalid' => 'সঠিক ছবি ফাইল নির্বাচন করুন',
+            'updating' => 'আপডেট হচ্ছে...',
+            'success' => 'প্রোফাইল সফলভাবে আপডেট হয়েছে!',
+        ],
+    ];
+
+    $lang = $translations[$isBangla ? 'bn' : 'en'];
 @endphp
 
 @include('frontend.dashboard.usersection')
@@ -20,226 +105,126 @@
 
             {{-- MAIN CONTENT --}}
             <div class="col-lg-9">
-                <div style="padding: 40px 30px; background: linear-gradient(135deg, {{ $primaryColor }}10 0%, {{ $secondaryColor }}10 100%); border-radius: 15px; border: 2px solid {{ $primaryColor }}; box-shadow: 0 6px 25px rgba(0,0,0,0.1); margin-top: 20px;">
+                <div class="profile-wrapper">
 
-                    {{-- Header --}}
-                    <div style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid {{ $primaryColor }};">
-                        <h4 style="color: {{ $secondaryColor }}; font-weight: bold; font-size: 1.8em; margin: 0;">
-                            <i class="fas fa-user-edit" style="color: {{ $primaryColor }}; margin-right: 10px;"></i>
-                            Edit Profile
+                    {{-- HEADER --}}
+                    <div class="profile-header">
+                        <h4>
+                            <i class="fas fa-user-edit"></i> {{ $lang['page_title'] }}
                         </h4>
                     </div>
 
-                    {{-- Success Message --}}
+                    {{-- SUCCESS MESSAGE --}}
                     @if(session('success'))
-                        <div class="success-alert" style="background: linear-gradient(135deg, #28a74520 0%, #28a74530 100%); border-left: 5px solid #28a745; padding: 18px 20px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);">
-                            <div style="display: flex; align-items: center;">
-                                <i class="fas fa-check-circle" style="color: #28a745; font-size: 1.5em; margin-right: 12px;"></i>
-                                <span style="color: #28a745; font-weight: 600; font-size: 1.05em;">{{ session('success') }}</span>
-                            </div>
+                        <div class="alert-success-box success-alert">
+                            <i class="fas fa-check-circle"></i>
+                            <span>{{ session('success') }}</span>
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('profile.update', auth()->user()->id) }}" enctype="multipart/form-data" id="profileForm">
+                    <form id="profileForm"
+                          action="{{ route('profile.update', $user->id) }}"
+                          method="POST"
+                          enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
                         <div class="row gy-4">
 
-                            {{-- LEFT AREA - Profile Photo --}}
+                            {{-- PROFILE PHOTO --}}
                             <div class="col-xl-4">
-                                <div style="background: linear-gradient(135deg, {{ $primaryColor }}15 0%, {{ $secondaryColor }}15 100%); border: 2px solid {{ $primaryColor }}; border-radius: 15px; padding: 30px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                <div class="profile-photo-box">
 
-                                    {{-- Profile Photo Preview --}}
-                                    <div style="margin-bottom: 25px;">
-                                        <div style="position: relative; display: inline-block;">
-                                            <img id="preview-image"
-                                                src="{{ auth()->user()->profile_photo ? asset('uploads/profile/' . auth()->user()->profile_photo) : asset('assets/images/account/user.png') }}"
-                                                alt="profile"
-                                                style="width: 180px; height: 180px; border-radius: 50%; object-fit: cover; border: 5px solid {{ $primaryColor }}; box-shadow: 0 6px 20px rgba(0,0,0,0.2); transition: all 0.3s ease;">
-
-                                            <div style="position: absolute; bottom: 10px; right: 10px; background-color: {{ $primaryColor }}; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer;">
-                                                <i class="fas fa-camera" style="color: {{ $secondaryColor }}; font-size: 1.2em;"></i>
-                                            </div>
-                                        </div>
+                                    <div class="photo-preview">
+                                        <img id="preview-image"
+                                             src="{{ $user->profile_photo ? asset('uploads/profile/'.$user->profile_photo) : asset('assets/images/account/user.png') }}"
+                                             alt="Profile">
+                                        <span class="camera-icon">
+                                            <i class="fas fa-camera"></i>
+                                        </span>
                                     </div>
 
-                                    {{-- User Info --}}
-                                    <div style="margin-bottom: 20px;">
-                                        <h4 style="color: {{ $secondaryColor }}; font-weight: bold; font-size: 1.4em; margin-bottom: 5px;">
-                                            {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}
-                                        </h4>
-                                        <p style="color: {{ $primaryColor }}; font-size: 0.95em; margin: 0; font-weight: 600;">
-                                            <i class="fas fa-at"></i> {{ auth()->user()->username }}
-                                        </p>
-                                    </div>
+                                    <h5>{{ $user->first_name }} {{ $user->last_name }}</h5>
+                                    <p>@{{ $user->username }}</p>
 
-                                    {{-- Upload Button --}}
-                                    <input type="file" name="profile_photo" class="d-none" id="update-photo" accept="image/*">
-                                    <label class="upload-btn" for="update-photo"
-                                           style="background: linear-gradient(135deg, {{ $primaryColor }} 0%, {{ $primaryColor }}dd 100%); color: {{ $secondaryColor }}; padding: 12px 30px; border-radius: 25px; font-weight: 600; cursor: pointer; display: inline-block; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border: none;">
-                                        <i class="fas fa-upload"></i> Upload Photo
+                                    <input type="file" name="profile_photo" id="update-photo" hidden accept="image/*">
+
+                                    <label for="update-photo" class="btn-upload">
+                                        <i class="fas fa-upload"></i> {{ $lang['upload_photo'] }}
                                     </label>
 
-                                    {{-- Additional Info --}}
-                                    <div style="margin-top: 25px; padding: 15px; background-color: {{ $primaryColor }}10; border-radius: 10px;">
-                                        <p style="color: {{ $secondaryColor }}; opacity: 0.7; font-size: 0.85em; margin: 0; line-height: 1.6;">
-                                            <i class="fas fa-info-circle" style="color: {{ $primaryColor }};"></i>
-                                            Recommended: Square image (500x500px) for best results
-                                        </p>
-                                    </div>
-
+                                    <small class="photo-note">
+                                        {{ $lang['photo_note'] }}
+                                    </small>
                                 </div>
                             </div>
 
-                            {{-- RIGHT AREA - Profile Form --}}
+                            {{-- PROFILE FORM --}}
                             <div class="col-xl-8">
-                                <div style="background: linear-gradient(135deg, {{ $primaryColor }}08 0%, {{ $secondaryColor }}08 100%); border: 2px solid {{ $primaryColor }}; border-radius: 15px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-
+                                <div class="profile-form-box">
                                     <div class="row gy-4">
 
-                                        {{-- First Name --}}
-                                        <div class="col-md-6">
-                                            <label style="display: block; color: {{ $secondaryColor }}; font-weight: 600; margin-bottom: 8px; font-size: 0.95em;">
-                                                <i class="fas fa-user" style="color: {{ $primaryColor }}; margin-right: 5px;"></i>
-                                                First Name
-                                            </label>
-                                            <input type="text"
-                                                   name="first_name"
-                                                   value="{{ auth()->user()->first_name }}"
-                                                   class="form-input"
-                                                   placeholder="Enter first name"
-                                                   style="width: 100%; padding: 12px 18px; border: 2px solid {{ $primaryColor }}50; border-radius: 8px; font-size: 0.95em; color: {{ $secondaryColor }}; background-color: white; transition: all 0.3s ease;">
-                                        </div>
+                                        @php
+                                            $fields = [
+                                                ['first_name', $lang['first_name'], 'user', 'text'],
+                                                ['last_name', $lang['last_name'], 'user', 'text'],
+                                                ['username', $lang['username'], 'at', 'text'],
+                                                ['email', $lang['email'], 'envelope', 'email'],
+                                                ['number', $lang['phone'], 'phone', 'text'],
+                                                ['address', $lang['address'], 'map-marker-alt', 'text'],
+                                                ['zip_code', $lang['zip_code'], 'mail-bulk', 'text'],
+                                            ];
+                                        @endphp
 
-                                        {{-- Last Name --}}
-                                        <div class="col-md-6">
-                                            <label style="display: block; color: {{ $secondaryColor }}; font-weight: 600; margin-bottom: 8px; font-size: 0.95em;">
-                                                <i class="fas fa-user" style="color: {{ $primaryColor }}; margin-right: 5px;"></i>
-                                                Last Name
-                                            </label>
-                                            <input type="text"
-                                                   name="last_name"
-                                                   value="{{ auth()->user()->last_name }}"
-                                                   class="form-input"
-                                                   placeholder="Enter last name"
-                                                   style="width: 100%; padding: 12px 18px; border: 2px solid {{ $primaryColor }}50; border-radius: 8px; font-size: 0.95em; color: {{ $secondaryColor }}; background-color: white; transition: all 0.3s ease;">
-                                        </div>
+                                        @foreach($fields as $field)
+                                            <div class="col-md-6">
+                                                <label>
+                                                    <i class="fas fa-{{ $field[2] }}"></i>
+                                                    {{ $field[1] }}
+                                                </label>
+                                                <input type="{{ $field[3] }}"
+                                                       name="{{ $field[0] }}"
+                                                       value="{{ $user->{$field[0]} }}"
+                                                       class="form-input">
+                                            </div>
+                                        @endforeach
 
-                                        {{-- Username --}}
+                                        {{-- COUNTRY --}}
                                         <div class="col-md-6">
-                                            <label style="display: block; color: {{ $secondaryColor }}; font-weight: 600; margin-bottom: 8px; font-size: 0.95em;">
-                                                <i class="fas fa-at" style="color: {{ $primaryColor }}; margin-right: 5px;"></i>
-                                                Username
+                                            <label>
+                                                <i class="fas fa-globe"></i> {{ $lang['country'] }}
                                             </label>
-                                            <input type="text"
-                                                   name="username"
-                                                   value="{{ auth()->user()->username }}"
-                                                   class="form-input"
-                                                   placeholder="Enter username"
-                                                   style="width: 100%; padding: 12px 18px; border: 2px solid {{ $primaryColor }}50; border-radius: 8px; font-size: 0.95em; color: {{ $secondaryColor }}; background-color: white; transition: all 0.3s ease;">
-                                        </div>
-
-                                        {{-- Email --}}
-                                        <div class="col-md-6">
-                                            <label style="display: block; color: {{ $secondaryColor }}; font-weight: 600; margin-bottom: 8px; font-size: 0.95em;">
-                                                <i class="fas fa-envelope" style="color: {{ $primaryColor }}; margin-right: 5px;"></i>
-                                                Email
-                                            </label>
-                                            <input type="email"
-                                                   name="email"
-                                                   value="{{ auth()->user()->email }}"
-                                                   class="form-input"
-                                                   placeholder="Enter email"
-                                                   style="width: 100%; padding: 12px 18px; border: 2px solid {{ $primaryColor }}50; border-radius: 8px; font-size: 0.95em; color: {{ $secondaryColor }}; background-color: white; transition: all 0.3s ease;">
-                                        </div>
-
-                                        {{-- Country --}}
-                                        <div class="col-md-6">
-                                            <label style="display: block; color: {{ $secondaryColor }}; font-weight: 600; margin-bottom: 8px; font-size: 0.95em;">
-                                                <i class="fas fa-globe" style="color: {{ $primaryColor }}; margin-right: 5px;"></i>
-                                                Country
-                                            </label>
-                                            <select name="country"
-                                                    class="form-select"
-                                                    style="width: 100%; padding: 12px 18px; border: 2px solid {{ $primaryColor }}50; border-radius: 8px; font-size: 0.95em; color: {{ $secondaryColor }}; background-color: white; transition: all 0.3s ease; cursor: pointer;">
-                                                <option value="Bangladesh" {{ auth()->user()->country == 'Bangladesh' ? 'selected' : '' }}>🇧🇩 Bangladesh</option>
-                                                <option value="India" {{ auth()->user()->country == 'India' ? 'selected' : '' }}>🇮🇳 India</option>
-                                                <option value="Pakistan" {{ auth()->user()->country == 'Pakistan' ? 'selected' : '' }}>🇵🇰 Pakistan</option>
-                                                <option value="Other" {{ auth()->user()->country == 'Other' ? 'selected' : '' }}>🌍 Other</option>
+                                            <select name="country" class="form-select">
+                                                @foreach(['Bangladesh','India','Pakistan','Other'] as $country)
+                                                    <option value="{{ $country }}" {{ $user->country == $country ? 'selected' : '' }}>
+                                                        {{ $lang['countries'][$country] }}
+                                                    </option>
+                                                @endforeach
                                             </select>
                                         </div>
 
-                                        {{-- Phone --}}
-                                        <div class="col-md-6">
-                                            <label style="display: block; color: {{ $secondaryColor }}; font-weight: 600; margin-bottom: 8px; font-size: 0.95em;">
-                                                <i class="fas fa-phone" style="color: {{ $primaryColor }}; margin-right: 5px;"></i>
-                                                Phone
-                                            </label>
-                                            <input type="text"
-                                                   name="number"
-                                                   value="{{ auth()->user()->number }}"
-                                                   class="form-input"
-                                                   placeholder="Enter phone number"
-                                                   style="width: 100%; padding: 12px 18px; border: 2px solid {{ $primaryColor }}50; border-radius: 8px; font-size: 0.95em; color: {{ $secondaryColor }}; background-color: white; transition: all 0.3s ease;">
-                                        </div>
-
-                                        {{-- Address --}}
-                                        <div class="col-md-6">
-                                            <label style="display: block; color: {{ $secondaryColor }}; font-weight: 600; margin-bottom: 8px; font-size: 0.95em;">
-                                                <i class="fas fa-map-marker-alt" style="color: {{ $primaryColor }}; margin-right: 5px;"></i>
-                                                Address
-                                            </label>
-                                            <input type="text"
-                                                   name="address"
-                                                   value="{{ auth()->user()->address }}"
-                                                   class="form-input"
-                                                   placeholder="Enter address"
-                                                   style="width: 100%; padding: 12px 18px; border: 2px solid {{ $primaryColor }}50; border-radius: 8px; font-size: 0.95em; color: {{ $secondaryColor }}; background-color: white; transition: all 0.3s ease;">
-                                        </div>
-
-                                        {{-- Zip Code --}}
-                                        <div class="col-md-6">
-                                            <label style="display: block; color: {{ $secondaryColor }}; font-weight: 600; margin-bottom: 8px; font-size: 0.95em;">
-                                                <i class="fas fa-mail-bulk" style="color: {{ $primaryColor }}; margin-right: 5px;"></i>
-                                                Zip Code
-                                            </label>
-                                            <input type="text"
-                                                   name="zip_code"
-                                                   value="{{ auth()->user()->zip_code }}"
-                                                   class="form-input"
-                                                   placeholder="Enter zip code"
-                                                   style="width: 100%; padding: 12px 18px; border: 2px solid {{ $primaryColor }}50; border-radius: 8px; font-size: 0.95em; color: {{ $secondaryColor }}; background-color: white; transition: all 0.3s ease;">
-                                        </div>
-
-                                        {{-- Submit Button --}}
-                                        <div class="col-md-12">
-                                            <button type="submit"
-                                                    class="submit-btn"
-                                                    style="background: linear-gradient(135deg, {{ $primaryColor }} 0%, {{ $primaryColor }}dd 100%); color: {{ $secondaryColor }}; border: none; padding: 15px 40px; border-radius: 10px; font-size: 1.05em; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 6px 20px rgba(0,0,0,0.2); width: 100%; margin-top: 10px;">
-                                                <i class="fas fa-save"></i> Update Profile
+                                        {{-- SUBMIT --}}
+                                        <div class="col-12">
+                                            <button type="submit" class="btn-submit">
+                                                <i class="fas fa-save"></i> {{ $lang['update_profile'] }}
                                             </button>
                                         </div>
 
                                     </div>
-
                                 </div>
                             </div>
 
                         </div>
-
                     </form>
 
-                    {{-- Security Tips --}}
-                    <div style="margin-top: 30px; padding: 20px; background-color: {{ $secondaryColor }}05; border-radius: 10px; border: 1px solid {{ $primaryColor }}30;">
-                        <h6 style="color: {{ $secondaryColor }}; font-weight: bold; margin-bottom: 12px;">
-                            <i class="fas fa-shield-alt" style="color: {{ $primaryColor }};"></i> Security Tips
-                        </h6>
-                        <ul style="margin: 0; padding-left: 20px; color: {{ $secondaryColor }}; opacity: 0.8; line-height: 1.8; font-size: 0.9em;">
-                            <li>Keep your email address up to date for account recovery</li>
-                            <li>Use a strong and unique password for your account</li>
-                            <li>Never share your login credentials with anyone</li>
-                            <li>Review your profile information regularly</li>
+                    {{-- SECURITY INFO --}}
+                    <div class="security-box">
+                        <h6><i class="fas fa-shield-alt"></i> {{ $lang['security_tips'] }}</h6>
+                        <ul>
+                            <li>{{ $lang['tip_1'] }}</li>
+                            <li>{{ $lang['tip_2'] }}</li>
+                            <li>{{ $lang['tip_3'] }}</li>
+                            <li>{{ $lang['tip_4'] }}</li>
                         </ul>
                     </div>
 
@@ -250,233 +235,364 @@
     </div>
 </div>
 
-<script>
-(function() {
-    'use strict';
+{{-- ===================== STYLES ===================== --}}
+<style>
+:root {
+    --primary: {{ $primaryColor }};
+    --secondary: {{ $secondaryColor }};
+}
 
-    const primaryColor = '{{ $primaryColor }}';
-    const secondaryColor = '{{ $secondaryColor }}';
+.profile-wrapper {
+    padding: 40px;
+    background: linear-gradient(135deg, {{ $primaryColor }}10, {{ $secondaryColor }}10);
+    border: 2px solid var(--primary);
+    border-radius: 15px;
+    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+}
+
+.profile-header h4 {
+    font-weight: 700;
+    border-bottom: 3px solid var(--primary);
+    padding-bottom: 15px;
+    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+}
+
+.profile-photo-box {
+    text-align: center;
+    border: 2px solid var(--primary);
+    padding: 30px;
+    border-radius: 15px;
+    background: #fff;
+}
+
+.profile-photo-box h5,
+.profile-photo-box p {
+    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+}
+
+.photo-preview {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 20px;
+}
+
+.photo-preview img {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid var(--primary);
+    transition: transform 0.3s ease;
+}
+
+.photo-preview:hover img {
+    transform: scale(1.05);
+}
+
+.camera-icon {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: var(--primary);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--secondary);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn-upload,
+.btn-submit {
+    background: var(--primary);
+    color: var(--secondary);
+    border: none;
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-weight: 600;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+}
+
+.btn-upload:hover,
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.photo-note {
+    display: block;
+    margin-top: 10px;
+    color: #666;
+    font-size: 0.85rem;
+    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+}
+
+.profile-form-box {
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    border: 2px solid {{ $primaryColor }}30;
+}
+
+.profile-form-box label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+}
+
+.profile-form-box label i {
+    color: var(--primary);
+    margin-right: 6px;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid {{ $primaryColor }}50;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+}
+
+.form-input:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px {{ $primaryColor }}20;
+}
+
+.alert-success-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #28a74520;
+    border-left: 5px solid #28a745;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    transition: opacity 0.5s ease;
+    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+}
+
+.security-box {
+    margin-top: 30px;
+    padding: 20px;
+    border: 2px solid {{ $primaryColor }}40;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.security-box h6 {
+    margin-bottom: 15px;
+    color: var(--primary);
+    font-weight: 700;
+    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+}
+
+.security-box ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.security-box ul li {
+    padding: 8px 0;
+    padding-left: 25px;
+    position: relative;
+    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+}
+
+.security-box ul li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #28a745;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .profile-wrapper {
+        padding: 20px;
+    }
+
+    .profile-form-box {
+        padding: 20px;
+    }
+}
+</style>
+
+<script>
+(function () {
+    'use strict';
 
     document.addEventListener('DOMContentLoaded', function () {
 
-        // ============================================
-        // LIVE IMAGE PREVIEW
-        // ============================================
+        /* =============================
+           CONFIGURATION
+        ============================== */
+        const isBangla = {{ $isBangla ? 'true' : 'false' }};
+        const messages = {
+            firstNameRequired: '{{ $lang["first_name_required"] }}',
+            lastNameRequired: '{{ $lang["last_name_required"] }}',
+            usernameRequired: '{{ $lang["username_required"] }}',
+            emailInvalid: '{{ $lang["email_invalid"] }}',
+            phoneInvalid: '{{ $lang["phone_invalid"] }}',
+            imageInvalid: '{{ $lang["image_invalid"] }}',
+            updating: '{{ $lang["updating"] }}'
+        };
+
+        /* =============================
+           ELEMENTS
+        ============================== */
+        const form = document.getElementById('profileForm');
         const photoInput = document.getElementById('update-photo');
-        const previewImage = document.getElementById('preview-image');
+        const previewImg = document.getElementById('preview-image');
+        const submitBtn = document.querySelector('.btn-submit');
+        const successBox = document.querySelector('.success-alert');
 
-        if (photoInput && previewImage) {
-            photoInput.addEventListener('change', function(e) {
+        /* =============================
+           PROFILE PHOTO PREVIEW
+        ============================== */
+        if (photoInput && previewImg) {
+            photoInput.addEventListener('change', function () {
                 if (this.files && this.files[0]) {
-                    let reader = new FileReader();
+                    const file = this.files[0];
 
-                    reader.onload = function(event) {
-                        previewImage.src = event.target.result;
-
-                        // Add animation
-                        previewImage.style.transform = 'scale(0.9)';
-                        setTimeout(() => {
-                            previewImage.style.transform = 'scale(1)';
-                        }, 100);
+                    if (!file.type.startsWith('image/')) {
+                        alert(messages.imageInvalid);
+                        this.value = '';
+                        return;
                     }
 
-                    reader.readAsDataURL(this.files[0]);
+                    // Check file size (max 5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert(isBangla ? 'ফাইল সাইজ ৫MB এর কম হতে হবে' : 'File size must be less than 5MB');
+                        this.value = '';
+                        return;
+                    }
+
+                    previewImg.src = URL.createObjectURL(file);
                 }
             });
         }
 
-        // ============================================
-        // IMAGE HOVER EFFECT
-        // ============================================
-        if (previewImage) {
-            previewImage.addEventListener('mouseenter', function() {
-                this.style.transform = 'scale(1.05)';
-                this.style.boxShadow = '0 8px 30px rgba(0,0,0,0.3)';
-            });
-
-            previewImage.addEventListener('mouseleave', function() {
-                this.style.transform = 'scale(1)';
-                this.style.boxShadow = '0 6px 20px rgba(0,0,0,0.2)';
-            });
-        }
-
-        // ============================================
-        // INPUT FOCUS EFFECTS
-        // ============================================
-        const formInputs = document.querySelectorAll('.form-input, .form-select');
-        formInputs.forEach(input => {
-            input.addEventListener('focus', function() {
-                this.style.borderColor = primaryColor;
-                this.style.boxShadow = `0 0 0 4px ${primaryColor}20`;
-                this.style.transform = 'scale(1.01)';
-            });
-
-            input.addEventListener('blur', function() {
-                this.style.borderColor = primaryColor + '50';
-                this.style.boxShadow = 'none';
-                this.style.transform = 'scale(1)';
-            });
-        });
-
-        // ============================================
-        // BUTTON HOVER EFFECTS
-        // ============================================
-        const submitBtn = document.querySelector('.submit-btn');
-        if (submitBtn) {
-            submitBtn.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-3px)';
-                this.style.boxShadow = '0 8px 30px rgba(0,0,0,0.3)';
-                this.style.opacity = '0.95';
-            });
-
-            submitBtn.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0)';
-                this.style.boxShadow = '0 6px 20px rgba(0,0,0,0.2)';
-                this.style.opacity = '1';
-            });
-        }
-
-        const uploadBtn = document.querySelector('.upload-btn');
-        if (uploadBtn) {
-            uploadBtn.addEventListener('mouseenter', function() {
-                this.style.transform = 'scale(1.05)';
-                this.style.boxShadow = '0 6px 25px rgba(0,0,0,0.3)';
-            });
-
-            uploadBtn.addEventListener('mouseleave', function() {
-                this.style.transform = 'scale(1)';
-                this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
-            });
-        }
-
-        // ============================================
-        // FORM VALIDATION
-        // ============================================
-        const form = document.getElementById('profileForm');
+        /* =============================
+           FORM VALIDATION
+        ============================== */
         if (form) {
-            form.addEventListener('submit', function(e) {
-                const firstName = document.querySelector('input[name="first_name"]');
-                const lastName = document.querySelector('input[name="last_name"]');
-                const email = document.querySelector('input[name="email"]');
+            form.addEventListener('submit', function (e) {
 
                 let isValid = true;
-                let errorMessage = '';
+                let message = '';
 
-                // Validate first name
-                if (!firstName || !firstName.value.trim()) {
+                const firstName = form.querySelector('[name="first_name"]');
+                const lastName = form.querySelector('[name="last_name"]');
+                const username = form.querySelector('[name="username"]');
+                const email = form.querySelector('[name="email"]');
+                const phone = form.querySelector('[name="number"]');
+
+                /* Required fields */
+                if (!firstName.value.trim()) {
                     isValid = false;
-                    errorMessage = 'First name is required!';
-                    if (firstName) {
-                        firstName.style.borderColor = '#dc3545';
-                        firstName.focus();
-                    }
+                    message = messages.firstNameRequired;
+                    firstName.focus();
                 }
-
-                // Validate last name
-                if (isValid && (!lastName || !lastName.value.trim())) {
+                else if (!lastName.value.trim()) {
                     isValid = false;
-                    errorMessage = 'Last name is required!';
-                    if (lastName) {
-                        lastName.style.borderColor = '#dc3545';
-                        lastName.focus();
-                    }
+                    message = messages.lastNameRequired;
+                    lastName.focus();
                 }
-
-                // Validate email
-                if (isValid && (!email || !email.value.trim())) {
+                else if (!username.value.trim()) {
                     isValid = false;
-                    errorMessage = 'Email is required!';
-                    if (email) {
-                        email.style.borderColor = '#dc3545';
-                        email.focus();
-                    }
-                } else if (isValid && email && !isValidEmail(email.value)) {
+                    message = messages.usernameRequired;
+                    username.focus();
+                }
+                /* Email validation */
+                else if (!validateEmail(email.value)) {
                     isValid = false;
-                    errorMessage = 'Please enter a valid email address!';
-                    email.style.borderColor = '#dc3545';
+                    message = messages.emailInvalid;
                     email.focus();
+                }
+                /* Phone validation */
+                else if (phone.value && phone.value.length < 8) {
+                    isValid = false;
+                    message = messages.phoneInvalid;
+                    phone.focus();
                 }
 
                 if (!isValid) {
                     e.preventDefault();
-                    showError(errorMessage);
+                    showError(message);
                     return false;
                 }
 
-                // Show loading state
-                if (submitBtn) {
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
-                    submitBtn.disabled = true;
-                    submitBtn.style.opacity = '0.7';
-                }
+                /* =============================
+                   LOADING STATE
+                ============================== */
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + messages.updating;
+                submitBtn.disabled = true;
             });
         }
 
-        // ============================================
-        // HELPER FUNCTIONS
-        // ============================================
-        function isValidEmail(email) {
+        /* =============================
+           SUCCESS AUTO HIDE
+        ============================== */
+        if (successBox) {
+            setTimeout(() => {
+                successBox.style.opacity = '0';
+                setTimeout(() => successBox.remove(), 500);
+            }, 5000);
+        }
+
+        /* =============================
+           FUNCTIONS
+        ============================== */
+        function validateEmail(email) {
             const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return re.test(email);
         }
 
-        function showError(message) {
-            const errorDiv = document.createElement('div');
-            errorDiv.style.cssText = `
-                background: linear-gradient(135deg, #dc354520 0%, #dc354530 100%);
-                border-left: 5px solid #dc3545;
-                padding: 18px 20px;
-                border-radius: 10px;
-                margin-bottom: 20px;
-                box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);
-                display: flex;
-                align-items: center;
-            `;
-            errorDiv.innerHTML = `
-                <i class="fas fa-exclamation-circle" style="color: #dc3545; font-size: 1.5em; margin-right: 12px;"></i>
-                <span style="color: #dc3545; font-weight: 600; font-size: 1.05em;">${message}</span>
+        function showError(text) {
+            const old = document.querySelector('.js-error');
+            if (old) old.remove();
+
+            const div = document.createElement('div');
+            div.className = 'alert-success-box js-error';
+            div.style.background = '#dc354520';
+            div.style.borderLeft = '5px solid #dc3545';
+
+            div.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                <span style="color:#dc3545;font-weight:600">${text}</span>
             `;
 
-            const form = document.getElementById('profileForm');
-            const existingError = document.querySelector('.error-alert');
-            if (existingError) {
-                existingError.remove();
-            }
+            form.prepend(div);
 
-            errorDiv.className = 'error-alert';
-            form.insertBefore(errorDiv, form.firstChild);
-
-            setTimeout(() => {
-                errorDiv.remove();
-            }, 5000);
+            setTimeout(() => div.remove(), 5000);
         }
 
-        // ============================================
-        // AUTO-DISMISS SUCCESS MESSAGE
-        // ============================================
-        setTimeout(() => {
-            const successAlert = document.querySelector('.success-alert');
-            if (successAlert) {
-                successAlert.style.transition = 'opacity 0.5s ease';
-                successAlert.style.opacity = '0';
-                setTimeout(() => {
-                    successAlert.remove();
-                }, 500);
+        /* =============================
+           BANGLA NUMBER CONVERSION
+        ============================== */
+        if (isBangla) {
+            const photoNote = document.querySelector('.photo-note');
+            if (photoNote) {
+                photoNote.textContent = photoNote.textContent.replace(/\d/g, digit => {
+                    const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+                    return banglaDigits[digit];
+                });
             }
-        }, 5000);
+        }
 
-        // ============================================
-        // RESET BORDER COLOR ON INPUT
-        // ============================================
-        const allInputs = document.querySelectorAll('input, select');
-        allInputs.forEach(input => {
-            input.addEventListener('input', function() {
-                this.style.borderColor = primaryColor + '50';
-            });
-        });
-
-        console.log('👤 Profile Edit Page Initialized');
-        console.log('Theme Colors:', { primary: primaryColor, secondary: secondaryColor });
+        console.log('👤 Profile JS Initialized');
     });
 })();
 </script>

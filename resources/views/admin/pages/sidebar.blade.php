@@ -55,6 +55,24 @@
             </ul>
         </li>
         <!-- KYC Setup -->
+        <li>
+            <a href="javascript:void(0);" class="has-arrow">
+                <div class="parent-icon">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+                <div class="menu-title">How Toticket Setup</div>
+            </a>
+            <ul>
+                <li>
+                    <a href="{{ route('howtoticket.index') }}">
+                        <i class="bi bi-circle"></i> How Toticket List
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+
+
 
 
 

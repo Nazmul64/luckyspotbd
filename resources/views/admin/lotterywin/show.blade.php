@@ -3,12 +3,12 @@
 @section('admin')
 
 <div class="container mt-4">
-    <h3>🎟 Lottery Purchases</h3>
+    <h3>🎟 Ticket Purchases</h3>
 
     {{-- Filter Tabs --}}
     <div class="mb-3">
         @php
-            $types = ['daily','7days','15days','1month','3months','6months','1year'];
+            $types = ['daily','weekly','biweekly','monthly','quarterly','halfyearly','yearly'];
         @endphp
 
         @foreach($types as $type)
@@ -17,6 +17,14 @@
                 {{ strtoupper($type) }}
             </a>
         @endforeach
+
+        {{-- Custom Days Buttons (1-30) --}}
+        @for($i = 1; $i <= 30; $i++)
+            <a href="{{ route('admin.lottery.purchases', ['type' => $i.'days']) }}"
+               class="btn btn-sm {{ ($winType ?? '') === $i.'days' ? 'btn-primary' : 'btn-outline-primary' }}">
+                {{ $i }}D
+            </a>
+        @endfor
 
         <a href="{{ route('admin.lottery.purchases') }}" class="btn btn-sm btn-outline-secondary">
             ALL
@@ -32,12 +40,11 @@
         <table class="table table-bordered align-middle" id="lotteryTable">
             <thead class="table-dark">
                 <tr>
-                    <th>Lottery Name</th>
+                    <th>Ticket Name</th>
                     <th>Type</th>
                     <th>Price / Ticket</th>
                     <th>Tickets Sold</th>
-                    <th>Multiple Title</th>
-                    <th>Multiple Price</th>
+                    <th>Best Gift</th>
                     <th>Total Amount</th>
                     <th>Status</th>
                     <th>Declare</th>
@@ -51,16 +58,19 @@
 
                         <td>{{ strtoupper($lottery->win_type) }}</td>
 
-                        <td>{{ number_format($lottery->price, 2) }} $</td>
+                        <td>{{ number_format($lottery->price, 2) }} ৳</td>
 
                         <td>{{ $lottery->tickets_sold }}</td>
 
-                        {{-- Multiple Title --}}
+                        {{-- Best Gift (Multiple Title & Price) --}}
                         <td>
-                            @if(is_array($lottery->multiple_title))
+                            @if(is_array($lottery->multiple_title) && is_array($lottery->multiple_price))
                                 <ul class="mb-0 ps-3">
-                                    @foreach($lottery->multiple_title as $title)
-                                        <li>{{ $title }}</li>
+                                    @foreach($lottery->multiple_title as $index => $title)
+                                        <li>
+                                            <strong>{{ $title }}</strong> -
+                                            {{ number_format($lottery->multiple_price[$index] ?? 0, 2) }} ৳
+                                        </li>
                                     @endforeach
                                 </ul>
                             @else
@@ -68,20 +78,7 @@
                             @endif
                         </td>
 
-                        {{-- Multiple Price --}}
-                        <td>
-                            @if(is_array($lottery->multiple_price))
-                                <ul class="mb-0 ps-3">
-                                    @foreach($lottery->multiple_price as $price)
-                                        <li>{{ number_format($price, 2) }} $</li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <span class="text-muted">N/A</span>
-                            @endif
-                        </td>
-
-                        <td>{{ number_format($lottery->total_amount, 2) }} $</td>
+                        <td>{{ number_format($lottery->total_amount, 2) }} ৳</td>
 
                         <td>
                             <span class="badge {{ $lottery->status === 'completed' ? 'bg-success' : 'bg-warning text-dark' }}">
@@ -102,8 +99,8 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="text-center text-muted">
-                            No lotteries found.
+                        <td colspan="8" class="text-center text-muted">
+                            No Ticket found.
                         </td>
                     </tr>
                 @endforelse
