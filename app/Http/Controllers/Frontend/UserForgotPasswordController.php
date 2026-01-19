@@ -131,8 +131,11 @@ class UserForgotPasswordController extends Controller
                         : 'N/A'
                 ]);
 
-                return redirect()->route('user.forget.password')
-                    ->withErrors(['email' => 'This password reset link has expired. Please request a new one.']);
+               return back()->withErrors([
+                    'email' => 'This password reset link has expired. Please request a new one.'
+                ]);
+
+
             }
 
             // Token doesn't exist at all
@@ -141,8 +144,11 @@ class UserForgotPasswordController extends Controller
                 'all_tokens' => User::whereNotNull('reset_token')->pluck('reset_token', 'email')->toArray()
             ]);
 
-            return redirect()->route('user.forget.password')
-                ->withErrors(['email' => 'This password reset link is invalid. Please request a new one.']);
+
+
+                 return back()->withErrors([
+                    'email' => 'This password reset link is invalid. Please request a new one'
+                ]);
         }
 
         // Valid token found

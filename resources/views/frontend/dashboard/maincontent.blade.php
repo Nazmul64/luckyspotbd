@@ -1,1040 +1,1540 @@
 @php
     use Carbon\Carbon;
-
-    // ============================================
-    // CONFIGURATION & SETUP
-    // ============================================
-
-    // Fetch active theme colors from database
-    $activeTheme = \App\Models\ThemeSetting::where('status', 1)->first();
-    $primaryColor = $activeTheme->primary_color ?? '#F5CE0D';
-    $secondaryColor = $activeTheme->secondary_color ?? '#000000';
-
-    // Set timezone to Bangladesh Standard Time (BST = UTC+6)
     date_default_timezone_set('Asia/Dhaka');
-
-    // Get current locale for translations
     $currentLocale = app()->getLocale();
-
-    // Get current server time in Bangladesh timezone
     $serverNow = Carbon::now('Asia/Dhaka');
-    $serverTimestamp = $serverNow->timestamp * 1000; // JavaScript timestamp
+    $serverTimestamp = $serverNow->timestamp * 1000;
 @endphp
 
-    <style>
-        /* ====================================
-           GLOBAL STYLES & VARIABLES
-        ==================================== */
-        :root {
-            --primary-color: {{ $primaryColor }};
-            --secondary-color: {{ $secondaryColor }};
-            --primary-rgb: {{ hexToRgb($primaryColor) }};
-            --secondary-rgb: {{ hexToRgb($secondaryColor) }};
-            --transition-speed: 0.3s;
-            --border-radius-sm: 8px;
-            --border-radius-md: 12px;
-            --border-radius-lg: 15px;
-            --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.1);
-            --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.2);
-            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.3);
+<style>
+:root {
+    --font: {{ $currentLocale === 'bn' ? '"Kalpurush", sans-serif' : '-apple-system, sans-serif' }};
+    --primary: #667eea;
+    --primary-dark: #764ba2;
+    --card1-start: #f093fb;
+    --card1-end: #f5576c;
+    --card2-start: #4facfe;
+    --card2-end: #00f2fe;
+    --card3-start: #43e97b;
+    --card3-end: #38f9d7;
+    --card4-start: #fa709a;
+    --card4-end: #fee140;
+    --card5-start: #30cfd0;
+    --card5-end: #330867;
+    --card6-start: #a8edea;
+    --card6-end: #fed6e3;
+
+    --transition-speed: 0.3s;
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 16px;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* GLOBAL */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font);
+    background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ANIMATIONS */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes float3D {
+    0%, 100% { transform: translateY(0px) rotateX(0deg); }
+    25% { transform: translateY(-8px) rotateX(2deg); }
+    50% { transform: translateY(-10px) rotateX(3deg); }
+    75% { transform: translateY(-8px) rotateX(2deg); }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+.pulse-icon {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.blink-icon {
+    animation: blink 1s ease-in-out infinite;
+}
+
+/* USER TOGGLER */
+.user-toggler-wrapper {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+}
+
+.user-toggler {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+    font-size: 1.2em;
+}
+
+.user-toggler:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+@media (min-width: 992px) {
+    .d-lg-none { display: none !important; }
+}
+
+/* STAT CARDS */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    border-radius: 15px;
+    padding: 25px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    background-size: 200% 200%;
+    animation: gradient-shift 6s ease infinite;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+.stat-card:nth-child(1) {
+    background: linear-gradient(135deg, var(--card1-start) 0%, var(--card1-end) 100%);
+}
+
+.stat-card:nth-child(2) {
+    background: linear-gradient(135deg, var(--card2-start) 0%, var(--card2-end) 100%);
+}
+
+.stat-card:nth-child(3) {
+    background: linear-gradient(135deg, var(--card3-start) 0%, var(--card3-end) 100%);
+}
+
+.stat-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.stat-card-value {
+    font-size: 2.2em;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 10px;
+    font-family: var(--font);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.stat-card-label {
+    font-size: 1.1em;
+    color: rgba(255, 255, 255, 0.95);
+    font-family: var(--font);
+    font-weight: 600;
+}
+
+.stat-card-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 4em;
+    color: white;
+    opacity: 0.2;
+    transition: all 0.3s;
+}
+
+.stat-card:hover .stat-card-icon {
+    opacity: 0.3;
+    transform: translateY(-50%) rotate(10deg) scale(1.1);
+}
+
+/* LOTTERY GRID */
+.lottery-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+    margin-bottom: 40px;
+    perspective: 1000px;
+}
+
+@media (min-width: 768px) {
+    .lottery-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .lottery-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* COLORFUL LOTTERY CARDS */
+.lottery-card {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    background-size: 200% 200%;
+    transform-style: preserve-3d;
+}
+
+/* Different gradient for each card */
+.lottery-card:nth-child(6n+1) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.lottery-card:nth-child(6n+2) {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.lottery-card:nth-child(6n+3) {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.lottery-card:nth-child(6n+4) {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.lottery-card:nth-child(6n+5) {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.lottery-card:nth-child(6n+6) {
+    background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+
+.lottery-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+}
+
+.lottery-card:hover::after {
+    opacity: 1;
+}
+
+.lottery-card:hover {
+    transform: translateY(-15px) rotateX(5deg) scale(1.02);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+}
+
+.lottery-card.fade-in {
+    animation: fadeIn 0.6s ease-out forwards, float3D 4s ease-in-out infinite;
+}
+
+.lottery-card-inner {
+    padding: 0;
+}
+
+.lottery-image {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    transition: transform 0.5s;
+    border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.lottery-card:hover .lottery-image {
+    transform: scale(1.1);
+}
+
+/* COLORFUL CARD CONTENT */
+.lottery-content {
+    padding: 25px;
+    position: relative;
+}
+
+.lottery-card:nth-child(6n+1) .lottery-content {
+    background: linear-gradient(to bottom,
+        rgba(102, 126, 234, 0.12) 0%,
+        rgba(118, 75, 162, 0.18) 100%),
+        linear-gradient(to right, #ffffff 0%, #f8f9fa 100%);
+}
+
+.lottery-card:nth-child(6n+2) .lottery-content {
+    background: linear-gradient(to bottom,
+        rgba(240, 147, 251, 0.12) 0%,
+        rgba(245, 87, 108, 0.18) 100%),
+        linear-gradient(to right, #ffffff 0%, #fff5f7 100%);
+}
+
+.lottery-card:nth-child(6n+3) .lottery-content {
+    background: linear-gradient(to bottom,
+        rgba(79, 172, 254, 0.12) 0%,
+        rgba(0, 242, 254, 0.18) 100%),
+        linear-gradient(to right, #ffffff 0%, #f0f9ff 100%);
+}
+
+.lottery-card:nth-child(6n+4) .lottery-content {
+    background: linear-gradient(to bottom,
+        rgba(67, 233, 123, 0.12) 0%,
+        rgba(56, 249, 215, 0.18) 100%),
+        linear-gradient(to right, #ffffff 0%, #f0fdf4 100%);
+}
+
+.lottery-card:nth-child(6n+5) .lottery-content {
+    background: linear-gradient(to bottom,
+        rgba(250, 112, 154, 0.12) 0%,
+        rgba(254, 225, 64, 0.18) 100%),
+        linear-gradient(to right, #ffffff 0%, #fffbeb 100%);
+}
+
+.lottery-card:nth-child(6n+6) .lottery-content {
+    background: linear-gradient(to bottom,
+        rgba(48, 207, 208, 0.12) 0%,
+        rgba(51, 8, 103, 0.18) 100%),
+        linear-gradient(to right, #ffffff 0%, #f5f3ff 100%);
+}
+
+.lottery-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 12px;
+    font-family: var(--font);
+    line-height: 1.3;
+}
+
+.lottery-description {
+    font-size: 0.95em;
+    color: #6c757d;
+    margin-bottom: 15px;
+    line-height: 1.6;
+    font-family: var(--font);
+}
+
+.lottery-badge {
+    background: linear-gradient(135deg, var(--card4-start) 0%, var(--card4-end) 100%);
+    color: white;
+    padding: 8px 18px;
+    border-radius: 25px;
+    font-size: 0.9em;
+    font-weight: 700;
+    display: inline-block;
+    margin-bottom: 15px;
+    font-family: var(--font);
+    box-shadow: 0 4px 15px rgba(250, 112, 154, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.lottery-price {
+    font-size: 2em;
+    font-weight: bold;
+    background: linear-gradient(135deg, var(--card1-start) 0%, var(--card1-end) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 18px;
+    font-family: var(--font);
+}
+
+.lottery-info-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 0.95em;
+    color: #2c3e50;
+    font-family: var(--font);
+    padding: 8px;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 8px;
+    transition: all 0.3s;
+    font-weight: 600;
+}
+
+.lottery-info-item:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: translateX(5px);
+}
+
+.lottery-info-item i {
+    color: var(--primary);
+    margin-right: 10px;
+    font-size: 1.2em;
+}
+
+/* PRIZE BOX */
+.prize-box {
+    background: linear-gradient(135deg, rgba(240, 147, 251, 0.15), rgba(245, 87, 108, 0.15));
+    border-left: 5px solid var(--card1-start);
+    border-right: 5px solid var(--card1-end);
+    padding: 18px;
+    border-radius: 12px;
+    margin: 18px 0;
+    box-shadow: 0 4px 15px rgba(240, 147, 251, 0.2);
+}
+
+.prize-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 0.95em;
+    color: #2c3e50;
+    font-family: var(--font);
+    padding: 6px;
+    transition: all 0.3s;
+    font-weight: 600;
+}
+
+.prize-item:hover {
+    transform: translateX(8px);
+}
+
+.prize-item:last-child {
+    margin-bottom: 0;
+}
+
+.prize-item i {
+    background: linear-gradient(135deg, var(--card1-start) 0%, var(--card1-end) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-right: 12px;
+    font-size: 1.3em;
+}
+
+.prize-label {
+    font-weight: 700;
+    margin-right: 5px;
+    background: linear-gradient(135deg, var(--card1-start) 0%, var(--card1-end) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* PARTICIPANTS BOX */
+.participants-box {
+    background: linear-gradient(135deg, rgba(79, 172, 254, 0.15), rgba(0, 242, 254, 0.15));
+    padding: 15px 18px;
+    border-radius: 12px;
+    margin: 18px 0;
+    display: flex;
+    align-items: center;
+    font-size: 0.95em;
+    font-weight: 700;
+    color: #2c3e50;
+    border: 3px solid var(--card2-start);
+    font-family: var(--font);
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.2);
+    transition: all 0.3s;
+}
+
+.participants-box:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 20px rgba(79, 172, 254, 0.3);
+}
+
+.participants-box i {
+    background: linear-gradient(135deg, var(--card2-start) 0%, var(--card2-end) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-right: 12px;
+    font-size: 1.3em;
+}
+
+/* GIFT BOX */
+.gift-box {
+    background: linear-gradient(135deg, rgba(67, 233, 123, 0.15), rgba(56, 249, 215, 0.15));
+    border: 3px solid var(--card3-start);
+    padding: 18px;
+    border-radius: 12px;
+    margin-top: 18px;
+    box-shadow: 0 4px 15px rgba(67, 233, 123, 0.2);
+    transition: all 0.3s;
+}
+
+.gift-box:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(67, 233, 123, 0.3);
+}
+
+.gift-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    font-family: var(--font);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.gift-title i {
+    background: linear-gradient(135deg, var(--card3-start) 0%, var(--card3-end) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-right: 12px;
+    font-size: 1.4em;
+}
+
+.gift-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.gift-item {
+    padding-left: 30px;
+    position: relative;
+    margin-bottom: 10px;
+    font-size: 0.95em;
+    color: #2c3e50;
+    font-family: var(--font);
+    padding: 8px 8px 8px 35px;
+    background: rgba(67, 233, 123, 0.08);
+    border-radius: 8px;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+
+.gift-item:hover {
+    background: rgba(67, 233, 123, 0.15);
+    transform: translateX(8px);
+}
+
+.gift-item i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, var(--card3-start) 0%, var(--card3-end) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* VIDEO SECTION */
+.video-section {
+    margin-top: 18px;
+}
+
+.video-container {
+    border-radius: 15px;
+    overflow: hidden;
+    border: 4px solid var(--primary);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    background: #000;
+    transition: all 0.3s;
+}
+
+.video-container:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+}
+
+.video-responsive {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+}
+
+.video-responsive iframe,
+.video-responsive video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.video-live-badge {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #ff0000;
+    font-family: var(--font);
+    animation: blink 1.5s ease-in-out infinite;
+}
+
+.video-coming-soon {
+    background: linear-gradient(135deg, var(--card5-start) 0%, var(--card5-end) 100%);
+    padding: 40px 20px;
+    border-radius: 15px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 8px 25px rgba(48, 207, 208, 0.4);
+}
+
+.video-coming-soon-icon {
+    font-size: 4em;
+    margin-bottom: 20px;
+    display: block;
+    animation: float 3s ease-in-out infinite;
+}
+
+.video-coming-soon-title {
+    font-size: 1.4em;
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-family: var(--font);
+}
+
+.video-countdown-text {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 15px 0;
+    font-family: var(--font);
+}
+
+.video-start-time {
+    font-size: 0.9em;
+    opacity: 0.95;
+    margin-top: 15px;
+    font-family: var(--font);
+}
+
+/* BUTTON */
+.btn {
+    display: block;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 1.05em;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: all 0.4s;
+    width: 100%;
+    font-family: var(--font);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+    color: white;
+}
+
+.btn i {
+    margin-right: 10px;
+    position: relative;
+    z-index: 1;
+}
+
+/* EMPTY STATE */
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 40px;
+    background: linear-gradient(135deg, var(--card3-start) 0%, var(--card3-end) 100%);
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(67, 233, 123, 0.4);
+}
+
+.empty-state-icon {
+    font-size: 5em;
+    color: #fff;
+    opacity: 0.9;
+    margin-bottom: 25px;
+    animation: float 3s ease-in-out infinite;
+}
+
+.empty-state-title {
+    font-size: 1.6em;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 12px;
+    font-family: var(--font);
+}
+
+.empty-state-text {
+    font-size: 1.1em;
+    color: rgba(255, 255, 255, 0.95);
+    font-family: var(--font);
+}
+
+/* PAGINATION */
+.pagination-wrapper {
+    margin: 50px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination {
+    display: flex;
+    list-style: none;
+    gap: 10px;
+    padding: 18px 25px;
+    background: linear-gradient(to right, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.pagination a,
+.pagination span {
+    display: inline-block;
+    padding: 12px 18px;
+    min-width: 50px;
+    text-align: center;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #e9ecef;
+    color: #2c3e50;
+    text-decoration: none;
+    font-weight: 700;
+    transition: all 0.3s;
+    font-family: var(--font);
+}
+
+.pagination a:hover {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.pagination .active span {
+    background: linear-gradient(135deg, var(--card1-start) 0%, var(--card1-end) 100%);
+    color: white;
+    border-color: var(--card1-start);
+    box-shadow: 0 5px 15px rgba(240, 147, 251, 0.3);
+}
+
+/* TRANSACTION TABLE */
+.transaction-section {
+    margin-top: 60px;
+}
+
+.transaction-container {
+    background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    border: 3px solid var(--primary);
+}
+
+.transaction-header {
+    font-size: 1.8em;
+    font-weight: bold;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font);
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.transaction-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.transaction-table thead {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+.transaction-table th {
+    padding: 18px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 1em;
+    color: white;
+    font-family: var(--font);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.transaction-table td {
+    padding: 15px 18px;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 0.95em;
+    color: #2c3e50;
+    font-family: var(--font);
+}
+
+.transaction-table tbody tr {
+    transition: all 0.3s;
+}
+
+.transaction-table tbody tr:hover {
+    background: linear-gradient(to right, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+    transform: scale(1.01);
+}
+
+.transaction-type {
+    padding: 6px 15px;
+    border-radius: 25px;
+    font-size: 0.9em;
+    font-weight: 700;
+    display: inline-block;
+    font-family: var(--font);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.type-deposit {
+    background: linear-gradient(135deg, rgba(67, 233, 123, 0.2), rgba(56, 249, 215, 0.2));
+    color: var(--card3-start);
+    border: 2px solid var(--card3-start);
+}
+
+.type-withdraw {
+    background: linear-gradient(135deg, rgba(245, 87, 108, 0.2), rgba(240, 147, 251, 0.2));
+    color: var(--card1-end);
+    border: 2px solid var(--card1-end);
+}
+
+.transaction-amount {
+    font-weight: 700;
+    font-size: 1.1em;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.status-badge {
+    padding: 6px 15px;
+    border-radius: 25px;
+    font-size: 0.9em;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-approved {
+    background: linear-gradient(135deg, rgba(67, 233, 123, 0.2), rgba(56, 249, 215, 0.2));
+    color: var(--card3-start);
+    border: 2px solid var(--card3-start);
+}
+
+.status-pending {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(254, 225, 64, 0.2));
+    color: #ff8800;
+    border: 2px solid #ffc107;
+}
+
+.status-rejected {
+    background: linear-gradient(135deg, rgba(245, 87, 108, 0.2), rgba(240, 147, 251, 0.2));
+    color: var(--card1-end);
+    border: 2px solid var(--card1-end);
+}
+
+.transaction-empty {
+    text-align: center;
+    padding: 50px 25px;
+    color: #6c757d;
+    font-family: var(--font);
+    font-size: 1.1em;
+}
+
+/* UTILITY CLASSES */
+.d-flex { display: flex !important; }
+.align-items-center { align-items: center; }
+.justify-content-between { justify-content: space-between; }
+.mb-0 { margin-bottom: 0 !important; }
+.fw-bold { font-weight: 700; }
+.mt-3 { margin-top: 15px !important; }
+.mt-4 { margin-top: 20px !important; }
+.mt-5 { margin-top: 30px !important; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .stat-card {
+        padding: 20px;
+    }
+    .lottery-image {
+        height: 180px;
+    }
+    .lottery-content {
+        padding: 20px;
+    }
+    .transaction-container {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 15px;
+    }
+    .lottery-content {
+        padding: 15px;
+    }
+    .stat-card-value {
+        font-size: 1.8em;
+    }
+    .transaction-header {
+        font-size: 1.4em;
+    }
+}
+
+@keyframes scroll {
+        0% {
+            transform: translateX(100%);
         }
-
-        /* ====================================
-           GRADIENT SHADOW EFFECTS
-        ==================================== */
-        .gradient-shadow {
-            position: relative;
+        100% {
+            transform: translateX(-100%);
         }
+    }
 
-        .gradient-shadow::before {
-            content: '';
-            position: absolute;
-            top: -3px;
-            left: -3px;
-            right: -3px;
-            bottom: -3px;
-            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-            border-radius: inherit;
-            z-index: -1;
-            opacity: 0.8;
-            transition: all var(--transition-speed) ease;
-        }
-
-        .gradient-shadow-sm::before {
-            box-shadow: 0 6px 20px rgba(51, 8, 103, 0.25),
-                        0 3px 10px rgba(48, 207, 208, 0.15);
-        }
-
-        .gradient-shadow-md::before {
-            box-shadow: 0 8px 30px rgba(51, 8, 103, 0.3),
-                        0 4px 15px rgba(48, 207, 208, 0.2),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        .gradient-shadow-lg::before {
-            box-shadow: 0 12px 40px rgba(51, 8, 103, 0.35),
-                        0 6px 20px rgba(48, 207, 208, 0.25),
-                        inset 0 2px 0 rgba(255, 255, 255, 0.15);
-        }
-
-        .gradient-shadow:hover::before {
-            transform: translateY(-3px);
-            box-shadow: 0 16px 50px rgba(51, 8, 103, 0.45),
-                        0 8px 25px rgba(48, 207, 208, 0.35);
-        }
-
-        /* ====================================
-           ANIMATIONS
-        ==================================== */
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .blink-icon {
-            animation: blink 1s ease-in-out infinite;
-        }
-
-        .pulse-icon {
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        /* ====================================
-           COMPONENT STYLES
-        ==================================== */
-
-        /* User Toggler */
-        .user-toggler-wrapper {
-            background: linear-gradient(135deg,
-                        rgba(var(--primary-rgb), 0.1) 0%,
-                        rgba(var(--primary-rgb), 0.2) 100%);
-            padding: 15px;
-            border-radius: var(--border-radius-sm);
-            margin-bottom: 20px;
-            border: 2px solid var(--primary-color);
-        }
-
-        .user-toggler {
-            background-color: var(--primary-color);
-            color: var(--secondary-color);
-            padding: 10px 15px;
-            border-radius: var(--border-radius-sm);
-            cursor: pointer;
-            transition: all var(--transition-speed) ease;
-        }
-
-        .user-toggler:hover {
-            opacity: 0.9;
-            transform: scale(1.05);
-        }
-
-        /* Dashboard Cards */
-        .dashboard-card {
-            background: linear-gradient(135deg,
-                        rgba(var(--primary-rgb), 0.15) 0%,
-                        rgba(var(--primary-rgb), 0.25) 100%);
-            border: 2px solid var(--primary-color);
-            border-radius: var(--border-radius-md);
-            padding: 25px;
-            position: relative;
-            overflow: hidden;
-            transition: all var(--transition-speed) ease;
-        }
-
-        .dashboard-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .dashboard-card-icon {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 3em;
-            color: var(--primary-color);
+    /* Pulse Animation for Icon Background */
+    @keyframes pulse {
+        0%, 100% {
+            transform: translate(-50%, -50%) scale(1);
             opacity: 0.3;
         }
-
-        /* Game Cards */
-        .game-card {
-            background: linear-gradient(135deg,
-                        rgba(var(--primary-rgb), 0.1) 0%,
-                        rgba(var(--secondary-rgb), 0.1) 100%);
-            border: 2px solid var(--primary-color);
-            border-radius: var(--border-radius-lg);
-            overflow: hidden;
-            transition: all var(--transition-speed) ease;
-            position: relative;
+        50% {
+            transform: translate(-50%, -50%) scale(1.2);
+            opacity: 0;
         }
+    }
 
-        .game-card:hover {
-            transform: translateY(-8px);
+    /* Shake Animation for Bullhorn */
+    @keyframes shake {
+        0%, 100% {
+            transform: rotate(0deg);
         }
-
-        .game-card-image {
-            width: 100%;
-            height: auto;
-            display: block;
-            border-radius: var(--border-radius-md);
-            border: 3px solid var(--primary-color);
-            box-shadow: var(--shadow-sm);
+        10%, 30% {
+            transform: rotate(-10deg);
         }
-
-        /* Buttons */
-        .btn-primary-custom {
-            background-color: var(--primary-color);
-            color: var(--secondary-color);
-            border: none;
-            padding: 15px 30px;
-            border-radius: var(--border-radius-sm);
-            width: 100%;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all var(--transition-speed) ease;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
+        20%, 40% {
+            transform: rotate(10deg);
         }
-
-        .btn-primary-custom:hover {
-            opacity: 0.9;
-            transform: scale(1.02);
+        50% {
+            transform: rotate(0deg);
         }
+    }
 
-        /* Prize Information Box */
-        .prize-info-box {
-            background-color: rgba(var(--secondary-rgb), 0.05);
-            border-left: 4px solid var(--primary-color);
-            padding: 15px;
-            border-radius: var(--border-radius-sm);
-            margin: 15px 0;
+    /* Ring Animation for Bell */
+    @keyframes ring {
+        0%, 100% {
+            transform: rotate(0deg);
         }
-
-        /* Video Container */
-        .video-container {
-            border-radius: var(--border-radius-md);
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
-            border: 3px solid var(--primary-color);
-            margin-bottom: 15px;
+        10%, 30% {
+            transform: rotate(-15deg);
         }
-
-        .video-responsive {
-            position: relative;
-            padding-bottom: 56.25%;
-            height: 0;
-            background: #000;
+        20%, 40% {
+            transform: rotate(15deg);
         }
-
-        .video-responsive iframe,
-        .video-responsive video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
+        50% {
+            transform: rotate(0deg);
         }
+    }
 
-        /* Video Coming Soon Box */
-        .video-coming-soon {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            padding: 30px;
-            border-radius: var(--border-radius-md);
-            text-align: center;
-            box-shadow: var(--shadow-md);
+    /* Background Move Animation */
+    @keyframes bgMove {
+        0% {
+            background-position: 0 0;
         }
-
-        /* Transaction Table */
-        .transaction-table-container {
-            background: linear-gradient(135deg,
-                        rgba(var(--primary-rgb), 0.05) 0%,
-                        rgba(var(--secondary-rgb), 0.05) 100%);
-            border-radius: var(--border-radius-lg);
-            padding: 25px;
-            border: 2px solid var(--primary-color);
+        100% {
+            background-position: 100px 100px;
         }
+    }
 
-        .transaction-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 10px;
+    /* Hover Effects */
+    .notice-scroll:hover {
+        animation-play-state: paused;
+    }
+
+    .notice-close:hover {
+        background: rgba(255,255,255,0.3) !important;
+        transform: scale(1.1);
+    }
+
+    .notice-close:active {
+        transform: scale(0.95);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .notice-label {
+            display: none !important;
         }
-
-        .transaction-table thead th {
-            background-color: var(--primary-color);
-            color: var(--secondary-color);
-            padding: 15px;
-            text-align: left;
-            font-weight: bold;
+        .notice-icon {
+            margin-right: 10px !important;
         }
-
-        .transaction-table thead th:first-child {
-            border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
+        .notice-icon div {
+            width: 35px !important;
+            height: 35px !important;
         }
-
-        .transaction-table thead th:last-child {
-            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+        .notice-icon i {
+            font-size: 1em !important;
         }
-
-        .transaction-table tbody tr {
-            background-color: rgba(var(--secondary-rgb), 0.03);
-            transition: all var(--transition-speed) ease;
+        .notice-scroll span {
+            font-size: 0.9em !important;
         }
+    }
+</style>
 
-        .transaction-table tbody tr:hover {
-            background-color: rgba(var(--primary-rgb), 0.1);
-            transform: scale(1.01);
-        }
 
-        .transaction-table tbody td {
-            padding: 15px;
-            color: var(--secondary-color);
-        }
+@php
+    use App\Models\Notice;
 
-        .transaction-table tbody td:first-child {
-            border-left: 3px solid var(--primary-color);
-            font-weight: 600;
-        }
+    $notice = Notice::latest()->first();
+    $currentLang = app()->getLocale(); // 'en' or 'bn'
+@endphp
 
-        /* Status Badges */
-        .status-badge {
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 600;
-            display: inline-block;
-        }
+{{-- Modern Notice Bar --}}
+<div class="notice-bar-wrapper" style="background: linear-gradient(135deg, #30cfd0 0%, #086755 100%); padding: 0; overflow: hidden; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-bottom: 3px solid #30cfd0;">
 
-        .status-approved {
-            background-color: #28a745;
-            color: white;
-        }
+    {{-- Animated Background Pattern --}}
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.1; background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px); animation: bgMove 20s linear infinite;"></div>
 
-        .status-pending {
-            background-color: #ffc107;
-            color: var(--secondary-color);
-        }
+    <div class="container-fluid">
+        <div class="notice-bar" style="display: flex; align-items: center; padding: 15px 0; position: relative; z-index: 1;">
 
-        .status-rejected {
-            background-color: #dc3545;
-            color: white;
-        }
+            {{-- Notice Icon with Pulse Animation --}}
+            <div class="notice-icon" style="flex-shrink: 0; margin-right: 20px; position: relative;">
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; background: rgba(255,193,7,0.3); border-radius: 50%; animation: pulse 2s infinite;"></div>
+                <div style="position: relative; background: #ffc107; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(255,193,7,0.4);">
+                    <i class="fas fa-bullhorn" style="color: #ffffff; font-size: 1.3em; animation: shake 3s infinite;"></i>
+                </div>
+            </div>
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .dashboard-card {
-                padding: 20px;
-            }
+            {{-- Notice Label --}}
+            <div class="notice-label" style="flex-shrink: 0; margin-right: 15px; background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 25px; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3);">
+                <span style="color: #ffffff; font-weight: bold; font-size: 0.95em; letter-spacing: 1px; text-transform: uppercase;">
+                    <i class="fas fa-bell" style="margin-right: 8px; animation: ring 2s infinite;"></i>
+                    {{ $currentLang === 'bn' ? 'নোটিস' : 'Notice' }}
+                </span>
+            </div>
 
-            .game-card {
-                margin-bottom: 20px;
-            }
+            {{-- Scrolling Notice Text --}}
+            <div class="notice-content" style="flex: 1; overflow: hidden; position: relative; height: 30px;">
+                <div class="notice-scroll" style="position: absolute; white-space: nowrap; animation: scroll 25s linear infinite; padding-right: 50px;">
+                    <span style="color: #ffffff; font-size: 1.05em; font-weight: 500; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        {{ $notice->notices_text ?? ($currentLang === 'bn' ? 'কোন নোটিস উপলব্ধ নেই' : 'No notice available') }}
+                    </span>
+                </div>
+            </div>
 
-            .transaction-table-container {
-                overflow-x: auto;
-            }
-        }
+            {{-- Close Button (Optional) --}}
+            <button class="notice-close" onclick="this.closest('.notice-bar-wrapper').style.display='none'" style="flex-shrink: 0; margin-left: 15px; background: rgba(255,255,255,0.2); border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+                <i class="fas fa-times" style="color: #ffffff; font-size: 1.1em;"></i>
+            </button>
 
-        /* Utility Classes */
-        .text-primary { color: var(--primary-color) !important; }
-        .text-secondary { color: var(--secondary-color) !important; }
-        .bg-primary { background-color: var(--primary-color) !important; }
-        .bg-secondary { background-color: var(--secondary-color) !important; }
-    </style>
-</head>
-<body>
-
-<!-- ====================================
-     USER TOGGLER (Mobile Only)
-==================================== -->
-<div class="gradient-shadow gradient-shadow-sm" style="border-radius: var(--border-radius-sm);">
-    <div class="user-toggler-wrapper d-flex align-items-center d-lg-none">
-        <h4 class="title m-0 text-secondary" style="flex: 1;">
-            {{ trans_db('User Dashboard', 'User Dashboard') }}
-        </h4>
-        <div class="user-toggler">
-            <i class="las la-sliders-h"></i>
         </div>
     </div>
 </div>
 
-<!-- ====================================
-     DASHBOARD STATISTICS CARDS
-==================================== -->
-<div class="row justify-content-center g-4">
 
-    <!-- Total Deposit Card -->
-    <div class="col-lg-6 col-xl-4 col-md-6 col-sm-10">
-        <div class="gradient-shadow gradient-shadow-md fade-in" style="border-radius: var(--border-radius-md); margin-bottom: 20px;">
-            <div class="dashboard-card">
-                <div style="position: relative; z-index: 2;">
-                    <h2 class="text-secondary" style="font-size: 2em; font-weight: bold; margin-bottom: 10px;">
-                        {{ number_format(round($total_deposite ?? 0)) }} {{ trans_db('টাকা','টাকা') }}
-                    </h2>
-                    <p class="text-secondary" style="opacity: 0.8; font-size: 1.1em; margin: 0;">
-                        {{ trans_db('Total Deposit','Total Deposit') }}
-                    </p>
+
+<div class="container">
+
+    <!-- USER TOGGLER -->
+    <div class="d-lg-none">
+        <div class="user-toggler-wrapper d-flex align-items-center justify-content-between">
+            <h4 class="fw-bold mb-0" style="color: white; font-family: var(--font);">
+                {{ trans_db('User Dashboard', 'User Dashboard') }}
+            </h4>
+            <button class="user-toggler" type="button">
+                <i class="las la-sliders-h"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+        <div class="fade-in" style="animation-delay: 0s;">
+            <div class="stat-card">
+                <div class="stat-card-value">
+                    {{ number_format(round($total_deposite ?? 0)) }} {{ trans_db('টাকা','টাকা') }}
                 </div>
-                <div class="dashboard-card-icon">
+                <div class="stat-card-label">
+                    {{ trans_db('Total Deposit','Total Deposit') }}
+                </div>
+                <div class="stat-card-icon">
                     <i class="las la-wallet"></i>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Total Balance Card -->
-    <div class="col-lg-6 col-xl-4 col-md-6 col-sm-10">
-        <div class="gradient-shadow gradient-shadow-md fade-in" style="border-radius: var(--border-radius-md); margin-bottom: 20px; animation-delay: 0.1s;">
-            <div class="dashboard-card">
-                <div style="position: relative; z-index: 2;">
-                    <h2 class="text-secondary" style="font-size: 2em; font-weight: bold; margin-bottom: 10px;">
-                        {{ number_format(round($total_balance ?? 0)) }} {{ trans_db('টাকা','টাকা') }}
-                    </h2>
-                    <p class="text-secondary" style="opacity: 0.8; font-size: 1.1em; margin: 0;">
-                        {{ trans_db('Total Balance','Total Balance') }}
-                    </p>
+        <div class="fade-in" style="animation-delay: 0.1s;">
+            <div class="stat-card">
+                <div class="stat-card-value">
+                    {{ number_format(round($total_balance ?? 0)) }} {{ trans_db('টাকা','টাকা') }}
                 </div>
-                <div class="dashboard-card-icon">
+                <div class="stat-card-label">
+                    {{ trans_db('Total Balance','Total Balance') }}
+                </div>
+                <div class="stat-card-icon">
                     <i class="las la-coins"></i>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Total Withdraw Card -->
-    <div class="col-lg-6 col-xl-4 col-md-6 col-sm-10">
-        <div class="gradient-shadow gradient-shadow-md fade-in" style="border-radius: var(--border-radius-md); margin-bottom: 20px; animation-delay: 0.2s;">
-            <div class="dashboard-card">
-                <div style="position: relative; z-index: 2;">
-                    <h2 class="text-secondary" style="font-size: 2em; font-weight: bold; margin-bottom: 10px;">
-                        {{ number_format(round($total_withdraw ?? 0)) }} {{ trans_db('টাকা','টাকা') }}
-                    </h2>
-                    <p class="text-secondary" style="opacity: 0.8; font-size: 1.1em; margin: 0;">
-                        {{ trans_db('Total Withdraw','Total Withdraw') }}
-                    </p>
+        <div class="fade-in" style="animation-delay: 0.2s;">
+            <div class="stat-card">
+                <div class="stat-card-value">
+                    {{ number_format(round($total_withdraw ?? 0)) }} {{ trans_db('টাকা','টাকা') }}
                 </div>
-                <div class="dashboard-card-icon">
+                <div class="stat-card-label">
+                    {{ trans_db('Total Withdraw','Total Withdraw') }}
+                </div>
+                <div class="stat-card-icon">
                     <i class="las la-hand-holding-usd"></i>
                 </div>
             </div>
         </div>
     </div>
 
-</div>
+    <!-- LOTTERY GRID -->
+    <div class="lottery-grid mt-5">
+        @forelse($package_show as $index => $package)
+            @php
+                $drawDate = $package->draw_date ? Carbon::parse($package->draw_date, 'UTC')->setTimezone('Asia/Dhaka') : null;
+                $drawTimestamp = $drawDate ? $drawDate->timestamp * 1000 : 0;
 
-<!-- ====================================
-     LOTTERY PACKAGES SECTION
-==================================== -->
-<div class="row gy-4 justify-content-center pt-5">
-    @forelse($package_show as $index => $package)
-        @php
-            // Calculate times in Bangladesh timezone
-            $drawDate = $package->draw_date
-                ? Carbon::parse($package->draw_date, 'UTC')->setTimezone('Asia/Dhaka')
-                : null;
-            $drawTimestamp = $drawDate ? $drawDate->timestamp * 1000 : 0;
+                $videoScheduledAt = $package->video_scheduled_at ? Carbon::parse($package->video_scheduled_at, 'UTC')->setTimezone('Asia/Dhaka') : null;
+                $videoTimestamp = $videoScheduledAt ? $videoScheduledAt->timestamp * 1000 : 0;
 
-            $videoScheduledAt = $package->video_scheduled_at
-                ? Carbon::parse($package->video_scheduled_at, 'UTC')->setTimezone('Asia/Dhaka')
-                : null;
-            $videoTimestamp = $videoScheduledAt ? $videoScheduledAt->timestamp * 1000 : 0;
-
-            // Determine if video should be shown
-            $shouldShowVideo = false;
-            if ($package->video_enabled && $package->video_url && $videoScheduledAt) {
-                $shouldShowVideo = $serverNow->gte($videoScheduledAt);
-            }
-
-            // Prepare video embed URL
-            $embedUrl = '';
-            $isYouTube = false;
-            if ($package->video_url) {
-                $videoUrl = trim($package->video_url);
-                if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/', $videoUrl, $matches)) {
-                    $videoId = $matches[1];
-                    $embedUrl = "https://www.youtube.com/embed/{$videoId}?autoplay=1&mute=0&rel=0&modestbranding=1&controls=1";
-                    $isYouTube = true;
-                } else {
-                    $embedUrl = $videoUrl;
+                $shouldShowVideo = false;
+                if ($package->video_enabled && $videoScheduledAt) {
+                    $shouldShowVideo = $serverNow->gte($videoScheduledAt);
                 }
-            }
 
-            // Get translated content
-            $lotteryName = $package->getTranslatedName();
-            $lotteryDescription = $package->getTranslatedDescription();
+                $embedUrl = '';
+                $isYouTube = false;
+                $videoSource = '';
 
-            // Animation delay for staggered effect
-            $animationDelay = $index * 0.1;
-        @endphp
+                if ($package->video_type === 'upload' && $package->video_file) {
+                    $videoSource = asset('uploads/lottery/videos/' . $package->video_file);
+                } elseif ($package->video_url) {
+                    $videoUrl = trim($package->video_url);
 
-        <div class="col-lg-6 col-xl-4 col-md-6 col-sm-6">
-            <div class="gradient-shadow gradient-shadow-lg fade-in" style="border-radius: var(--border-radius-lg); margin-bottom: 25px; animation-delay: {{ $animationDelay }}s;">
-                <div class="game-card">
-                    <div style="padding: 20px;">
+                    if ($package->video_type === 'youtube') {
+                        if (preg_match('/^[a-zA-Z0-9_-]{11}$/', $videoUrl)) {
+                            $videoId = $videoUrl;
+                        } elseif (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/', $videoUrl, $matches)) {
+                            $videoId = $matches[1];
+                        } else {
+                            $videoId = null;
+                        }
 
+                        if ($videoId) {
+                            $embedUrl = "https://www.youtube.com/embed/{$videoId}?autoplay=1&mute=0&rel=0&modestbranding=1&controls=1";
+                            $isYouTube = true;
+                        }
+                    } else {
+                        $videoSource = $videoUrl;
+                    }
+                }
+
+                $lotteryName = is_array($package->name) ? ($currentLocale === 'bn' ? ($package->name['bn'] ?? $package->name['en']) : $package->name['en']) : $package->name;
+                $lotteryDescription = is_array($package->description) ? ($currentLocale === 'bn' ? ($package->description['bn'] ?? $package->description['en'] ?? '') : ($package->description['en'] ?? '')) : ($package->description ?? '');
+                $animationDelay = ($index % ($package_show->perPage() ?? 12)) * 0.1;
+                $totalBuyers = $total_buyer ?? 0;
+            @endphp
+
+            <div class="fade-in" style="animation-delay: {{ $animationDelay }}s;">
+                <div class="lottery-card">
+                    <div class="lottery-card-inner">
                         @auth
-                            {{-- AUTHENTICATED USER VIEW --}}
                             <form method="POST" action="{{ route('buy.package', $package->id) }}">
                                 @csrf
+                                <img src="{{ asset('uploads/lottery/' . ($package->photo ?? 'default.png')) }}" alt="{{ $lotteryName }}" class="lottery-image" onerror="this.src='{{ asset('assets/images/default-lottery.png') }}'">
 
-                                <!-- Lottery Image -->
-                                <div style="margin-bottom: 20px;">
-                                    <img src="{{ asset('uploads/Lottery/' . ($package->photo ?? 'default.png')) }}"
-                                         alt="{{ $lotteryName }}"
-                                         class="game-card-image"
-                                         onerror="this.src='{{ asset('uploads/lottery/default.png') }}'">
-                                </div>
+                                <div class="lottery-content">
+                                    <h4 class="lottery-title">{{ $lotteryName ?: trans_db('N/A', 'N/A') }}</h4>
+                                    @if($lotteryDescription)
+                                        <p class="lottery-description">{{ Str::limit($lotteryDescription, 80) }}</p>
+                                    @endif
 
-                                <!-- Lottery Title & Description -->
-                                <h4 class="text-secondary" style="font-size: 1.5em; font-weight: bold; margin-bottom: 10px;">
-                                    {{ $lotteryName ?: trans_db('N/A', 'N/A') }}
-                                </h4>
+                                    <div class="lottery-badge">{{ ucfirst($package->win_type ?? trans_db('N/A', 'N/A')) }}</div>
+                                    <div class="lottery-price">{{ number_format($package->price ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}</div>
 
-                                @if($lotteryDescription)
-                                    <p class="text-secondary" style="opacity: 0.8; margin-bottom: 15px; font-size: 0.95em;">
-                                        {{ Str::limit($lotteryDescription, 100) }}
-                                    </p>
-                                @endif
-
-                                <!-- Win Type Badge -->
-                                <p style="background-color: var(--primary-color); color: var(--secondary-color); display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 0.9em; font-weight: 600; margin-bottom: 10px;">
-                                    {{ ucfirst($package->win_type ?? trans_db('N/A', 'N/A')) }}
-                                </p>
-
-                                <!-- Price -->
-                                <p class="text-primary" style="font-size: 1.8em; font-weight: bold; margin-bottom: 15px;">
-                                    {{ number_format($package->price ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}
-                                </p>
-
-                                <!-- Draw Date -->
-                                <p class="text-secondary" style="margin-bottom: 15px; font-size: 0.95em;">
-                                    <i class="fas fa-calendar-alt text-primary"></i>
-                                    <span style="font-weight: 600;">{{ trans_db('Draw Date', 'Draw Date') }}:</span>
-                                    {{ $drawDate ? $drawDate->format('d M, Y h:i A') : trans_db('Not Set', 'Not Set') }}
-                                </p>
-
-                                <!-- Prize Information -->
-                                <div class="prize-info-box">
-                                    <p class="text-secondary" style="margin-bottom: 8px; font-size: 0.95em;">
-                                        <i class="fas fa-trophy text-primary"></i>
-                                        <span style="font-weight: 600;">{{ trans_db('1st Prize', '1st Prize') }}:</span>
-                                        {{ number_format($package->first_prize ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}
-                                    </p>
-                                    <p class="text-secondary" style="margin-bottom: 8px; font-size: 0.95em;">
-                                        <i class="fas fa-medal text-primary"></i>
-                                        <span style="font-weight: 600;">{{ trans_db('2nd Prize', '2nd Prize') }}:</span>
-                                        {{ number_format($package->second_prize ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}
-                                    </p>
-                                    <p class="text-secondary" style="margin-bottom: 0; font-size: 0.95em;">
-                                        <i class="fas fa-award text-primary"></i>
-                                        <span style="font-weight: 600;">{{ trans_db('3rd Prize', '3rd Prize') }}:</span>
-                                        {{ number_format($package->third_prize ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}
-                                    </p>
-                                </div>
-
-                                <!-- Total Participants -->
-                                <div style="background-color: rgba(var(--primary-rgb), 0.1); padding: 12px; border-radius: var(--border-radius-sm); margin-bottom: 15px;">
-                                    <p class="text-secondary" style="margin-bottom: 0; font-size: 0.95em;">
-                                        <i class="fas fa-users text-primary"></i>
-                                        <span style="font-weight: 600;">{{ trans_db('Total Participants', 'Total Participants') }}:</span>
-                                        {{ $total_buyer }}
-                                    </p>
-                                </div>
-
-                                <!-- Multiple Packages/Gifts -->
-                                @if(is_array($package->multiple_title) && count($package->multiple_title) > 0)
-                                    <div style="background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1) 0%, rgba(var(--secondary-rgb), 0.05) 100%); padding: 15px; border-radius: var(--border-radius-sm); margin-top: 15px; border: 1px solid var(--primary-color);">
-                                        <h6 class="text-secondary" style="margin-bottom: 12px; font-weight: bold; font-size: 1.1em;">
-                                            <i class="fas fa-box-open text-primary"></i>
-                                            {{ trans_db('Best Gift', 'Best Gift') }}:
-                                        </h6>
-                                        <ul style="list-style: none; padding: 0; margin: 0;">
-                                            @foreach($package->multiple_title as $idx => $title)
-                                                @if($title)
-                                                    <li class="text-secondary" style="margin-bottom: 8px; padding-left: 25px; position: relative; font-size: 0.9em;">
-                                                        <i class="fas fa-check-circle text-primary" style="position: absolute; left: 0; top: 2px;"></i>
-                                                        <strong>{{ $title }}</strong> - {{ number_format($package->multiple_price[$idx] ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}
-                                                    </li>
-                                                @endif
-                                            @endforeach
-                                        </ul>
+                                    <div class="lottery-info-item">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <strong>{{ trans_db('Draw Date', 'Draw Date') }}:</strong>
+                                        <span style="margin-left: 5px;">{{ $drawDate ? $drawDate->format('d M, Y h:i A') : trans_db('Not Set', 'Not Set') }}</span>
                                     </div>
+
+                                    <div class="prize-box">
+                                        <div class="prize-item">
+                                            <i class="fas fa-trophy"></i>
+                                            <span class="prize-label">{{ trans_db('1st Prize', '1st Prize') }}:</span>
+                                            {{ number_format($package->first_prize ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}
+                                        </div>
+                                        <div class="prize-item">
+                                            <i class="fas fa-medal"></i>
+                                            <span class="prize-label">{{ trans_db('2nd Prize', '2nd Prize') }}:</span>
+                                            {{ number_format($package->second_prize ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}
+                                        </div>
+                                        <div class="prize-item">
+                                            <i class="fas fa-award"></i>
+                                            <span class="prize-label">{{ trans_db('3rd Prize', '3rd Prize') }}:</span>
+                                            {{ number_format($package->third_prize ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}
+                                        </div>
+                                    </div>
+
+                                    <div class="participants-box">
+                                        <i class="fas fa-users"></i>
+                                        <strong>{{ trans_db('Total Participants', 'Total Participants') }}:</strong>
+                                        <span style="margin-left: 5px;">{{ $totalBuyers }}</span>
+                                    </div>
+
+                                    @if(is_array($package->multiple_title) && count(array_filter($package->multiple_title)) > 0)
+                                        <div class="gift-box">
+                                            <div class="gift-title">
+                                                <i class="fas fa-box-open"></i>
+                                                {{ trans_db('Best Gift', 'Best Gift') }}
+                                            </div>
+                                            <ul class="gift-list">
+                                                @foreach($package->multiple_title as $idx => $title)
+                                                    @if($title)
+                                                        <li class="gift-item">
+                                                            <i class="fas fa-check-circle"></i>
+                                                            <strong>{{ $title }}</strong> - {{ number_format($package->multiple_price[$idx] ?? 0, 0) }} {{ trans_db('টাকা','টাকা') }}
+                                                        </li>
+                                                    @endif
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    @endif
+
+                                    @if($package->video_enabled && ($embedUrl || $videoSource))
+                                        <div class="video-section" data-package-id="{{ $package->id }}" data-should-show="{{ $shouldShowVideo ? 'true' : 'false' }}" data-video-time="{{ $videoTimestamp }}" data-server-time="{{ $serverTimestamp }}" data-embed-url="{{ $embedUrl }}" data-video-source="{{ $videoSource }}">
+                                            @if($shouldShowVideo)
+                                                <div class="video-container">
+                                                    @if($isYouTube && $embedUrl)
+                                                        <div class="video-responsive">
+                                                            <iframe src="{{ $embedUrl }}" title="Lottery Live Draw" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                                        </div>
+                                                    @elseif($videoSource)
+                                                        <video controls autoplay muted playsinline style="width: 100%; display: block;">
+                                                            <source src="{{ $videoSource }}" type="video/mp4">
+                                                            Your browser does not support the video tag.
+                                                        </video>
+                                                    @endif
+                                                </div>
+                                                <div class="video-live-badge">
+                                                    <i class="fas fa-circle blink-icon" style="color: #ff0000;"></i>
+                                                    {{ trans_db('LIVE NOW', 'LIVE NOW') }}
+                                                </div>
+                                            @else
+                                                <div class="video-coming-soon">
+                                                    <i class="fas fa-video pulse-icon video-coming-soon-icon"></i>
+                                                    <h5 class="video-coming-soon-title">
+                                                        <i class="fas fa-broadcast-tower"></i>
+                                                        {{ trans_db('Live Draw Coming Soon', 'Live Draw Coming Soon!') }}
+                                                    </h5>
+                                                    @if($videoTimestamp > 0)
+                                                        <div class="video-countdown-text" data-video-time="{{ $videoTimestamp }}" data-server-time="{{ $serverTimestamp }}" data-package-id="{{ $package->id }}">
+                                                            <i class="fas fa-clock"></i> {{ trans_db('Calculating', 'Calculating...') }}
+                                                        </div>
+                                                    @endif
+                                                    <p class="video-start-time">
+                                                        <i class="fas fa-calendar-check"></i>
+                                                        {{ trans_db('Video Start', 'Video Start') }}: {{ $videoScheduledAt ? $videoScheduledAt->format('d M, Y h:i A') : trans_db('Not Set', 'Not Set') }}
+                                                    </p>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
+
+                                    <button type="submit" class="btn btn-primary mt-4">
+                                        <i class="fas fa-ticket-alt"></i>
+                                        {{ trans_db('Buy Ticket', 'Buy Ticket') }}
+                                    </button>
+                                </div>
+                            </form>
+                        @else
+                            <img src="{{ asset('uploads/lottery/' . ($package->photo ?? 'default.png')) }}" alt="{{ $lotteryName }}" class="lottery-image">
+                            <div class="lottery-content">
+                                <h4 class="lottery-title">{{ $lotteryName ?: trans_db('N/A', 'N/A') }}</h4>
+                                @if($lotteryDescription)
+                                    <p class="lottery-description">{{ Str::limit($lotteryDescription, 80) }}</p>
                                 @endif
 
-                                <!-- Video Section -->
-                                @if($package->video_enabled && $embedUrl)
-                                    <div class="video-section" style="margin-top: 20px;"
-                                         id="video-section-{{ $package->id }}"
-                                         data-package-id="{{ $package->id }}"
-                                         data-should-show="{{ $shouldShowVideo ? 'true' : 'false' }}"
-                                         data-video-time="{{ $videoTimestamp }}"
-                                         data-server-time="{{ $serverTimestamp }}"
-                                         data-embed-url="{{ $embedUrl }}">
-
-                                        @if($shouldShowVideo)
-                                            <!-- LIVE Video Display -->
-                                            <div class="video-container">
-                                                @if($isYouTube)
-                                                    <div class="video-responsive">
-                                                        <iframe src="{{ $embedUrl }}"
-                                                                title="Lottery Live Draw"
-                                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                                allowfullscreen>
-                                                        </iframe>
-                                                    </div>
-                                                @else
-                                                    <video controls autoplay playsinline
-                                                           style="width: 100%; border-radius: var(--border-radius-md); background: #000;"
-                                                           poster="{{ asset('uploads/Lottery/' . ($package->photo ?? 'default.png')) }}">
-                                                        <source src="{{ $package->video_url }}" type="video/mp4">
-                                                        Your browser does not support the video tag.
-                                                    </video>
-                                                @endif
+                                @if($package->video_enabled && $shouldShowVideo && ($embedUrl || $videoSource))
+                                    <div class="video-container mt-3">
+                                        @if($isYouTube && $embedUrl)
+                                            <div class="video-responsive">
+                                                <iframe src="{{ $embedUrl }}" allowfullscreen></iframe>
                                             </div>
-                                            <p class="text-primary" style="margin-top: 10px; font-weight: bold; font-size: 1.1em; text-align: center;">
-                                                <i class="fas fa-circle blink-icon" style="color: #ff0000;"></i>
-                                                {{ trans_db('LIVE NOW', 'LIVE NOW') }}
-                                            </p>
-                                        @else
-                                            <!-- Video Coming Soon -->
-                                            <div class="video-coming-soon">
-                                                <i class="fas fa-video pulse-icon" style="font-size: 3.5em; color: white; margin-bottom: 20px; display: block;"></i>
-                                                <h5 style="color: white; margin-bottom: 15px; font-size: 1.3em; font-weight: bold;">
-                                                    <i class="fas fa-broadcast-tower"></i>
-                                                    {{ trans_db('Live Draw Coming Soon', 'Live Draw Coming Soon!') }}
-                                                </h5>
-                                                @if($videoTimestamp > 0)
-                                                    <p class="video-countdown"
-                                                       data-video-time="{{ $videoTimestamp }}"
-                                                       data-server-time="{{ $serverTimestamp }}"
-                                                       data-package-id="{{ $package->id }}"
-                                                       style="color: white; font-size: 1.2em; font-weight: bold; margin-bottom: 15px;">
-                                                       <i class="fas fa-clock"></i> {{ trans_db('Calculating', 'Calculating...') }}
-                                                    </p>
-                                                @endif
-                                                <p style="color: white; font-size: 0.95em; opacity: 0.95; margin-bottom: 0;">
-                                                    <i class="fas fa-calendar-check"></i>
-                                                    {{ trans_db('Video Start', 'Video Start') }}:
-                                                    {{ $videoScheduledAt ? $videoScheduledAt->format('d M, Y h:i A') : trans_db('Not Set', 'Not Set') }}
-                                                </p>
-                                            </div>
+                                        @elseif($videoSource)
+                                            <video controls autoplay muted src="{{ $videoSource }}" style="width: 100%;"></video>
                                         @endif
                                     </div>
                                 @endif
 
-                                <!-- Buy Ticket Button -->
-                                <div class="gradient-shadow gradient-shadow-sm" style="margin-top: 20px; border-radius: var(--border-radius-sm);">
-                                    <button type="submit" class="btn-primary-custom">
-                                        <i class="fas fa-ticket-alt"></i> {{ trans_db('Buy Ticket', 'Buy Ticket') }}
-                                    </button>
-                                </div>
-
-                            </form>
-
-                        @else
-                            {{-- GUEST USER VIEW --}}
-                            <div style="margin-bottom: 20px;">
-                                <img src="{{ asset('uploads/Lottery/' . ($package->photo ?? 'default.png')) }}"
-                                     alt="{{ $lotteryName }}"
-                                     class="game-card-image">
-                            </div>
-
-                            <h4 class="text-secondary" style="font-size: 1.5em; font-weight: bold; margin-bottom: 15px;">
-                                {{ $lotteryName ?: trans_db('N/A', 'N/A') }}
-                            </h4>
-
-                            @if($lotteryDescription)
-                                <p class="text-secondary" style="opacity: 0.8; margin-bottom: 15px; font-size: 0.95em;">
-                                    {{ Str::limit($lotteryDescription, 100) }}
-                                </p>
-                            @endif
-
-                            <!-- Show Video if LIVE for Guest Users -->
-                            @if($package->video_enabled && $embedUrl && $shouldShowVideo)
-                                <div class="video-container" style="margin-top: 20px; margin-bottom: 20px;">
-                                    @if($isYouTube)
-                                        <div class="video-responsive">
-                                            <iframe src="{{ $embedUrl }}"
-                                                    allowfullscreen>
-                                            </iframe>
-                                        </div>
-                                    @else
-                                        <video controls autoplay src="{{ $package->video_url }}" style="width: 100%;"></video>
-                                    @endif
-                                </div>
-                            @endif
-
-                            <!-- Login to Play Button -->
-                            <div class="gradient-shadow gradient-shadow-sm" style="margin-top: 20px; border-radius: var(--border-radius-sm);">
-                                <a href="{{ route('frontend.login') }}" class="btn-primary-custom">
-                                    <i class="fas fa-sign-in-alt"></i> {{ trans_db('Login to Play', 'Login to Play') }}
+                                <a href="{{ route('frontend.login') }}" class="btn btn-primary mt-4">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    {{ trans_db('Login to Play', 'Login to Play') }}
                                 </a>
                             </div>
                         @endauth
-
                     </div>
-
-                    <!-- Decorative Circle -->
-                    <div style="position: absolute; width: 60px; height: 60px; background-color: var(--primary-color); opacity: 0.1; border-radius: 50%; bottom: -30px; right: -30px;"></div>
                 </div>
             </div>
-        </div>
 
-    @empty
-        <!-- No Packages Available -->
-        <div class="col-12">
-            <div class="fade-in" style="text-align: center; padding: 50px; background-color: {{ $primaryColor }}15; border-radius: var(--border-radius-lg); border: 2px dashed {{ $primaryColor }};">
-                <i class="fas fa-inbox" style="font-size: 64px; color: {{ $primaryColor }}; opacity: 0.5; margin-bottom: 20px; display: block;"></i>
-                <h4 style="color: {{ $secondaryColor }}; margin-top: 20px; font-size: 1.3em;">
-                    {{ trans_db('No lottery packages available', 'No lottery packages available') }}
-                </h4>
-                <p style="color: {{ $secondaryColor }}; opacity: 0.7; margin-top: 10px;">
-                    {{ trans_db('Please check back later for new lottery packages', 'Please check back later for new lottery packages') }}
-                </p>
+        @empty
+            <div style="grid-column: 1 / -1;">
+                <div class="empty-state fade-in">
+                    <i class="fas fa-inbox empty-state-icon"></i>
+                    <h4 class="empty-state-title">{{ trans_db('No lottery packages available', 'No lottery packages available') }}</h4>
+                    <p class="empty-state-text">{{ trans_db('Please check back later for new lottery packages', 'Please check back later for new lottery packages') }}</p>
+                </div>
             </div>
-        </div>
-    @endforelse
-</div>
-
-<!-- ====================================
-     TRANSACTION HISTORY
-==================================== -->
-<div class="mt-5">
-    <div class="gradient-shadow gradient-shadow-md fade-in" style="border-radius: var(--border-radius-lg);">
-        <div class="transaction-table-container">
-            <h3 class="text-secondary" style="margin-bottom: 25px; font-weight: bold; padding-bottom: 15px; border-bottom: 3px solid var(--primary-color);">
-                <i class="fas fa-history text-primary"></i>
-                {{ trans_db('Transaction History', 'Transaction History') }}
-            </h3>
-
-            <div style="overflow-x: auto;">
-                <table class="transaction-table">
-                    <thead>
-                        <tr>
-                            <th>{{ trans_db('Transaction ID', 'Transaction ID') }}</th>
-                            <th>{{ trans_db('Type', 'Type') }}</th>
-                            <th>{{ trans_db('Date', 'Date') }}</th>
-                            <th>{{ trans_db('Amount', 'Amount') }}</th>
-                            <th>{{ trans_db('Status', 'Status') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($deposite_history as $deposit)
-                            <tr>
-                                <td>{{ $deposit->transaction_id ?? '#' . $deposit->id }}</td>
-                                <td>
-                                    <span style="background-color: {{ $deposit->amount > 0 ? 'var(--primary-color)' : 'rgba(var(--secondary-rgb), 0.2)' }}; padding: 5px 12px; border-radius: 15px; font-size: 0.9em; font-weight: 600;">
-                                        {{ $deposit->amount > 0 ? trans_db('Deposit', 'Deposit') : trans_db('Withdraw', 'Withdraw') }}
-                                    </span>
-                                </td>
-                                <td>{{ $deposit->created_at ? $deposit->created_at->format('d M, Y h:i A') : trans_db('N/A', 'N/A') }}</td>
-                                <td class="text-primary" style="font-weight: bold; font-size: 1.1em;">
-                                    {{ number_format($deposit->amount, 2) }} {{ trans_db('টাকা','টাকা') }}
-                                </td>
-                                <td>
-                                    @if($deposit->status == 'approved')
-                                        <span class="status-badge status-approved">
-                                            <i class="fas fa-check-circle"></i> {{ trans_db('Approved', 'Approved') }}
-                                        </span>
-                                    @elseif($deposit->status == 'pending')
-                                        <span class="status-badge status-pending">
-                                            <i class="fas fa-clock"></i> {{ trans_db('Pending', 'Pending') }}
-                                        </span>
-                                    @else
-                                        <span class="status-badge status-rejected">
-                                            <i class="fas fa-times-circle"></i> {{ trans_db('Rejected', 'Rejected') }}
-                                        </span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" style="text-align: center; padding: 40px; color: var(--secondary-color); font-size: 1.1em;">
-                                    <i class="fas fa-inbox" style="font-size: 3em; color: var(--primary-color); opacity: 0.3; display: block; margin-bottom: 15px;"></i>
-                                    {{ trans_db('No transaction history found', 'No transaction history found.') }}
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        @endforelse
     </div>
+
+    @if($package_show->hasPages())
+        <div class="pagination-wrapper">
+            {{ $package_show->links('pagination::bootstrap-4') }}
+        </div>
+    @endif
+
 </div>
 
-<!-- ====================================
-     JAVASCRIPT - TIMER & INTERACTIONS
-==================================== -->
+<!-- JAVASCRIPT -->
 <script>
 (function() {
     'use strict';
 
-    // ============================================
-    // CONFIGURATION
-    // ============================================
-    const CONFIG = {
+    const CFG = {
         DEBUG: true,
-        TIMEZONE: 'Asia/Dhaka',
+        TZ: 'Asia/Dhaka',
         LOCALE: '{{ $currentLocale }}',
-        COLORS: {
-            primary: '{{ $primaryColor }}',
-            secondary: '{{ $secondaryColor }}'
-        },
-        INTERVALS: {
-            countdown: 1000,        // 1 second
-            videoCheck: 1000        // 1 second
-        },
-        RELOAD_THRESHOLD: 3000,     // 3 seconds before video time
-        RELOAD_COOLDOWN: 30000      // 30 seconds cooldown
+        UPDATE_MS: 1000,
+        RELOAD_MS: 3000,
+        COOLDOWN_MS: 30000
     };
 
-    // ============================================
-    // UTILITIES
-    // ============================================
-    const Utils = {
-        log: function(message, data = null) {
-            if (CONFIG.DEBUG) {
-                const timestamp = new Date().toLocaleTimeString('en-US', {
-                    timeZone: CONFIG.TIMEZONE,
+    const U = {
+        log(msg, data) {
+            if (CFG.DEBUG) {
+                const t = new Date().toLocaleTimeString('en-US', {
+                    timeZone: CFG.TZ,
                     hour12: false
                 });
-                console.log(`[${timestamp}] 🎰 Lottery:`, message, data || '');
+                console.log(`[${t}] 🎰`, msg, data || '');
             }
         },
-
-        formatTime: function(milliseconds) {
-            if (milliseconds <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
-
-            const seconds = Math.floor(milliseconds / 1000);
-            const minutes = Math.floor(seconds / 60);
-            const hours = Math.floor(minutes / 60);
-            const days = Math.floor(hours / 24);
-
-            return {
-                days: days,
-                hours: hours % 24,
-                minutes: minutes % 60,
-                seconds: seconds % 60
-            };
+        fmt(ms) {
+            if (ms <= 0) return { d: 0, h: 0, m: 0, s: 0 };
+            const s = Math.floor(ms / 1000);
+            const m = Math.floor(s / 60);
+            const h = Math.floor(m / 60);
+            const d = Math.floor(h / 24);
+            return { d, h: h % 24, m: m % 60, s: s % 60 };
         },
-
-        getTranslation: function(key) {
-            const translations = {
-                'en': {
-                    'LIVE': 'LIVE NOW',
-                    'Calculating': 'Calculating...',
-                    'Video is LIVE': 'Video is LIVE!'
-                },
-                'bn': {
-                    'LIVE': 'লাইভ চলছে',
-                    'Calculating': 'গণনা করা হচ্ছে...',
-                    'Video is LIVE': 'ভিডিও লাইভ!'
-                }
+        tr(k) {
+            const t = {
+                en: { LIVE: 'LIVE NOW', Calc: 'Calculating...' },
+                bn: { LIVE: 'লাইভ চলছে', Calc: 'গণনা করা হচ্ছে...' }
             };
-            return translations[CONFIG.LOCALE]?.[key] || key;
+            return t[CFG.LOCALE]?.[k] || k;
         }
     };
 
-    // ============================================
-    // TIME SYNCHRONIZATION
-    // ============================================
-    const TimeSync = {
-        offset: 0,
-        initialized: false,
-
-        init: function() {
-            const firstTimer = document.querySelector('[data-server-time]');
-            if (!firstTimer) {
-                Utils.log('⚠️ No server time found, using browser time');
-                this.initialized = true;
+    const TS = {
+        off: 0,
+        init() {
+            const el = document.querySelector('[data-server-time]');
+            if (!el) {
+                U.log('⚠️ No server time');
                 return;
             }
-
-            const serverTime = parseInt(firstTimer.getAttribute('data-server-time'), 10);
-            const browserTime = Date.now();
-            this.offset = serverTime - browserTime;
-            this.initialized = true;
-
-            Utils.log('✅ Time Sync Initialized', {
-                server_time: new Date(serverTime).toLocaleString('en-US', { timeZone: CONFIG.TIMEZONE }),
-                browser_time: new Date(browserTime).toLocaleString('en-US', { timeZone: CONFIG.TIMEZONE }),
-                offset_ms: this.offset,
-                offset_seconds: Math.round(this.offset / 1000)
-            });
+            const st = parseInt(el.getAttribute('data-server-time'), 10);
+            const bt = Date.now();
+            this.off = st - bt;
+            U.log('✅ Time synced', { off: this.off });
         },
-
-        getServerTime: function() {
-            return Date.now() + this.offset;
+        now() {
+            return Date.now() + this.off;
         }
     };
 
-    // ============================================
-    // VIDEO COUNTDOWN MANAGER
-    // ============================================
-    const VideoCountdown = {
-        countdowns: [],
-
-        init: function() {
-            this.countdowns = Array.from(document.querySelectorAll('.video-countdown'));
-            Utils.log(`Found ${this.countdowns.length} video countdowns`);
+    const VC = {
+        els: [],
+        init() {
+            this.els = Array.from(document.querySelectorAll('.video-countdown-text'));
+            U.log(`Found ${this.els.length} countdowns`);
         },
-
-        update: function() {
-            this.countdowns.forEach(countdown => {
-                const videoTime = parseInt(countdown.getAttribute('data-video-time'), 10);
-                const packageId = countdown.getAttribute('data-package-id');
-
-                if (!videoTime || isNaN(videoTime) || videoTime <= 0) {
-                    countdown.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Video time not set';
-                    countdown.style.color = '#dc3545';
+        upd() {
+            this.els.forEach(el => {
+                const vt = parseInt(el.getAttribute('data-video-time'), 10);
+                if (!vt || vt <= 0) {
+                    el.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Not Set';
                     return;
                 }
-
-                const now = TimeSync.getServerTime();
-                const diff = videoTime - now;
-
+                const now = TS.now();
+                const diff = vt - now;
                 if (diff <= 0) {
-                    countdown.innerHTML = `<i class="fas fa-circle blink-icon" style="color: #ff0000;"></i> ${Utils.getTranslation('Video is LIVE')}`;
-                    countdown.style.color = '#00ff00';
+                    el.innerHTML = '<i class="fas fa-circle blink-icon" style="color: #00ff00;"></i> ' + U.tr('LIVE');
                     return;
                 }
-
-                const time = Utils.formatTime(diff);
-                countdown.innerHTML = `<i class="fas fa-clock"></i> ${time.days}d ${time.hours}h ${time.minutes}m ${time.seconds}s`;
+                const t = U.fmt(diff);
+                el.innerHTML = `<i class="fas fa-clock"></i> ${t.d}d ${t.h}h ${t.m}m ${t.s}s`;
             });
         }
     };
 
-    // ============================================
-    // VIDEO AUTO-RELOAD MANAGER
-    // ============================================
-    const VideoAutoReload = {
-        storageKey: 'lottery_video_reload_triggered',
-
-        check: function() {
-            const videoSections = document.querySelectorAll('.video-section');
-            let needsReload = false;
-
-            videoSections.forEach(section => {
-                const shouldShow = section.getAttribute('data-should-show');
-                const videoTime = parseInt(section.getAttribute('data-video-time'), 10);
-                const packageId = section.getAttribute('data-package-id');
-
-                if (shouldShow === 'false' && videoTime && !isNaN(videoTime) && videoTime > 0) {
-                    const now = TimeSync.getServerTime();
-                    const diff = videoTime - now;
-
-                    // Check if we're within threshold
-                    if (diff <= CONFIG.RELOAD_THRESHOLD && diff > -1000) {
-                        Utils.log(`🎬 Package ${packageId}: Video time reached!`);
-                        needsReload = true;
+    const AR = {
+        key: 'lot_reload',
+        chk() {
+            const secs = document.querySelectorAll('[data-should-show="false"]');
+            let need = false;
+            secs.forEach(s => {
+                const vt = parseInt(s.getAttribute('data-video-time'), 10);
+                if (vt && vt > 0) {
+                    const now = TS.now();
+                    const diff = vt - now;
+                    if (diff <= CFG.RELOAD_MS && diff > -1000) {
+                        U.log('🎬 Video time!');
+                        need = true;
                     }
                 }
             });
-
-            if (needsReload) {
-                this.performReload();
-            }
+            if (need) this.rel();
         },
-
-        performReload: function() {
-            const lastReload = sessionStorage.getItem(this.storageKey);
+        rel() {
+            const last = sessionStorage.getItem(this.key);
             const now = Date.now();
-
-            // Check cooldown
-            if (lastReload && (now - parseInt(lastReload)) < CONFIG.RELOAD_COOLDOWN) {
-                Utils.log('⏳ Reload on cooldown, skipping...');
+            if (last && (now - parseInt(last)) < CFG.COOLDOWN_MS) {
+                U.log('⏳ Cooldown active');
                 return;
             }
-
-            sessionStorage.setItem(this.storageKey, now.toString());
-            Utils.log('🔄 Reloading page to show video...');
-
-            setTimeout(() => {
-                window.location.reload(true);
-            }, 1000);
+            sessionStorage.setItem(this.key, now.toString());
+            U.log('🔄 Reloading...');
+            setTimeout(() => window.location.reload(true), 1000);
         }
     };
 
-    // ============================================
-    // UI INTERACTIONS
-    // ============================================
-    const UIInteractions = {
-        init: function() {
-            // No need for manual hover effects as CSS handles them
-            Utils.log('✅ UI Interactions ready (CSS-based)');
-        }
-    };
-
-    // ============================================
-    // MAIN APPLICATION
-    // ============================================
-    const App = {
-        init: function() {
-            Utils.log('=== 🚀 Lottery System Starting ===');
-            Utils.log('Configuration:', CONFIG);
-
-            // Initialize modules
-            TimeSync.init();
-            VideoCountdown.init();
-            UIInteractions.init();
-
-            // Initial updates
-            VideoCountdown.update();
-            VideoAutoReload.check();
-
-            // Start intervals
-            setInterval(() => {
-                VideoCountdown.update();
-                VideoAutoReload.check();
-            }, CONFIG.INTERVALS.countdown);
-
-            Utils.log('✅ All systems operational');
-            Utils.log('============================');
-        }
-    };
-
-    // ============================================
-    // START APPLICATION
-    // ============================================
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => App.init());
-    } else {
-        App.init();
+    function init() {
+        U.log('=== 🚀 Starting Colorful Lottery Dashboard ===');
+        TS.init();
+        VC.init();
+        VC.upd();
+        AR.chk();
+        setInterval(() => {
+            VC.upd();
+            AR.chk();
+        }, CFG.UPDATE_MS);
+        U.log('✅ Ready - Colorful 3D Cards Loaded');
     }
 
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 })();
 </script>
-
-
-
-@php
-// Helper function to convert hex to RGB
-function hexToRgb($hex) {
-    $hex = ltrim($hex, '#');
-    if (strlen($hex) == 3) {
-        $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
-    }
-    $r = hexdec(substr($hex, 0, 2));
-    $g = hexdec(substr($hex, 2, 2));
-    $b = hexdec(substr($hex, 4, 2));
-    return "$r, $g, $b";
-}
-@endphp

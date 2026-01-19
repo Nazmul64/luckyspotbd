@@ -10,7 +10,7 @@
 <!-- =======================
     DASHBOARD SECTION
 =========================== -->
-<div class="dashboard-section padding-top padding-bottom">
+<div class="dashboard-section padding-top padding-bottom" style="background: linear-gradient(135deg, #30cfd0 0%, #086755 100%);">
     <div class="container">
         <div class="row">
 

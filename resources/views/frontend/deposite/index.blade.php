@@ -3,10 +3,7 @@
 @section('content')
 
 @php
-    // Fetch active theme colors
-    $activeTheme = \App\Models\ThemeSetting::where('status', 1)->first();
-    $primaryColor = $activeTheme->primary_color ?? '#F5CE0D';
-    $secondaryColor = $activeTheme->secondary_color ?? '#000000';
+    use Carbon\Carbon;
 
     // Helper function for multi-language fields
     if (!function_exists('lang_field')) {
@@ -18,14 +15,12 @@
         }
     }
 
-    // Get current language and set translations
+    // Get current language
     $currentLang = app()->getLocale();
     $isBangla = $currentLang === 'bn';
-
-    // Currency based on language
     $currency = $isBangla ? 'টাকা' : 'Taka';
 
-    // All text translations
+    // All translations
     $text = [
         'page_title' => $isBangla ? 'ডিপোজিট যোগ করুন' : 'Add Deposit',
         'deposit_limits' => $isBangla ? 'ডিপোজিট সীমা' : 'Deposit Limits',
@@ -49,8 +44,469 @@
         'help_2' => $isBangla ? 'আপনার পছন্দের পদ্ধতি ব্যবহার করে পেমেন্ট করুন' : 'Make the payment using your preferred method',
         'help_3' => $isBangla ? 'ট্রানজেকশন আইডি লিখুন এবং স্ক্রিনশট আপলোড করুন (ঐচ্ছিক কিন্তু সুপারিশকৃত)' : 'Enter the transaction ID and upload screenshot (optional but recommended)',
         'help_4' => $isBangla ? 'ফর্ম জমা দিন এবং অ্যাডমিন অনুমোদনের জন্য অপেক্ষা করুন' : 'Submit the form and wait for admin approval',
+        'click_to_upload' => $isBangla ? 'আপলোড করতে ক্লিক করুন' : 'Click to upload',
+        'or_drag' => $isBangla ? 'অথবা এখানে টেনে আনুন' : 'or drag and drop here',
+        'remove_image' => $isBangla ? 'ছবি মুছুন' : 'Remove Image',
+        'change_image' => $isBangla ? 'ছবি পরিবর্তন করুন' : 'Change Image',
+        'image_preview' => $isBangla ? 'ছবি প্রিভিউ' : 'Image Preview',
     ];
 @endphp
+
+<style>
+:root {
+    --primary-color: #30cfd0;
+    --secondary-color: #086755;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --white: #ffffff;
+    --transition: all 0.3s ease;
+}
+
+/* MAIN CONTAINER */
+.deposit-container {
+    padding: 40px 30px;
+    background: linear-gradient(135deg, rgba(48, 207, 208, 0.06) 0%, rgba(8, 103, 85, 0.06) 100%);
+    border-radius: 15px;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+/* HEADER */
+.deposit-header {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid var(--primary-color);
+}
+
+.deposit-header h4 {
+    color: var(--white);
+    font-weight: bold;
+    font-size: 1.8em;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.deposit-header i {
+    color: var(--primary-color);
+}
+
+/* DEPOSIT LIMIT BOX */
+.limit-info-box {
+    background: linear-gradient(135deg, rgba(48, 207, 208, 0.12) 0%, rgba(48, 207, 208, 0.18) 100%);
+    border-left: 5px solid var(--primary-color);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.limit-info-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 12px;
+}
+
+.limit-info-header i {
+    color: var(--primary-color);
+    font-size: 1.5em;
+}
+
+.limit-info-header h5 {
+    color: var(--white);
+    font-weight: bold;
+    margin: 0;
+}
+
+.limit-values {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.limit-item {
+    flex: 1;
+    min-width: 200px;
+}
+
+.limit-label {
+    color: var(--white);
+    margin: 0;
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+.limit-value {
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 1.3em;
+    margin: 5px 0 0 0;
+}
+
+/* FORM ELEMENTS */
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-label {
+    display: block;
+    color: var(--white);
+    font-weight: 600;
+    margin-bottom: 10px;
+    font-size: 1.05em;
+}
+
+.form-label i {
+    color: var(--primary-color);
+    margin-right: 8px;
+}
+
+.form-label .optional {
+    opacity: 0.6;
+    font-size: 0.9em;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid var(--primary-color);
+    border-radius: 10px;
+    font-size: 1em;
+    color: var(--white);
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.form-input:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(48, 207, 208, 0.12);
+    transform: scale(1.01);
+}
+
+.form-select {
+    cursor: pointer;
+}
+
+.form-select option {
+    color: #000;
+    background-color: #fff;
+}
+
+.error-message {
+    color: var(--danger-color);
+    font-size: 0.9em;
+    margin-top: 5px;
+    display: block;
+}
+
+.error-message i {
+    margin-right: 5px;
+}
+
+/* COPY ACCOUNT NUMBER */
+.copy-section {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.copy-input {
+    flex: 1;
+    min-width: 250px;
+    padding: 12px 18px;
+    border: 2px solid rgba(48, 207, 208, 0.18);
+    border-radius: 8px;
+    font-size: 0.95em;
+    color: var(--white);
+    background-color: rgba(48, 207, 208, 0.03);
+    font-weight: 600;
+}
+
+.copy-btn {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    white-space: nowrap;
+}
+
+.copy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+.copy-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* IMAGE UPLOAD ZONE */
+.upload-zone {
+    position: relative;
+    border: 2px dashed var(--primary-color);
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    background-color: rgba(48, 207, 208, 0.03);
+    transition: var(--transition);
+    cursor: pointer;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-zone:hover {
+    border-color: var(--primary-color);
+    background-color: rgba(48, 207, 208, 0.08);
+    transform: scale(1.01);
+}
+
+.upload-zone.dragover {
+    border-color: var(--primary-color);
+    background-color: rgba(48, 207, 208, 0.12);
+    border-style: solid;
+}
+
+.file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+/* UPLOAD PLACEHOLDER */
+.upload-placeholder {
+    pointer-events: none;
+}
+
+.upload-icon {
+    font-size: 3em;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    display: block;
+}
+
+.upload-text {
+    color: var(--white);
+    font-size: 1em;
+    margin: 0 0 8px 0;
+    font-weight: 600;
+}
+
+.upload-hint {
+    color: var(--white);
+    opacity: 0.6;
+    font-size: 0.85em;
+    margin: 0;
+}
+
+/* IMAGE PREVIEW */
+.preview-container {
+    display: none;
+    position: relative;
+}
+
+.preview-container.active {
+    display: block;
+}
+
+.preview-wrapper {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.preview-image {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    display: block;
+    margin: 0 auto;
+}
+
+.preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 10px;
+    opacity: 0;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-wrapper:hover .preview-overlay {
+    opacity: 1;
+}
+
+.preview-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-action {
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    font-size: 0.95em;
+}
+
+.btn-change {
+    background-color: var(--primary-color);
+    color: var(--white);
+}
+
+.btn-change:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-remove {
+    background-color: var(--danger-color);
+    color: var(--white);
+}
+
+.btn-remove:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+}
+
+/* SUBMIT BUTTON */
+.submit-section {
+    margin-top: 30px;
+}
+
+.submit-btn {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #2ab5b6 100%);
+    color: var(--white);
+    border: none;
+    padding: 18px 40px;
+    border-radius: 10px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 300px;
+}
+
+.submit-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    opacity: 0.95;
+}
+
+.submit-btn:active {
+    transform: translateY(-1px);
+}
+
+.submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* HELP SECTION */
+.help-section {
+    margin-top: 40px;
+    padding: 20px;
+    background-color: rgba(8, 103, 85, 0.05);
+    border-radius: 10px;
+    border: 1px solid rgba(48, 207, 208, 0.18);
+}
+
+.help-title {
+    color: var(--white);
+    font-weight: bold;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.help-title i {
+    color: var(--primary-color);
+}
+
+.help-list {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--white);
+    opacity: 0.8;
+    line-height: 1.8;
+}
+
+.help-list li {
+    margin-bottom: 8px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .deposit-container {
+        padding: 25px 20px;
+    }
+
+    .deposit-header h4 {
+        font-size: 1.4em;
+    }
+
+    .limit-values {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .copy-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .copy-btn {
+        width: 100%;
+    }
+
+    .submit-btn {
+        max-width: 100%;
+    }
+
+    .preview-image {
+        max-height: 300px;
+    }
+}
+</style>
 
 @include('frontend.dashboard.usersection')
 
@@ -63,39 +519,33 @@
 
             {{-- MAIN CONTENT --}}
             <div class="col-lg-9">
-                <div style="padding: 40px 30px; background: linear-gradient(135deg, {{ $primaryColor }}10 0%, {{ $secondaryColor }}10 100%); border-radius: 15px; border: 2px solid {{ $primaryColor }}; box-shadow: 0 6px 25px rgba(0,0,0,0.1); margin-top: 20px;">
+                <div class="deposit-container">
 
                     {{-- Header --}}
-                    <div style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid {{ $primaryColor }};">
-                        <h4 style="color: {{ $secondaryColor }}; font-weight: bold; font-size: 1.8em; margin: 0;">
-                            <i class="fas fa-wallet" style="color: {{ $primaryColor }}; margin-right: 10px;"></i>
+                    <div class="deposit-header">
+                        <h4>
+                            <i class="fas fa-wallet"></i>
                             {{ $text['page_title'] }}
                         </h4>
                     </div>
 
                     {{-- Deposit Limit Info --}}
                     @if(isset($deposite_limit))
-                        <div style="background: linear-gradient(135deg, {{ $primaryColor }}20 0%, {{ $primaryColor }}30 100%); border-left: 5px solid {{ $primaryColor }}; padding: 20px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                <i class="fas fa-info-circle" style="color: {{ $primaryColor }}; font-size: 1.5em; margin-right: 12px;"></i>
-                                <h5 style="color: {{ $secondaryColor }}; font-weight: bold; margin: 0;">
-                                    {{ $text['deposit_limits'] }}
-                                </h5>
+                        <div class="limit-info-box">
+                            <div class="limit-info-header">
+                                <i class="fas fa-info-circle"></i>
+                                <h5>{{ $text['deposit_limits'] }}</h5>
                             </div>
-                            <div style="display: flex; gap: 30px; flex-wrap: wrap; margin-top: 15px;">
-                                <div style="flex: 1; min-width: 200px;">
-                                    <p style="color: {{ $secondaryColor }}; margin: 0; font-size: 0.9em; opacity: 0.8;">
-                                        {{ $text['minimum_deposit'] }}:
-                                    </p>
-                                    <p style="color: {{ $primaryColor }}; font-weight: bold; font-size: 1.3em; margin: 5px 0 0 0;">
+                            <div class="limit-values">
+                                <div class="limit-item">
+                                    <p class="limit-label">{{ $text['minimum_deposit'] }}:</p>
+                                    <p class="limit-value">
                                         {{ is_array($deposite_limit->minimum_deposite) ? ($deposite_limit->minimum_deposite[$currentLang] ?? 0) : $deposite_limit->minimum_deposite }} {{ $currency }}
                                     </p>
                                 </div>
-                                <div style="flex: 1; min-width: 200px;">
-                                    <p style="color: {{ $secondaryColor }}; margin: 0; font-size: 0.9em; opacity: 0.8;">
-                                        {{ $text['maximum_deposit'] }}:
-                                    </p>
-                                    <p style="color: {{ $primaryColor }}; font-weight: bold; font-size: 1.3em; margin: 5px 0 0 0;">
+                                <div class="limit-item">
+                                    <p class="limit-label">{{ $text['maximum_deposit'] }}:</p>
+                                    <p class="limit-value">
                                         {{ is_array($deposite_limit->maximum_deposite) ? ($deposite_limit->maximum_deposite[$currentLang] ?? 0) : $deposite_limit->maximum_deposite }} {{ $currency }}
                                     </p>
                                 </div>
@@ -108,9 +558,9 @@
                         @csrf
 
                         {{-- Amount --}}
-                        <div style="margin-bottom: 25px;">
-                            <label style="display: block; color: {{ $secondaryColor }}; font-weight: 600; margin-bottom: 10px; font-size: 1.05em;">
-                                <i class="fas fa-money-bill-wave" style="color: {{ $primaryColor }}; margin-right: 8px;"></i>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-money-bill-wave"></i>
                                 {{ $text['amount'] }} *
                             </label>
                             <input type="number"
@@ -120,24 +570,24 @@
                                    min="{{ $deposite_limit->minimum_deposite ?? 0 }}"
                                    max="{{ $deposite_limit->maximum_deposite ?? 0 }}"
                                    placeholder="{{ $text['enter_amount_between'] }} {{ $deposite_limit->minimum_deposite ?? 0 }} {{ $text['and'] }} {{ $deposite_limit->maximum_deposite ?? 0 }} {{ $currency }}"
-                                   style="width: 100%; padding: 15px 20px; border: 2px solid {{ $primaryColor }}; border-radius: 10px; font-size: 1em; color: {{ $secondaryColor }}; background-color: white; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                   required>
                             @error('amount')
-                                <span style="color: #dc3545; font-size: 0.9em; margin-top: 5px; display: block;">
+                                <span class="error-message">
                                     <i class="fas fa-exclamation-circle"></i> {{ $message }}
                                 </span>
                             @enderror
                         </div>
 
                         {{-- Payment Method --}}
-                        <div style="margin-bottom: 25px;">
-                            <label style="display: block; color: {{ $secondaryColor }}; font-weight: 600; margin-bottom: 10px; font-size: 1.05em;">
-                                <i class="fas fa-credit-card" style="color: {{ $primaryColor }}; margin-right: 8px;"></i>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-credit-card"></i>
                                 {{ $text['payment_method'] }} *
                             </label>
                             <select id="payment_method_select"
                                     name="payment_method"
                                     class="form-select"
-                                    style="width: 100%; padding: 15px 20px; border: 2px solid {{ $primaryColor }}; border-radius: 10px; font-size: 1em; color: {{ $secondaryColor }}; background-color: white; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer;">
+                                    required>
                                 <option value="">-- {{ $text['select_payment'] }} --</option>
                                 @foreach ($payment_method_name as $item)
                                     @php
@@ -150,79 +600,103 @@
                                 @endforeach
                             </select>
                             @error('payment_method')
-                                <span style="color: #dc3545; font-size: 0.9em; margin-top: 5px; display: block;">
+                                <span class="error-message">
                                     <i class="fas fa-exclamation-circle"></i> {{ $message }}
                                 </span>
                             @enderror
 
                             {{-- Copy Account Number --}}
-                            <div style="margin-top: 15px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <div class="copy-section">
                                 <input type="text"
                                        id="copy_account_number"
+                                       class="copy-input"
                                        readonly
-                                       placeholder="{{ $text['select_payment_placeholder'] }}"
-                                       style="flex: 1; min-width: 250px; padding: 12px 18px; border: 2px solid {{ $primaryColor }}30; border-radius: 8px; font-size: 0.95em; color: {{ $secondaryColor }}; background-color: {{ $primaryColor }}05; font-weight: 600;">
-                                <button type="button"
-                                        id="copy_button"
-                                        class="copy-btn"
-                                        style="background-color: {{ $primaryColor }}; color: {{ $secondaryColor }}; border: none; padding: 12px 25px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15); white-space: nowrap;">
+                                       placeholder="{{ $text['select_payment_placeholder'] }}">
+                                <button type="button" id="copy_button" class="copy-btn" disabled>
                                     <i class="fas fa-copy"></i> {{ $text['copy'] }}
                                 </button>
                             </div>
                         </div>
 
                         {{-- Transaction ID --}}
-                        <div style="margin-bottom: 25px;">
-                            <label style="display: block; color: {{ $secondaryColor }}; font-weight: 600; margin-bottom: 10px; font-size: 1.05em;">
-                                <i class="fas fa-hashtag" style="color: {{ $primaryColor }}; margin-right: 8px;"></i>
-                                {{ $text['transaction_id'] }} <span style="opacity: 0.6; font-size: 0.9em;">({{ $text['optional'] }})</span>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-hashtag"></i>
+                                {{ $text['transaction_id'] }} <span class="optional">({{ $text['optional'] }})</span>
                             </label>
                             <input type="text"
                                    name="transaction_id"
                                    class="form-input"
-                                   placeholder="{{ $text['enter_transaction_id'] }}"
-                                   style="width: 100%; padding: 15px 20px; border: 2px solid {{ $primaryColor }}; border-radius: 10px; font-size: 1em; color: {{ $secondaryColor }}; background-color: white; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                   placeholder="{{ $text['enter_transaction_id'] }}">
                         </div>
 
-                        {{-- Screenshot --}}
-                        <div style="margin-bottom: 30px;">
-                            <label style="display: block; color: {{ $secondaryColor }}; font-weight: 600; margin-bottom: 10px; font-size: 1.05em;">
-                                <i class="fas fa-image" style="color: {{ $primaryColor }}; margin-right: 8px;"></i>
-                                {{ $text['payment_screenshot'] }} <span style="opacity: 0.6; font-size: 0.9em;">({{ $text['optional'] }})</span>
+                        {{-- Screenshot with Preview --}}
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-image"></i>
+                                {{ $text['payment_screenshot'] }} <span class="optional">({{ $text['optional'] }})</span>
                             </label>
-                            <div style="position: relative;">
+
+                            <div class="upload-zone" id="upload-zone">
                                 <input type="file"
                                        name="screenshot"
-                                       class="form-file"
-                                       accept="image/*"
-                                       style="width: 100%; padding: 15px 20px; border: 2px dashed {{ $primaryColor }}; border-radius: 10px; font-size: 1em; color: {{ $secondaryColor }}; background-color: {{ $primaryColor }}05; transition: all 0.3s ease; cursor: pointer;">
+                                       id="screenshot-input"
+                                       class="file-input"
+                                       accept="image/*">
+
+                                {{-- Upload Placeholder --}}
+                                <div id="upload-placeholder" class="upload-placeholder">
+                                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                    <p class="upload-text">{{ $text['click_to_upload'] }}</p>
+                                    <p class="upload-hint">
+                                        <i class="fas fa-hand-pointer"></i> {{ $text['or_drag'] }}
+                                    </p>
+                                    <p class="upload-hint" style="margin-top: 10px;">
+                                        <i class="fas fa-info-circle"></i> {{ $text['upload_screenshot_info'] }}
+                                    </p>
+                                </div>
+
+                                {{-- Image Preview --}}
+                                <div id="preview-container" class="preview-container">
+                                    <div class="preview-wrapper">
+                                        <img id="preview-image" src="" alt="{{ $text['image_preview'] }}" class="preview-image">
+                                        <div class="preview-overlay">
+                                            <i class="fas fa-search-plus" style="color: white; font-size: 2em;"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-actions">
+                                        <button type="button" id="change-image-btn" class="btn-action btn-change">
+                                            <i class="fas fa-sync-alt"></i> {{ $text['change_image'] }}
+                                        </button>
+                                        <button type="button" id="remove-image-btn" class="btn-action btn-remove">
+                                            <i class="fas fa-trash-alt"></i> {{ $text['remove_image'] }}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
+
                             @error('screenshot')
-                                <span style="color: #dc3545; font-size: 0.9em; margin-top: 5px; display: block;">
+                                <span class="error-message">
                                     <i class="fas fa-exclamation-circle"></i> {{ $message }}
                                 </span>
                             @enderror
-                            <p style="color: {{ $secondaryColor }}; opacity: 0.6; font-size: 0.85em; margin-top: 8px; margin-bottom: 0;">
-                                <i class="fas fa-info-circle"></i> {{ $text['upload_screenshot_info'] }}
-                            </p>
                         </div>
 
                         {{-- Submit Button --}}
-                        <div style="margin-top: 30px;">
-                            <button type="submit"
-                                    class="submit-btn"
-                                    style="background: linear-gradient(135deg, {{ $primaryColor }} 0%, {{ $primaryColor }}dd 100%); color: {{ $secondaryColor }}; border: none; padding: 18px 40px; border-radius: 10px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 6px 20px rgba(0,0,0,0.2); width: 100%; max-width: 300px;">
+                        <div class="submit-section">
+                            <button type="submit" class="submit-btn">
                                 <i class="fas fa-paper-plane"></i> {{ $text['submit_deposit'] }}
                             </button>
                         </div>
                     </form>
 
                     {{-- Help Section --}}
-                    <div style="margin-top: 40px; padding: 20px; background-color: {{ $secondaryColor }}05; border-radius: 10px; border: 1px solid {{ $primaryColor }}30;">
-                        <h6 style="color: {{ $secondaryColor }}; font-weight: bold; margin-bottom: 12px;">
-                            <i class="fas fa-question-circle" style="color: {{ $primaryColor }};"></i> {{ $text['need_help'] }}
+                    <div class="help-section">
+                        <h6 class="help-title">
+                            <i class="fas fa-question-circle"></i>
+                            {{ $text['need_help'] }}
                         </h6>
-                        <ul style="margin: 0; padding-left: 20px; color: {{ $secondaryColor }}; opacity: 0.8; line-height: 1.8;">
+                        <ul class="help-list">
                             <li>{{ $text['help_1'] }}</li>
                             <li>{{ $text['help_2'] }}</li>
                             <li>{{ $text['help_3'] }}</li>
@@ -237,62 +711,64 @@
     </div>
 </div>
 
-{{-- JS Scripts --}}
+{{-- JavaScript --}}
 <script>
 (function() {
     'use strict';
 
-    // Configuration
-    const config = {
-        primaryColor: '{{ $primaryColor }}',
-        secondaryColor: '{{ $secondaryColor }}',
-        currency: '{{ $currency }}',
-        isBangla: {{ $isBangla ? 'true' : 'false' }}
-    };
-
-    // Translation object for JavaScript
-    const translations = {
+    // Translations
+    const T = {
         selectPaymentFirst: '{{ $isBangla ? "প্রথমে একটি পেমেন্ট পদ্ধতি নির্বাচন করুন!" : "Please select a payment method first!" }}',
         copied: '{{ $isBangla ? "কপি হয়েছে!" : "Copied!" }}',
         copy: '{{ $isBangla ? "কপি করুন" : "Copy" }}',
-        failedToCopy: '{{ $isBangla ? "কপি করতে ব্যর্থ। অনুগ্রহ করে ম্যানুয়ালি কপি করুন:" : "Failed to copy. Please copy manually:" }}',
-        validAmountRequired: '{{ $isBangla ? "অনুগ্রহ করে একটি বৈধ পরিমাণ লিখুন!" : "Please enter a valid amount!" }}',
-        paymentMethodRequired: '{{ $isBangla ? "অনুগ্রহ করে একটি পেমেন্ট পদ্ধতি নির্বাচন করুন!" : "Please select a payment method!" }}',
+        failedToCopy: '{{ $isBangla ? "কপি করতে ব্যর্থ" : "Failed to copy" }}',
+        invalidFileType: '{{ $isBangla ? "শুধুমাত্র ছবি ফাইল আপলোড করুন (JPG, PNG, GIF, WEBP)" : "Please upload only image files (JPG, PNG, GIF, WEBP)" }}',
+        fileTooLarge: '{{ $isBangla ? "ফাইল সাইজ ৫MB এর কম হতে হবে" : "File size must be less than 5MB" }}',
         processing: '{{ $isBangla ? "প্রসেস করা হচ্ছে..." : "Processing..." }}'
     };
 
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         // Elements
+        const form = document.getElementById('deposit-form');
         const paymentSelect = document.getElementById('payment_method_select');
         const copyInput = document.getElementById('copy_account_number');
-        const copyButton = document.getElementById('copy_button');
-        const submitBtn = document.querySelector('.submit-btn');
-        const form = document.getElementById('deposit-form');
+        const copyBtn = document.getElementById('copy_button');
+        const submitBtn = form.querySelector('.submit-btn');
 
-        // Payment Method Change Handler
-        if (paymentSelect && copyInput && copyButton) {
-            paymentSelect.addEventListener('change', function () {
+        // Image Upload Elements
+        const screenshotInput = document.getElementById('screenshot-input');
+        const uploadZone = document.getElementById('upload-zone');
+        const uploadPlaceholder = document.getElementById('upload-placeholder');
+        const previewContainer = document.getElementById('preview-container');
+        const previewImage = document.getElementById('preview-image');
+        const changeBtn = document.getElementById('change-image-btn');
+        const removeBtn = document.getElementById('remove-image-btn');
+
+        // ==========================================
+        // PAYMENT METHOD SELECTION
+        // ==========================================
+        if (paymentSelect && copyInput && copyBtn) {
+            paymentSelect.addEventListener('change', function() {
                 const selectedOption = this.options[this.selectedIndex];
                 const accountNumber = selectedOption.dataset.number || '';
+
                 copyInput.value = accountNumber;
 
                 if (accountNumber) {
-                    copyInput.style.backgroundColor = config.primaryColor + '15';
-                    copyInput.style.borderColor = config.primaryColor;
-                    copyButton.style.opacity = '1';
-                    copyButton.disabled = false;
+                    copyInput.style.backgroundColor = 'rgba(48, 207, 208, 0.08)';
+                    copyInput.style.borderColor = 'var(--primary-color)';
+                    copyBtn.disabled = false;
                 } else {
-                    copyInput.style.backgroundColor = config.primaryColor + '05';
-                    copyInput.style.borderColor = config.primaryColor + '30';
-                    copyButton.style.opacity = '0.5';
-                    copyButton.disabled = true;
+                    copyInput.style.backgroundColor = 'rgba(48, 207, 208, 0.03)';
+                    copyInput.style.borderColor = 'rgba(48, 207, 208, 0.18)';
+                    copyBtn.disabled = true;
                 }
             });
 
-            // Copy Button Handler
-            copyButton.addEventListener('click', function () {
+            // Copy Button
+            copyBtn.addEventListener('click', function() {
                 if (!copyInput.value) {
-                    alert(translations.selectPaymentFirst);
+                    alert(T.selectPaymentFirst);
                     return;
                 }
 
@@ -300,113 +776,182 @@
                 copyInput.setSelectionRange(0, 99999);
 
                 try {
-                    document.execCommand('copy');
-                    const originalHTML = copyButton.innerHTML;
-                    copyButton.innerHTML = '<i class="fas fa-check"></i> ' + translations.copied;
-                    copyButton.style.backgroundColor = '#28a745';
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        const originalHTML = copyBtn.innerHTML;
+                        const originalBg = copyBtn.style.backgroundColor;
 
-                    setTimeout(() => {
-                        copyButton.innerHTML = originalHTML;
-                        copyButton.style.backgroundColor = config.primaryColor;
-                    }, 2000);
+                        copyBtn.innerHTML = '<i class="fas fa-check"></i> ' + T.copied;
+                        copyBtn.style.backgroundColor = '#28a745';
+
+                        setTimeout(() => {
+                            copyBtn.innerHTML = originalHTML;
+                            copyBtn.style.backgroundColor = originalBg || 'var(--primary-color)';
+                        }, 2000);
+                    }
                 } catch (err) {
-                    alert(translations.failedToCopy + ' ' + copyInput.value);
+                    console.error('Copy failed:', err);
+                    alert(T.failedToCopy + ': ' + copyInput.value);
                 }
             });
         }
 
-        // Form Input Focus Effects
-        const formInputs = document.querySelectorAll('.form-input, .form-select, .form-file');
-        formInputs.forEach(input => {
-            input.addEventListener('focus', function() {
-                this.style.borderColor = config.primaryColor;
-                this.style.boxShadow = `0 0 0 4px ${config.primaryColor}20`;
-                this.style.transform = 'scale(1.01)';
-            });
+        // ==========================================
+        // IMAGE UPLOAD & PREVIEW
+        // ==========================================
+        if (screenshotInput && uploadZone && previewImage) {
 
-            input.addEventListener('blur', function() {
-                this.style.borderColor = config.primaryColor;
-                this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
-                this.style.transform = 'scale(1)';
-            });
-        });
-
-        // Submit Button Hover Effects
-        if (submitBtn) {
-            submitBtn.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-3px)';
-                this.style.boxShadow = '0 8px 30px rgba(0,0,0,0.3)';
-                this.style.opacity = '0.95';
-            });
-
-            submitBtn.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0)';
-                this.style.boxShadow = '0 6px 20px rgba(0,0,0,0.2)';
-                this.style.opacity = '1';
-            });
-        }
-
-        // Copy Button Hover Effects
-        if (copyButton) {
-            copyButton.addEventListener('mouseenter', function() {
-                this.style.transform = 'scale(1.05)';
-                this.style.boxShadow = '0 6px 20px rgba(0,0,0,0.25)';
-            });
-
-            copyButton.addEventListener('mouseleave', function() {
-                this.style.transform = 'scale(1)';
-                this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-            });
-        }
-
-        // Form Validation
-        if (form && submitBtn) {
-            form.addEventListener('submit', function(e) {
-                const amountInput = document.querySelector('input[name="amount"]');
-                const paymentMethodSelect = document.querySelector('select[name="payment_method"]');
-
-                let isValid = true;
-                let errorMessage = '';
-
-                // Validate amount
-                if (!amountInput || !amountInput.value || parseFloat(amountInput.value) <= 0) {
-                    isValid = false;
-                    errorMessage = translations.validAmountRequired;
-                    if (amountInput) {
-                        amountInput.style.borderColor = '#dc3545';
-                        amountInput.focus();
-                    }
+            // File Input Change
+            screenshotInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    handleFile(file);
                 }
+            });
 
-                // Validate payment method
-                if (isValid && (!paymentMethodSelect || !paymentMethodSelect.value)) {
-                    isValid = false;
-                    errorMessage = translations.paymentMethodRequired;
-                    if (paymentMethodSelect) {
-                        paymentMethodSelect.style.borderColor = '#dc3545';
-                        paymentMethodSelect.focus();
-                    }
+            // Drag & Drop Events
+            uploadZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.classList.add('dragover');
+            });
+
+            uploadZone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.classList.remove('dragover');
+            });
+
+            uploadZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.classList.remove('dragover');
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    // Set the file to input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    screenshotInput.files = dataTransfer.files;
+                    handleFile(file);
                 }
+            });
 
-                // If invalid, prevent submission
-                if (!isValid) {
+            // Change Image Button
+            if (changeBtn) {
+                changeBtn.addEventListener('click', function(e) {
                     e.preventDefault();
-                    alert(errorMessage);
+                    e.stopPropagation();
+                    screenshotInput.click();
+                });
+            }
+
+            // Remove Image Button
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    clearPreview();
+                });
+            }
+
+            // Handle File
+            function handleFile(file) {
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    alert(T.invalidFileType);
+                    clearPreview();
+                    return;
+                }
+
+                // Validate file size (5MB)
+                const maxSize = 5 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    alert(T.fileTooLarge);
+                    clearPreview();
+                    return;
+                }
+
+                // Read and display image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    showPreview();
+                };
+                reader.onerror = function() {
+                    console.error('Failed to read file');
+                    clearPreview();
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // Show Preview
+            function showPreview() {
+                uploadPlaceholder.style.display = 'none';
+                previewContainer.classList.add('active');
+                uploadZone.style.padding = '20px';
+                uploadZone.style.backgroundColor = 'rgba(48, 207, 208, 0.06)';
+                uploadZone.style.minHeight = 'auto';
+            }
+
+            // Clear Preview
+            function clearPreview() {
+                screenshotInput.value = '';
+                previewImage.src = '';
+                uploadPlaceholder.style.display = 'block';
+                previewContainer.classList.remove('active');
+                uploadZone.style.padding = '30px';
+                uploadZone.style.backgroundColor = 'rgba(48, 207, 208, 0.03)';
+                uploadZone.style.minHeight = '200px';
+            }
+        }
+
+        // ==========================================
+        // FORM VALIDATION
+        // ==========================================
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const amount = form.querySelector('[name="amount"]').value;
+                const paymentMethod = form.querySelector('[name="payment_method"]').value;
+
+                if (!amount || parseFloat(amount) <= 0) {
+                    e.preventDefault();
+                    alert('{{ $isBangla ? "অনুগ্রহ করে একটি বৈধ পরিমাণ লিখুন!" : "Please enter a valid amount!" }}');
                     return false;
                 }
 
-                // Show processing state
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + translations.processing;
-                submitBtn.disabled = true;
-                submitBtn.style.cursor = 'not-allowed';
-                submitBtn.style.opacity = '0.7';
+                if (!paymentMethod) {
+                    e.preventDefault();
+                    alert('{{ $isBangla ? "অনুগ্রহ করে একটি পেমেন্ট পদ্ধতি নির্বাচন করুন!" : "Please select a payment method!" }}');
+                    return false;
+                }
+
+                // Disable submit button
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + T.processing;
+                }
             });
         }
 
-        // Console log for debugging
-        console.log('💳 Deposit Form Initialized Successfully');
-        console.log('📝 Configuration:', config);
-        console.log('🌐 Language:', config.isBangla ? 'Bangla (বাংলা)' : 'English');
+        // ==========================================
+        // INPUT FOCUS EFFECTS
+        // ==========================================
+        const inputs = document.querySelectorAll('.form-input, .form-select');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.borderColor = 'var(--primary-color)';
+                this.style.boxShadow = '0 0 0 4px rgba(48, 207, 208, 0.12)';
+            });
+
+            input.addEventListener('blur', function() {
+                this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.05)';
+            });
+        });
+
+        console.log('✅ Deposit Form Initialized - Image Preview Ready!');
     });
 })();
 </script>

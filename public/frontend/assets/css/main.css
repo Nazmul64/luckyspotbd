@@ -2676,6 +2676,15 @@ select.form--control option:hover {
 .dashboard-sidebar {
     background: #2e0327;
     position: relative;
+
+}
+@media (max-width: 991.98px) {
+    .dashboard-sidebar {
+        background-color: transparent !important;
+        min-height: 100%;
+        padding-bottom: 50px !important;
+        height: 1068px;
+}
 }
 
 .dashboard-sidebar .close-dashboard {
@@ -2704,11 +2713,14 @@ select.form--control option:hover {
         transition: all ease .3s;
     }
 
+   @media (max-width: 991px) {
     .dashboard-sidebar.active {
         opacity: 1;
         visibility: visible;
         transform: translateX(0px);
+        height: 1103px;
     }
+}
 }
 
 @media (max-width: 991px) {

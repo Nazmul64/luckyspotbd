@@ -15,11 +15,7 @@ use Illuminate\Support\Facades\DB;
 class UserlottryController extends Controller
 {
     /**
-     * Buy a lottery/package for authenticated user
-     *
-     * @param Request $request
-     * @param int $packageId
-     * @return \Illuminate\Http\RedirectResponse
+     * Buy a lottery/package
      */
     public function buyPackage(Request $request, int $packageId)
     {
@@ -29,7 +25,7 @@ class UserlottryController extends Controller
         DB::beginTransaction();
 
         try {
-            // 1️⃣ Lock approved deposit to prevent race condition
+            // 🔒 Lock deposit
             $deposit = Deposite::where('user_id', $user->id)
                 ->where('status', 'approved')
                 ->lockForUpdate()
@@ -37,25 +33,16 @@ class UserlottryController extends Controller
 
             if (!$deposit || $deposit->amount < $package->price) {
                 DB::rollBack();
-                return back()->with('error', 'Insufficient balance to buy this package.');
+                return back()->with('error', 'Insufficient balance.');
             }
 
-            // 2️⃣ Deduct package price from deposit
+            // 💰 Deduct balance
             $deposit->decrement('amount', $package->price);
 
-            // 3️⃣ Generate ticket number
-            $ticketNumber = null;
-            if ($package->type === 'lottery') {
-                // 8-digit unique numeric ticket number
-                do {
-                    $ticketNumber = str_pad(rand(0, 99999999), 8, '0', STR_PAD_LEFT);
-                } while (Userpackagebuy::where('ticket_number', $ticketNumber)->exists());
-            } else {
-                // Non-lottery package
-                $ticketNumber = 'N/A-' . uniqid();
-            }
+            // 🎟 Ticket number
+            $ticketNumber = $this->generateTicket($package);
 
-            // 4️⃣ Save user package purchase
+            // 📦 Save purchase
             Userpackagebuy::create([
                 'user_id'       => $user->id,
                 'package_id'    => $package->id,
@@ -64,72 +51,111 @@ class UserlottryController extends Controller
                 'status'        => 'active',
             ]);
 
-            // 5️⃣ Log expense in Profit
+            // 📉 Expense log
             Profit::create([
                 'user_id'      => $user->id,
                 'from_user_id' => $user->id,
                 'deposit_id'   => $deposit->id,
                 'amount'       => -$package->price,
                 'level'        => 0,
-                'note'         => 'User purchased package: ' . $package->id,
+                'note'         => 'Package purchase',
             ]);
 
-            // 6️⃣ Handle referral & generation commissions
+            // ⚙️ Commission
             $settings = CommissionSetting::first();
             if ($settings && $settings->status) {
-                $this->distributeReferralCommission($user, $package, $settings, $deposit->id);
 
+                // ✅ Referral bonus ONLY ONCE
+                $this->distributeReferralCommissionOnce(
+                    $user,
+                    $package,
+                    $settings,
+                    $deposit->id
+                );
+
+                // 🔁 Generation commission (non-lottery)
                 if ($package->type !== 'lottery') {
-                    $this->distributeGenerationCommission($user, $package, $settings, $deposit->id);
+                    $this->distributeGenerationCommission(
+                        $user,
+                        $package,
+                        $settings,
+                        $deposit->id
+                    );
                 }
             }
 
             DB::commit();
 
-            // 7️⃣ Return success message with ticket number
             return back()->with([
-                'success'       => 'Package purchased successfully!',
+                'success' => 'Package purchased successfully!',
                 'ticket_number' => $ticketNumber
             ]);
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Something went wrong: ' . $e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
     /**
-     * Distribute direct referral commission
+     * Generate ticket number
      */
-    protected function distributeReferralCommission($user, $package, $settings, int $depositId)
+    protected function generateTicket($package)
+    {
+        if ($package->type !== 'lottery') {
+            return 'N/A-' . uniqid();
+        }
+
+        do {
+            $ticket = str_pad(rand(0, 99999999), 8, '0', STR_PAD_LEFT);
+        } while (Userpackagebuy::where('ticket_number', $ticket)->exists());
+
+        return $ticket;
+    }
+
+    /**
+     * Referral commission (ONLY ONCE PER USER)
+     */
+    protected function distributeReferralCommissionOnce($user, $package, $settings, int $depositId)
     {
         $referrer = $user->referrer;
-        if (!$referrer || $settings->refer_commission <= 0) return;
+        if (!$referrer || $settings->refer_commission <= 0) {
+            return;
+        }
+
+        // ❌ Already paid check
+        $alreadyPaid = Profit::where('from_user_id', $user->id)
+            ->where('level', 1)
+            ->where('note', 'Referral commission')
+            ->exists();
+
+        if ($alreadyPaid) {
+            return;
+        }
 
         $bonus = round($package->price * ($settings->refer_commission / 100), 2);
+        if ($bonus <= 0) return;
 
-        if ($bonus > 0) {
-            $referrer->increment('balance', $bonus);
-            $referrer->increment('refer_income', $bonus);
+        $referrer->increment('balance', $bonus);
+        $referrer->increment('refer_income', $bonus);
 
-            Profit::create([
-                'user_id'      => $referrer->id,
-                'from_user_id' => $user->id,
-                'deposit_id'   => $depositId,
-                'amount'       => $bonus,
-                'level'        => 1,
-                'note'         => $package->type === 'lottery' ? 'Lottery referral commission' : 'Direct referral commission',
-            ]);
-        }
+        Profit::create([
+            'user_id'      => $referrer->id,
+            'from_user_id' => $user->id,
+            'deposit_id'   => $depositId,
+            'amount'       => $bonus,
+            'level'        => 1,
+            'note'         => 'Referral commission',
+        ]);
     }
 
     /**
-     * Distribute generation commission up to 5 levels
+     * Generation commission (up to 5 levels)
      */
     protected function distributeGenerationCommission($user, $package, $settings, int $depositId)
     {
         $currentUser = $user;
-        $stockAmount = round($package->price * ($settings->generation_commission / 100), 2);
+        $baseAmount = round($package->price * ($settings->generation_commission / 100), 2);
 
         $levels = [
             1 => $settings->generation_level_1,
@@ -143,7 +169,8 @@ class UserlottryController extends Controller
             $referrer = $currentUser->referrer;
             if (!$referrer || ($levels[$level] ?? 0) <= 0) break;
 
-            $bonus = round($stockAmount * ($levels[$level] / 100), 2);
+            $bonus = round($baseAmount * ($levels[$level] / 100), 2);
+
             if ($bonus > 0) {
                 $referrer->increment('balance', $bonus);
                 $referrer->increment('generation_income', $bonus);
@@ -154,7 +181,7 @@ class UserlottryController extends Controller
                     'deposit_id'   => $depositId,
                     'amount'       => $bonus,
                     'level'        => $level,
-                    'note'         => 'Generation commission (Level ' . $level . ')',
+                    'note'         => "Generation commission (Level {$level})",
                 ]);
             }
 

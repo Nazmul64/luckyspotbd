@@ -7,27 +7,32 @@ use App\Models\Lottery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Validation\Rule;
 
 class LotterycreateController extends Controller
 {
+    // Constants
+    private const PHOTO_MAX_SIZE = 2048; // KB
+    private const VIDEO_MAX_SIZE = 512000; // KB
+    private const PAGINATION = 15;
+    private const PHOTO_DIR = 'uploads/lottery';
+    private const VIDEO_DIR = 'uploads/lottery/videos';
+
     /**
-     * Display a listing of lotteries
+     * Display lottery list with pagination
      */
     public function index()
     {
-        try {
-            $lotteries = Lottery::latest()->get();
-            return view('admin.lottery.index', compact('lotteries'));
-        } catch (Exception $e) {
-            Log::error('Lottery Index Error: ' . $e->getMessage());
-            return back()->with('error', 'Failed to load lotteries.');
-        }
+
+            $lotteries = Lottery::latest('id')->paginate(self::PAGINATION);
+            return view('admin.Lottery.index', compact('lotteries'));
     }
 
     /**
-     * Show the form for creating a new lottery
+     * Show create form
      */
     public function create()
     {
@@ -35,296 +40,372 @@ class LotterycreateController extends Controller
     }
 
     /**
-     * Store a newly created lottery in storage
+     * Store new lottery
      */
     public function store(Request $request)
     {
-        // Validate incoming request
-        $validated = $request->validate([
-            'name_en' => 'required|string|max:255',
-            'name_bn' => 'required|string|max:255',
-            'description_en' => 'nullable|string|max:5000',
-            'description_bn' => 'nullable|string|max:5000',
-            'price' => 'required|numeric|min:0',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'first_prize' => 'nullable|numeric|min:0',
-            'second_prize' => 'nullable|numeric|min:0',
-            'third_prize' => 'nullable|numeric|min:0',
-            'multiple_title' => 'nullable|array',
-            'multiple_title.*' => 'nullable|string|max:255',
-            'multiple_price' => 'nullable|array',
-            'multiple_price.*' => 'nullable|numeric|min:0',
-            'video_url' => 'nullable|url|max:500',
-            'video_enabled' => 'nullable|boolean',
-            'video_scheduled_at' => 'nullable|date',
-            'draw_date' => 'required|date|after:now',
-            'win_type' => 'required|string|max:50',
-            'status' => 'required|in:active,inactive,completed',
-        ]);
+        $validator = $this->validator($request);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput()
+                ->with('error', 'Please fix validation errors.');
+        }
+
+        DB::beginTransaction();
 
         try {
-            // ✅ Prepare data - NO json_encode() needed because Model has 'array' cast
-            $data = [
-                'name' => [
-                    'en' => $request->name_en,
-                    'bn' => $request->name_bn,
-                ],
-                'description' => [
-                    'en' => $request->description_en ?? '',
-                    'bn' => $request->description_bn ?? '',
-                ],
-                'price' => $request->price,
-                'first_prize' => $request->first_prize ?? 0,
-                'second_prize' => $request->second_prize ?? 0,
-                'third_prize' => $request->third_prize ?? 0,
-                'video_url' => $request->video_url,
-                'video_enabled' => $request->has('video_enabled') ? 1 : 0,
-                'video_scheduled_at' => $request->video_scheduled_at,
-                'draw_date' => $request->draw_date,
-                'win_type' => $request->win_type,
-                'status' => $request->status,
-            ];
+            $data = $this->prepareData($request);
 
-            // Handle multiple packages - also as array (Model will auto-encode to JSON)
-            if ($request->has('multiple_title') && is_array($request->multiple_title)) {
-                $titles = array_filter($request->multiple_title, function($title) {
-                    return !empty(trim($title));
-                });
-
-                $prices = [];
-                foreach ($titles as $key => $title) {
-                    $prices[$key] = $request->multiple_price[$key] ?? 0;
-                }
-
-                // Store as arrays - Model will handle JSON encoding
-                $data['multiple_title'] = array_values($titles);
-                $data['multiple_price'] = array_values($prices);
-            } else {
-                $data['multiple_title'] = [];
-                $data['multiple_price'] = [];
-            }
-
-            // Handle photo upload
+            // Handle uploads
             if ($request->hasFile('photo')) {
-                $data['photo'] = $this->uploadPhoto($request->file('photo'));
+                $data['photo'] = $this->uploadFile($request->file('photo'), self::PHOTO_DIR);
             }
 
-            // Create lottery
+            $this->processVideo($request, $data);
+
             $lottery = Lottery::create($data);
 
-            Log::info('✅ Lottery Created Successfully', [
-                'id' => $lottery->id,
-                'name' => $lottery->name, // This will log as array
-            ]);
+            DB::commit();
 
-            return redirect()
-                ->route('lottery.index')
-                ->with('success', '✅ Lottery created successfully!');
+            Log::info('Lottery Created', ['id' => $lottery->id]);
+
+            return redirect()->route('lottery.index')
+                ->with('success', 'Lottery created successfully!');
 
         } catch (Exception $e) {
-            Log::error('❌ Lottery Store Error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
+            DB::rollBack();
+            $this->cleanup($data ?? []);
 
-            return back()
-                ->withInput()
-                ->with('error', '❌ Failed to create lottery: ' . $e->getMessage());
+            Log::error('Lottery Store Failed: ' . $e->getMessage());
+
+            return back()->withInput()
+                ->with('error', 'Failed to create lottery: ' . $e->getMessage());
         }
     }
 
     /**
-     * Show the form for editing the specified lottery
+     * Show edit form
      */
     public function edit($id)
     {
-        try {
+
             $lottery = Lottery::findOrFail($id);
-            return view('admin.lottery.edit', compact('lottery'));
-        } catch (Exception $e) {
-            Log::error('Lottery Edit Error: ' . $e->getMessage());
-            return redirect()
-                ->route('lottery.index')
-                ->with('error', '❌ Lottery not found.');
-        }
+            return view('admin.Lottery.edit', compact('lottery'));
+
     }
 
     /**
-     * Update the specified lottery in storage
+     * Update lottery
      */
     public function update(Request $request, $id)
     {
         try {
             $lottery = Lottery::findOrFail($id);
         } catch (Exception $e) {
-            return redirect()
-                ->route('lottery.index')
-                ->with('error', '❌ Lottery not found.');
+            return redirect()->route('lottery.index')
+                ->with('error', 'Lottery not found.');
         }
 
-        $validated = $request->validate([
+        $validator = $this->validator($request, $lottery);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput()
+                ->with('error', 'Please fix validation errors.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $oldPhoto = $lottery->photo;
+            $oldVideo = $lottery->video_file;
+
+            $data = $this->prepareData($request);
+
+            // Handle photo update
+            if ($request->hasFile('new_photo')) {
+                $data['photo'] = $this->uploadFile($request->file('new_photo'), self::PHOTO_DIR);
+                $this->deleteFile($oldPhoto, self::PHOTO_DIR);
+            } else {
+                $data['photo'] = $lottery->photo;
+            }
+
+            // Handle video update
+            $this->processVideoUpdate($request, $lottery, $data, $oldVideo);
+
+            $lottery->update($data);
+
+            DB::commit();
+
+            Log::info('Lottery Updated', ['id' => $lottery->id]);
+
+            return redirect()->route('lottery.index')
+                ->with('success', 'Lottery updated successfully!');
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            $this->cleanup($data ?? []);
+
+            Log::error('Lottery Update Failed: ' . $e->getMessage());
+
+            return back()->withInput()
+                ->with('error', 'Failed to update lottery: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete lottery
+     */
+    public function destroy($id)
+    {
+        DB::beginTransaction();
+
+        try {
+            $lottery = Lottery::findOrFail($id);
+
+            $photo = $lottery->photo;
+            $video = $lottery->video_file;
+
+            $lottery->delete();
+
+            $this->deleteFile($photo, self::PHOTO_DIR);
+            $this->deleteFile($video, self::VIDEO_DIR);
+
+            DB::commit();
+
+            Log::info('Lottery Deleted', ['id' => $id]);
+
+            return redirect()->route('lottery.index')
+                ->with('success', 'Lottery deleted successfully!');
+
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            Log::error('Lottery Delete Failed: ' . $e->getMessage());
+
+            return back()->with('error', 'Failed to delete lottery.');
+        }
+    }
+
+    // ==========================================
+    // PRIVATE HELPER METHODS
+    // ==========================================
+
+    /**
+     * Validate request
+     */
+    private function validator(Request $request, ?Lottery $lottery = null)
+    {
+        $isUpdate = !is_null($lottery);
+
+        $rules = [
             'name_en' => 'required|string|max:255',
             'name_bn' => 'required|string|max:255',
             'description_en' => 'nullable|string|max:5000',
             'description_bn' => 'nullable|string|max:5000',
-            'price' => 'required|numeric|min:0',
-            'new_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'first_prize' => 'nullable|numeric|min:0',
-            'second_prize' => 'nullable|numeric|min:0',
-            'third_prize' => 'nullable|numeric|min:0',
-            'multiple_title' => 'nullable|array',
-            'multiple_title.*' => 'nullable|string|max:255',
-            'multiple_price' => 'nullable|array',
-            'multiple_price.*' => 'nullable|numeric|min:0',
-            'video_url' => 'nullable|url|max:500',
+            'price' => 'required|numeric|min:0|max:999999999',
+            'first_prize' => 'nullable|numeric|min:0|max:999999999',
+            'second_prize' => 'nullable|numeric|min:0|max:999999999',
+            'third_prize' => 'nullable|numeric|min:0|max:999999999',
             'video_enabled' => 'nullable|boolean',
-            'video_scheduled_at' => 'nullable|date',
-            'draw_date' => 'required|date',
+            'video_type' => ['required', Rule::in(['upload', 'direct', 'youtube'])],
+            'video_scheduled_at' => 'nullable|date|after_or_equal:now',
+            'draw_date' => 'required|date|after:now',
             'win_type' => 'required|string|max:50',
-            'status' => 'required|in:active,inactive,completed',
+            'status' => ['required', Rule::in(['active', 'inactive', 'completed'])],
+        ];
+
+        // Photo rules
+        $photoRule = 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:' . self::PHOTO_MAX_SIZE;
+        $rules[$isUpdate ? 'new_photo' : 'photo'] = $photoRule;
+
+        // Video rules
+        if ($request->input('video_enabled')) {
+            $videoType = $request->input('video_type');
+
+            if ($videoType === 'upload') {
+                $required = $isUpdate ? 'nullable' : 'required';
+                $rules['video_file'] = $required . '|file|mimes:mp4,webm,ogg,mov|max:' . self::VIDEO_MAX_SIZE;
+            } elseif ($videoType === 'direct') {
+                $rules['video_url_direct'] = 'required|url|max:500';
+            } elseif ($videoType === 'youtube') {
+                $rules['video_url_youtube'] = 'required|string|max:200';
+            }
+        }
+
+        return Validator::make($request->all(), $rules, [
+            'name_en.required' => 'English name is required',
+            'name_bn.required' => 'Bengali name is required',
+            'price.required' => 'Price is required',
+            'draw_date.after' => 'Draw date must be in future',
+            'video_file.required' => 'Video file required',
+            'video_file.max' => 'Video max 500MB',
         ]);
+    }
 
-        try {
-            // ✅ Prepare data - NO json_encode() needed
-            $data = [
-                'name' => [
-                    'en' => $request->name_en,
-                    'bn' => $request->name_bn,
-                ],
-                'description' => [
-                    'en' => $request->description_en ?? '',
-                    'bn' => $request->description_bn ?? '',
-                ],
-                'price' => $request->price,
-                'first_prize' => $request->first_prize ?? 0,
-                'second_prize' => $request->second_prize ?? 0,
-                'third_prize' => $request->third_prize ?? 0,
-                'video_url' => $request->video_url,
-                'video_enabled' => $request->has('video_enabled') ? 1 : 0,
-                'video_scheduled_at' => $request->video_scheduled_at,
-                'draw_date' => $request->draw_date,
-                'win_type' => $request->win_type,
-                'status' => $request->status,
-            ];
+    /**
+     * Prepare lottery data
+     */
+    private function prepareData(Request $request): array
+    {
+        return [
+            'name' => [
+                'en' => $request->name_en,
+                'bn' => $request->name_bn,
+            ],
+            'description' => [
+                'en' => $request->description_en ?? '',
+                'bn' => $request->description_bn ?? '',
+            ],
+            'price' => $request->price ?? 0,
+            'first_prize' => $request->first_prize ?? 0,
+            'second_prize' => $request->second_prize ?? 0,
+            'third_prize' => $request->third_prize ?? 0,
+            'multiple_title' => $this->filterArray($request->multiple_title ?? []),
+            'multiple_price' => $this->filterPrices($request->multiple_price ?? []),
+            'video_enabled' => $request->has('video_enabled'),
+            'video_type' => $request->video_type ?? 'direct',
+            'video_scheduled_at' => $request->video_scheduled_at,
+            'draw_date' => $request->draw_date,
+            'win_type' => $request->win_type,
+            'status' => $request->status ?? 'active',
+        ];
+    }
 
-            // Handle multiple packages
-            if ($request->has('multiple_title') && is_array($request->multiple_title)) {
-                $titles = array_filter($request->multiple_title, function($title) {
-                    return !empty(trim($title));
-                });
+    /**
+     * Process video for creation
+     */
+    private function processVideo(Request $request, array &$data): void
+    {
+        if (!$request->input('video_enabled')) {
+            $data['video_url'] = null;
+            $data['video_file'] = null;
+            return;
+        }
 
-                $prices = [];
-                foreach ($titles as $key => $title) {
-                    $prices[$key] = $request->multiple_price[$key] ?? 0;
-                }
+        $type = $request->video_type;
 
-                $data['multiple_title'] = array_values($titles);
-                $data['multiple_price'] = array_values($prices);
+        if ($type === 'upload' && $request->hasFile('video_file')) {
+            $data['video_file'] = $this->uploadFile($request->file('video_file'), self::VIDEO_DIR);
+            $data['video_url'] = null;
+        } elseif ($type === 'direct') {
+            $data['video_url'] = $request->video_url_direct;
+            $data['video_file'] = null;
+        } elseif ($type === 'youtube') {
+            $data['video_url'] = $this->extractYoutubeId($request->video_url_youtube);
+            $data['video_file'] = null;
+        }
+    }
+
+    /**
+     * Process video for update
+     */
+    private function processVideoUpdate(Request $request, Lottery $lottery, array &$data, ?string $oldVideo): void
+    {
+        if (!$request->input('video_enabled')) {
+            $data['video_url'] = null;
+            $data['video_file'] = null;
+            $this->deleteFile($oldVideo, self::VIDEO_DIR);
+            return;
+        }
+
+        $type = $request->video_type;
+
+        if ($type === 'upload') {
+            if ($request->hasFile('video_file')) {
+                $data['video_file'] = $this->uploadFile($request->file('video_file'), self::VIDEO_DIR);
+                $data['video_url'] = null;
+                $this->deleteFile($oldVideo, self::VIDEO_DIR);
             } else {
-                $data['multiple_title'] = [];
-                $data['multiple_price'] = [];
+                $data['video_file'] = $lottery->video_file;
+                $data['video_url'] = null;
             }
-
-            // Handle photo upload
-            if ($request->hasFile('new_photo')) {
-                if ($lottery->photo) {
-                    $this->deletePhoto($lottery->photo);
-                }
-                $data['photo'] = $this->uploadPhoto($request->file('new_photo'));
+        } elseif ($type === 'direct') {
+            $data['video_url'] = $request->video_url_direct;
+            $data['video_file'] = null;
+            if ($oldVideo && $lottery->video_type === 'upload') {
+                $this->deleteFile($oldVideo, self::VIDEO_DIR);
             }
-
-            // Update lottery
-            $lottery->update($data);
-
-            Log::info('✅ Lottery Updated Successfully', [
-                'id' => $lottery->id,
-                'name' => $lottery->name,
-            ]);
-
-            return redirect()
-                ->route('lottery.index')
-                ->with('success', '✅ Lottery updated successfully!');
-
-        } catch (Exception $e) {
-            Log::error('❌ Lottery Update Error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return back()
-                ->withInput()
-                ->with('error', '❌ Failed to update lottery: ' . $e->getMessage());
+        } elseif ($type === 'youtube') {
+            $data['video_url'] = $this->extractYoutubeId($request->video_url_youtube);
+            $data['video_file'] = null;
+            if ($oldVideo && $lottery->video_type === 'upload') {
+                $this->deleteFile($oldVideo, self::VIDEO_DIR);
+            }
         }
     }
 
     /**
-     * Remove the specified lottery from storage
+     * Extract YouTube ID
      */
-    public function destroy($id)
+    private function extractYoutubeId(string $input): string
     {
-        try {
-            $lottery = Lottery::findOrFail($id);
+        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/', $input, $m)) {
+            return $m[1];
+        }
 
-            if ($lottery->photo) {
-                $this->deletePhoto($lottery->photo);
-            }
+        if (preg_match('/^[a-zA-Z0-9_-]{11}$/', $input)) {
+            return $input;
+        }
 
-            $lottery->delete();
+        return $input;
+    }
 
-            Log::info('✅ Lottery Deleted', ['id' => $id]);
+    /**
+     * Upload file
+     */
+    private function uploadFile($file, string $dir): string
+    {
+        $name = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $path = public_path($dir);
 
-            return redirect()
-                ->route('lottery.index')
-                ->with('success', '✅ Lottery deleted successfully!');
+        if (!File::isDirectory($path)) {
+            File::makeDirectory($path, 0755, true);
+        }
 
-        } catch (Exception $e) {
-            Log::error('❌ Lottery Delete Error: ' . $e->getMessage());
-            return back()->with('error', '❌ Failed to delete lottery.');
+        $file->move($path, $name);
+
+        return $name;
+    }
+
+    /**
+     * Delete file
+     */
+    private function deleteFile(?string $file, string $dir): bool
+    {
+        if (!$file) return false;
+
+        $path = public_path($dir . '/' . $file);
+
+        return File::exists($path) ? File::delete($path) : false;
+    }
+
+    /**
+     * Cleanup failed uploads
+     */
+    private function cleanup(array $data): void
+    {
+        if (!empty($data['photo'])) {
+            $this->deleteFile($data['photo'], self::PHOTO_DIR);
+        }
+
+        if (!empty($data['video_file'])) {
+            $this->deleteFile($data['video_file'], self::VIDEO_DIR);
         }
     }
 
     /**
-     * Upload photo to storage
+     * Filter array
      */
-    private function uploadPhoto($file)
+    private function filterArray(array $arr): array
     {
-        try {
-            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $uploadPath = public_path('uploads/lottery');
-
-            if (!File::exists($uploadPath)) {
-                File::makeDirectory($uploadPath, 0755, true);
-            }
-
-            $file->move($uploadPath, $filename);
-
-            Log::info('✅ Photo Uploaded', ['filename' => $filename]);
-
-            return $filename;
-        } catch (Exception $e) {
-            Log::error('Photo Upload Error: ' . $e->getMessage());
-            throw new Exception('Failed to upload photo.');
-        }
+        return array_values(array_filter(array_map('trim', $arr), fn($v) => !empty($v)));
     }
 
     /**
-     * Delete photo from storage
+     * Filter prices
      */
-    private function deletePhoto($filename)
+    private function filterPrices(array $arr): array
     {
-        try {
-            if (!$filename) return false;
-
-            $filePath = public_path('uploads/lottery/' . $filename);
-
-            if (File::exists($filePath)) {
-                File::delete($filePath);
-                Log::info('✅ Photo Deleted', ['filename' => $filename]);
-                return true;
-            }
-
-            return false;
-        } catch (Exception $e) {
-            Log::error('Photo Delete Error: ' . $e->getMessage());
-            return false;
-        }
+        return array_values(array_map(fn($p) => max(0, (float)($p ?? 0)), $arr));
     }
 }

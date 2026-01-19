@@ -14,8 +14,10 @@ use App\Models\Slider;
 use App\Models\Support;
 use App\Models\Termscondition;
 use App\Models\Testimonial;
+use App\Models\User_widthdraw;
 use App\Models\Whychooseusticket;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Termwind\Components\Hr;
 
 class FrontendController extends Controller
@@ -78,6 +80,30 @@ class FrontendController extends Controller
         $supportcontact=Support::all();
          return view('frontend.supportcontact.index', compact('supportcontact'));
     }
+
+
+
+    public function withdrawHistory()
+{
+    $withdraws =User_widthdraw::where('user_id', Auth::id())
+        ->latest()
+        ->get();
+
+    return view('frontend.dashboard.depositehistory.index', compact('withdraws'));
+}
+
+
+
+
+
+public function depositeHistory()
+{
+    $deposits = \App\Models\Deposite::where('user_id', Auth::id())
+        ->latest()
+        ->get();
+
+    return view('frontend.dashboard.depositehistory.depositehistory', compact('deposits'));
+}
 
 
 }

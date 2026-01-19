@@ -66,6 +66,16 @@
 
     $t = $translations[$currentLang] ?? $translations['en'];
     $chunkedPackages = $packages->chunk(4);
+
+    // Card Gradients & Backgrounds
+    $cardStyles = [
+        ['gradient' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'bg' => 'rgba(118, 75, 162, 0.1)'],
+        ['gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 'bg' => 'rgba(245, 87, 108, 0.1)'],
+        ['gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 'bg' => 'rgba(0, 242, 254, 0.1)'],
+        ['gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', 'bg' => 'rgba(56, 249, 215, 0.1)'],
+        ['gradient' => 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', 'bg' => 'rgba(254, 225, 64, 0.1)'],
+        ['gradient' => 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)', 'bg' => 'rgba(51, 8, 103, 0.1)'],
+    ];
 @endphp
 
 @include('frontend.dashboard.usersection')
@@ -73,9 +83,7 @@
 <div class="container px-3 mt-4">
     <div class="row">
         {{-- SIDEBAR --}}
-
-            @include('frontend.dashboard.sidebar')
-
+        @include('frontend.dashboard.sidebar')
 
         {{-- MAIN CONTENT --}}
         <div class="col-lg-9 col-md-8">
@@ -91,75 +99,80 @@
                                  role="tabpanel"
                                  aria-hidden="{{ $slideIndex === 0 ? 'false' : 'true' }}">
                                 <div class="winners-grid">
-                                    @foreach($slidePackages as $package)
+                                    @foreach($slidePackages as $cardIndex => $package)
                                         @php
                                             $winners = $packageWinners[$package->id] ?? [];
                                             $packagePrice = round($package->price);
+                                            $styleIndex = $cardIndex % count($cardStyles);
+                                            $cardStyle = $cardStyles[$styleIndex];
                                         @endphp
 
-                                        <article class="winner-card">
+                                        <article class="winner-card" data-card-index="{{ $cardIndex }}">
                                             {{-- Package Header --}}
-                                            <header class="package-header">
+                                            <header class="package-header" style="background: {{ $cardStyle['gradient'] }};">
                                                 <span class="package-icon" aria-hidden="true">💎</span>
                                                 <h3 class="package-title">{{ $t['ticket_price'] }} ${{ $packagePrice }}</h3>
                                             </header>
 
-                                            {{-- Winners Slider or Empty State --}}
-                                            @if(count($winners) > 0)
-                                                <div class="winners-slider-wrapper">
-                                                    <div class="winners-slider"
-                                                         id="slider-{{ $package->id }}"
-                                                         data-package-id="{{ $package->id }}"
-                                                         role="region"
-                                                         aria-label="Winners for ${{ $packagePrice }} package">
-                                                        @foreach($winners as $winnerIndex => $winner)
-                                                            <div class="winner-slide {{ $winnerIndex === 0 ? 'active' : '' }}">
-                                                                <div class="winner-content">
-                                                                    {{-- Medal Icon --}}
-                                                                    <div class="medal-icon" aria-hidden="true">
-                                                                        @if($winnerIndex === 0) 🏆
-                                                                        @elseif($winnerIndex === 1) 🥈
-                                                                        @elseif($winnerIndex === 2) 🥉
-                                                                        @else 🎖️
-                                                                        @endif
+                                            {{-- Card Body with Background --}}
+                                            <div class="card-body" style="background: {{ $cardStyle['bg'] }};">
+                                                {{-- Winners Slider or Empty State --}}
+                                                @if(count($winners) > 0)
+                                                    <div class="winners-slider-wrapper">
+                                                        <div class="winners-slider"
+                                                             id="slider-{{ $package->id }}"
+                                                             data-package-id="{{ $package->id }}"
+                                                             role="region"
+                                                             aria-label="Winners for ${{ $packagePrice }} package">
+                                                            @foreach($winners as $winnerIndex => $winner)
+                                                                <div class="winner-slide {{ $winnerIndex === 0 ? 'active' : '' }}">
+                                                                    <div class="winner-content">
+                                                                        {{-- Medal Icon --}}
+                                                                        <div class="medal-icon" aria-hidden="true">
+                                                                            @if($winnerIndex === 0) 🏆
+                                                                            @elseif($winnerIndex === 1) 🥈
+                                                                            @elseif($winnerIndex === 2) 🥉
+                                                                            @else 🎖️
+                                                                            @endif
+                                                                        </div>
+
+                                                                        {{-- Winner Image --}}
+                                                                        <img src="{{ asset('uploads/profile/' . $winner->user->profile_photo) }}"
+                                                                             alt="{{ $winner->user->name }}"
+                                                                             class="winner-image"
+                                                                             loading="lazy"
+                                                                             onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($winner->user->name) }}&background={{ str_replace('#', '', $primaryColor) }}&color=fff&size=120'">
+
+                                                                        {{-- Winner Details --}}
+                                                                        <h4 class="winner-name">{{ $winner->user->name }}</h4>
+                                                                        <p class="winner-amount">💰 ${{ round($winner->win_amount) }}</p>
+
+                                                                        {{-- Position Badge --}}
+                                                                        <span class="winner-badge">
+                                                                            @if($winnerIndex === 0) {{ $t['place_1st'] }}
+                                                                            @elseif($winnerIndex === 1) {{ $t['place_2nd'] }}
+                                                                            @elseif($winnerIndex === 2) {{ $t['place_3rd'] }}
+                                                                            @else {{ $winnerIndex + 1 }}{{ $t['place_nth'] }}
+                                                                            @endif
+                                                                        </span>
                                                                     </div>
-
-                                                                    {{-- Winner Image --}}
-                                                                    <img src="{{ asset('uploads/profile/' . $winner->user->profile_photo) }}"
-                                                                         alt="{{ $winner->user->name }}"
-                                                                         class="winner-image"
-                                                                         loading="lazy"
-                                                                         onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($winner->user->name) }}&background={{ str_replace('#', '', $primaryColor) }}&color=fff&size=120'">
-
-                                                                    {{-- Winner Details --}}
-                                                                    <h4 class="winner-name">{{ $winner->user->name }}</h4>
-                                                                    <p class="winner-amount">💰 ${{ round($winner->win_amount) }}</p>
-
-                                                                    {{-- Position Badge --}}
-                                                                    <span class="winner-badge">
-                                                                        @if($winnerIndex === 0) {{ $t['place_1st'] }}
-                                                                        @elseif($winnerIndex === 1) {{ $t['place_2nd'] }}
-                                                                        @elseif($winnerIndex === 2) {{ $t['place_3rd'] }}
-                                                                        @else {{ $winnerIndex + 1 }}{{ $t['place_nth'] }}
-                                                                        @endif
-                                                                    </span>
                                                                 </div>
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
+                                                            @endforeach
+                                                        </div>
 
-                                                    {{-- Slide Counter --}}
-                                                    <div class="slide-counter" aria-live="polite">
-                                                        <span class="counter-current" data-package-id="{{ $package->id }}">1</span> / {{ count($winners) }}
+                                                        {{-- Slide Counter --}}
+                                                        <div class="slide-counter" aria-live="polite">
+                                                            <span class="counter-current" data-package-id="{{ $package->id }}">1</span> / {{ count($winners) }}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            @else
-                                                <div class="no-winners-state">
-                                                    <div class="empty-icon" aria-hidden="true">🎯</div>
-                                                    <p class="empty-text">{{ $t['no_winners'] }}</p>
-                                                    <small class="empty-subtext">{{ $t['be_first'] }}</small>
-                                                </div>
-                                            @endif
+                                                @else
+                                                    <div class="no-winners-state">
+                                                        <div class="empty-icon" aria-hidden="true">🎯</div>
+                                                        <p class="empty-text">{{ $t['no_winners'] }}</p>
+                                                        <small class="empty-subtext">{{ $t['be_first'] }}</small>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </article>
                                     @endforeach
                                 </div>
@@ -337,7 +350,6 @@
 
 /* ==================== PACKAGE HEADER ==================== */
 .package-header {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     padding: 12px 16px;
     display: flex;
     align-items: center;
@@ -363,6 +375,12 @@
     font-weight: 700;
     margin: 0;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ==================== CARD BODY ==================== */
+.card-body {
+    padding: 0;
+    border-radius: 0 0 14px 14px;
 }
 
 /* ==================== WINNER SLIDER ==================== */
@@ -557,7 +575,6 @@
     height: 12px;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
-
 /* ==================== ACTIVITY SECTIONS ==================== */
 .activity-section {
     border-radius: var(--radius);

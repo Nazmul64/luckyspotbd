@@ -63,6 +63,9 @@ Auth::routes();
 Route::get('/', [FrontendController::class, 'frontend'])->name('frontend');
 Route::get('contactpages', [FrontendController::class, 'contactpages'])->name('contact.pages');
 Route::get('privacy', [FrontendController::class, 'privacy'])->name('privacy.pages');
+
+Route::get('/withdraw-history', [FrontendController::class, 'withdrawHistory'])->name('withdraw.history');
+Route::get('/deposite-history', [FrontendController::class, 'depositeHistory'])->name('deposite.history');
 Route::get('trmsandcondation', [FrontendController::class, 'trmsandcondation'])->name('trmsandcondation');
 Route::get('supportcontact', [FrontendController::class, 'supportcontact'])->name('supportcontact');
 Route::post('/supportemail', [SupportEmailController::class, 'supportemail'])->name('contact.message');

@@ -44,7 +44,16 @@
 
                                 {{-- Transaction ID --}}
                                 <td>{{ $item->transaction_id ?? 'N/A' }}</td>
-                                <td>{{ $item->photo ?? 'N/A' }}</td>
+                                <td>
+                                    @if($item->screenshot && file_exists(public_path('uploads/deposites/'.$item->screenshot)))
+                                        <img src="{{ asset('uploads/deposites/'.$item->screenshot) }}"
+                                            class="img-fluid"
+                                            style="max-height:100px;">
+                                    @else
+                                        <span class="text-muted">No Screenshot</span>
+                                    @endif
+
+                                </td>
 
                                 {{-- Status Dropdown --}}
                                 <td>

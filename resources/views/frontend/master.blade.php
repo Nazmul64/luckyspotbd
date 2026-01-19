@@ -127,7 +127,7 @@
             <div class="footer-wrapper d-flex flex-wrap align-items-center justify-content-md-between justify-content-center">
                 <div class="logo mb-3 mb-md-0">
                     <a href="{{ route('frontend') }}">
-                        <img src="{{ asset('frontend/assets/images/logo.png') }}" alt="logo">
+                        <img src="{{ asset('uploads/settings/' . ($setting->photo ?? '')) }}" alt="logo">
                     </a>
                 </div>
                  <ul class="footer-links d-flex flex-wrap justify-content-center">
@@ -150,8 +150,10 @@
         </div>
     </div>
 
-    <div class="shapes">
+    {{-- <div class="shapes">
         <img src="{{ asset('uploads/settings/' . ($setting->photo ?? '')) }}" alt="footer" class="shape1">
+    </div> --}}
+    <div class="shapes">
     </div>
 </footer>
 

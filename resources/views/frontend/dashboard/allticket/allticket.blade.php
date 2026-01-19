@@ -8,7 +8,6 @@
     // ============================================
     $activeTheme = \App\Models\ThemeSetting::where('status', 1)->first();
     $primaryColor = $activeTheme->primary_color ?? '#667eea';
-    $secondaryColor = $activeTheme->secondary_color ?? '#764ba2';
 
     // ============================================
     // LANGUAGE DETECTION
@@ -84,15 +83,16 @@
     // TICKET STATISTICS
     // ============================================
     $totalTickets = $tickets->count();
-    $wonTickets = $tickets->filter(fn($t) => $t->results->first()?->win_status === 'won')->count();
-    $lostTickets = $tickets->filter(fn($t) => $t->results->first()?->win_status === 'lost')->count();
+    $wonTickets = $tickets->filter(fn($t) => optional($t->results->first())->win_status === 'won')->count();
+    $lostTickets = $tickets->filter(fn($t) => optional($t->results->first())->win_status === 'lost')->count();
     $pendingTickets = $tickets->filter(fn($t) => !$t->results->first())->count();
-    $totalWinnings = $tickets->sum(fn($t) => $t->results->first()?->win_amount ?? 0);
+    $totalWinnings = $tickets->sum(fn($t) => optional($t->results->first())->win_amount ?? 0);
 
     // ============================================
     // NUMBER FORMATTING FUNCTION
     // ============================================
     function formatNumber($number, $isBangla) {
+        $number = is_numeric($number) ? (float)$number : 0;
         if ($isBangla) {
             $englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
             $banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
@@ -107,19 +107,35 @@
     function formatDate($date, $isBangla) {
         if (!$date) return '-';
 
-        if ($isBangla) {
-            $englishMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            $banglaMonths = ['জানু', 'ফেব', 'মার্চ', 'এপ্রি', 'মে', 'জুন', 'জুলা', 'আগ', 'সেপ', 'অক্ট', 'নভে', 'ডিসে'];
-            $englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-            $banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+        try {
+            $dateObj = is_string($date) ? new \DateTime($date) : $date;
 
-            $formatted = $date->format('d M Y');
-            $formatted = str_replace($englishMonths, $banglaMonths, $formatted);
-            $formatted = str_replace($englishDigits, $banglaDigits, $formatted);
-            return $formatted;
+            if ($isBangla) {
+                $englishMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                $banglaMonths = ['জানু', 'ফেব', 'মার্চ', 'এপ্রি', 'মে', 'জুন', 'জুলা', 'আগ', 'সেপ', 'অক্ট', 'নভে', 'ডিসে'];
+                $englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+                $banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+
+                $formatted = $dateObj->format('d M Y');
+                $formatted = str_replace($englishMonths, $banglaMonths, $formatted);
+                $formatted = str_replace($englishDigits, $banglaDigits, $formatted);
+                return $formatted;
+            }
+
+            return $dateObj->format('d M Y');
+        } catch (\Exception $e) {
+            return '-';
         }
+    }
 
-        return $date->format('d M Y');
+    // ============================================
+    // SAFE STRING CONVERSION
+    // ============================================
+    function safeString($value, $default = '') {
+        if (is_array($value) || is_object($value)) {
+            return $default;
+        }
+        return (string)$value;
     }
 @endphp
 
@@ -127,7 +143,7 @@
 
 <div class="container px-3 mt-4">
     <div class="row">
-            @include('frontend.dashboard.sidebar')
+        @include('frontend.dashboard.sidebar')
 
         {{-- MAIN CONTENT --}}
         <div class="col-lg-9 col-md-8">
@@ -271,44 +287,51 @@
                                 @forelse ($tickets as $ticket)
                                     @php
                                         $result = $ticket->results->first();
-                                        $status = $result ? $result->win_status : 'pending';
+                                        $status = $result ? safeString($result->win_status, 'pending') : 'pending';
                                         $statusClass = match($status) {
                                             'won' => 'status-won',
                                             'lost' => 'status-lost',
                                             default => 'status-pending'
                                         };
+
+                                        $ticketNumber = safeString($ticket->ticket_number, 'N/A');
+                                        $packageName = isset($ticket->package->name) ? safeString($ticket->package->name) : $lang['n_a'];
+                                        $ticketPrice = is_numeric($ticket->price) ? (float)$ticket->price : 0;
+                                        $winAmount = $result && is_numeric($result->win_amount) ? (float)$result->win_amount : 0;
+                                        $drawDate = $result && isset($result->draw_date) ? $result->draw_date : null;
+                                        $drawTimestamp = $drawDate ? (is_object($drawDate) && method_exists($drawDate, 'getTimestamp') ? $drawDate->getTimestamp() : 0) : 0;
                                     @endphp
 
                                     <tr class="ticket-row {{ $statusClass }}"
-                                        data-ticket="{{ $ticket->ticket_number }}"
-                                        data-package="{{ $ticket->package->name ?? $lang['n_a'] }}"
-                                        data-price="{{ $ticket->price }}"
+                                        data-ticket="{{ $ticketNumber }}"
+                                        data-package="{{ $packageName }}"
+                                        data-price="{{ $ticketPrice }}"
                                         data-status="{{ $status }}"
-                                        data-winnings="{{ $result->win_amount ?? 0 }}"
-                                        data-date="{{ $result && $result->draw_date ? $result->draw_date->timestamp : 0 }}">
+                                        data-winnings="{{ $winAmount }}"
+                                        data-date="{{ $drawTimestamp }}">
 
                                         {{-- Ticket Number --}}
                                         <td class="td-ticket">
                                             <div class="ticket-number">
                                                 <i class="fas fa-ticket-alt"></i>
-                                                <span>{{ $ticket->ticket_number }}</span>
+                                                <span>{{ $ticketNumber }}</span>
                                             </div>
                                         </td>
 
                                         {{-- Package Name --}}
                                         <td class="td-package">
-                                            <span class="package-name">{{ $ticket->package->name ?? $lang['n_a'] }}</span>
+                                            <span class="package-name">{{ $packageName }}</span>
                                         </td>
 
                                         {{-- Price --}}
                                         <td class="td-price">
-                                            <span class="price-value">{{ formatNumber($ticket->price, $isBangla) }} {{ $lang['currency'] }}</span>
+                                            <span class="price-value">{{ formatNumber($ticketPrice, $isBangla) }} {{ $lang['currency'] }}</span>
                                         </td>
 
                                         {{-- Status --}}
                                         <td class="td-status">
                                             @if ($result)
-                                                @if ($result->win_status === 'won')
+                                                @if ($status === 'won')
                                                     <span class="status-badge badge-won">
                                                         <i class="fas fa-check-circle"></i>
                                                         {{ $lang['won'] }}
@@ -329,11 +352,11 @@
 
                                         {{-- Win Amount --}}
                                         <td class="td-winnings">
-                                            <div class="winnings-amount {{ $result && $result->win_amount > 0 ? 'has-winnings' : '' }}">
-                                                @if($result && $result->win_amount > 0)
+                                            <div class="winnings-amount {{ $winAmount > 0 ? 'has-winnings' : '' }}">
+                                                @if($winAmount > 0)
                                                     <i class="fas fa-trophy"></i>
                                                 @endif
-                                                <span>{{ formatNumber($result->win_amount ?? 0, $isBangla) }} {{ $lang['currency'] }}</span>
+                                                <span>{{ formatNumber($winAmount, $isBangla) }} {{ $lang['currency'] }}</span>
                                             </div>
                                         </td>
 
@@ -341,7 +364,7 @@
                                         <td class="td-date">
                                             <div class="draw-date">
                                                 <i class="fas fa-calendar-day"></i>
-                                                <span>{{ formatDate($result && $result->draw_date ? $result->draw_date : null, $isBangla) }}</span>
+                                                <span>{{ formatDate($drawDate, $isBangla) }}</span>
                                             </div>
                                         </td>
                                     </tr>
@@ -382,12 +405,13 @@
 </div>
 
 {{-- ============================================
-     STYLES
+     Part 2: Complete Styles & JavaScript
+     Part 1 এর পরে এই কোডটি যোগ করুন
 ============================================ --}}
+
 <style>
 :root {
     --primary: {{ $primaryColor }};
-    --secondary: {{ $secondaryColor }};
     --success: #28a745;
     --warning: #ffc107;
     --danger: #dc3545;
@@ -408,10 +432,8 @@
 
 /* ==================== PAGE HEADER ==================== */
 .page-header {
-    background: linear-gradient(135deg,
-        color-mix(in srgb, var(--primary) 15%, transparent) 0%,
-        color-mix(in srgb, var(--secondary) 15%, transparent) 100%);
-    border: 2px solid var(--primary);
+    background: linear-gradient(135deg, #30cfd0 0%, #086755 100%);
+    border: 2px solid #30cfd0;
     border-radius: var(--radius-lg);
     padding: 24px;
     margin-bottom: 24px;
@@ -423,26 +445,30 @@
 }
 
 .page-title {
-    color: var(--primary);
+    color: var(--white);
     font-size: clamp(1.5rem, 4vw, 2rem);
     font-weight: 700;
     margin: 0 0 8px;
     display: flex;
     align-items: center;
     gap: 12px;
-    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+    @if($isBangla)
+        font-family: "Kalpurush", "SolaimanLipi", sans-serif;
+    @endif
 }
 
 .page-title i {
-    color: var(--secondary);
+    color: var(--white);
     font-size: 0.9em;
 }
 
 .page-subtitle {
-    color: var(--text-muted);
+    color: var(--white);
     font-size: 0.95rem;
     margin: 0;
-    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+    @if($isBangla)
+        font-family: "Kalpurush", "SolaimanLipi", sans-serif;
+    @endif
 }
 
 /* ==================== SEARCH ==================== */
@@ -468,19 +494,21 @@
 .search-input {
     width: 100%;
     padding: 14px 48px 14px 48px;
-    border: 2px solid var(--primary);
+    border: 2px solid var(--white);
     border-radius: var(--radius);
     font-size: 1rem;
     color: var(--text-dark);
     background: var(--white);
     transition: all var(--transition);
     outline: none;
-    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+    @if($isBangla)
+        font-family: "Kalpurush", "SolaimanLipi", sans-serif;
+    @endif
 }
 
 .search-input:focus {
-    border-color: var(--secondary);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 15%, transparent);
+    border-color: var(--white);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3);
     transform: translateY(-1px);
 }
 
@@ -513,13 +541,15 @@
 .search-results-count {
     margin-top: 8px;
     padding: 8px 12px;
-    background: color-mix(in srgb, var(--primary) 10%, transparent);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: var(--radius-sm);
-    color: var(--primary);
+    color: var(--white);
     font-size: 0.9rem;
     font-weight: 600;
     text-align: center;
-    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+    @if($isBangla)
+        font-family: "Kalpurush", "SolaimanLipi", sans-serif;
+    @endif
 }
 
 /* ==================== STATISTICS CARDS ==================== */
@@ -553,7 +583,7 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    background: var(--primary);
     transition: height var(--transition);
 }
 
@@ -581,23 +611,23 @@
 }
 
 .stat-card-primary .stat-icon {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    background: var(--primary);
     color: var(--white);
 }
 
 .stat-card-success .stat-icon {
-    background: linear-gradient(135deg, var(--success), #20c997);
+    background: var(--success);
     color: var(--white);
 }
 
 .stat-card-warning .stat-icon {
-    background: linear-gradient(135deg, var(--warning), #ffb900);
-    color: var(--text-dark);
+    background: var(--warning);
+    color: var(--white);
 }
 
 .stat-card-gold .stat-icon {
-    background: linear-gradient(135deg, var(--gold), #ffaa00);
-    color: var(--text-dark);
+    background: var(--gold);
+    color: var(--white);
 }
 
 .stat-content {
@@ -610,7 +640,9 @@
     color: var(--text-dark);
     margin: 0 0 4px;
     line-height: 1;
-    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+    @if($isBangla)
+        font-family: "Kalpurush", "SolaimanLipi", sans-serif;
+    @endif
 }
 
 .stat-label {
@@ -618,7 +650,9 @@
     color: var(--text-muted);
     margin: 0;
     font-weight: 500;
-    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+    @if($isBangla)
+        font-family: "Kalpurush", "SolaimanLipi", sans-serif;
+    @endif
 }
 
 .stat-decoration {
@@ -628,9 +662,7 @@
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    background: radial-gradient(circle,
-        color-mix(in srgb, var(--primary) 10%, transparent),
-        transparent 70%);
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.05), transparent 70%);
     pointer-events: none;
 }
 
@@ -662,7 +694,7 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    background: var(--primary);
 }
 
 .tickets-table th {
@@ -673,7 +705,9 @@
     color: var(--white);
     white-space: nowrap;
     user-select: none;
-    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+    @if($isBangla)
+        font-family: "Kalpurush", "SolaimanLipi", sans-serif;
+    @endif
 }
 
 .th-content {
@@ -688,7 +722,7 @@
 }
 
 .sortable:hover {
-    background: color-mix(in srgb, var(--white) 10%, transparent);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .sort-icon {
@@ -722,7 +756,7 @@
 }
 
 .ticket-row:hover {
-    background: color-mix(in srgb, var(--primary) 5%, transparent);
+    background: rgba(102, 126, 234, 0.05);
     transform: scale(1.01);
     box-shadow: var(--shadow-sm);
 }
@@ -732,7 +766,9 @@
     font-size: 0.95rem;
     color: var(--text-dark);
     vertical-align: middle;
-    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+    @if($isBangla)
+        font-family: "Kalpurush", "SolaimanLipi", sans-serif;
+    @endif
 }
 
 /* ==================== TABLE CELLS ==================== */
@@ -745,7 +781,7 @@
 }
 
 .ticket-number i {
-    color: var(--secondary);
+    color: var(--primary);
 }
 
 .package-name {
@@ -769,17 +805,17 @@
 }
 
 .badge-won {
-    background: color-mix(in srgb, var(--success) 15%, transparent);
+    background: rgba(40, 167, 69, 0.15);
     color: var(--success);
 }
 
 .badge-lost {
-    background: color-mix(in srgb, var(--danger) 15%, transparent);
+    background: rgba(220, 53, 69, 0.15);
     color: var(--danger);
 }
 
 .badge-pending {
-    background: color-mix(in srgb, var(--warning) 15%, transparent);
+    background: rgba(255, 193, 7, 0.15);
     color: #856404;
 }
 
@@ -831,7 +867,9 @@
     font-weight: 700;
     color: var(--text-dark);
     margin: 0 0 12px;
-    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+    @if($isBangla)
+        font-family: "Kalpurush", "SolaimanLipi", sans-serif;
+    @endif
 }
 
 .empty-description,
@@ -839,7 +877,9 @@
     font-size: 1rem;
     color: var(--text-muted);
     margin: 0 0 24px;
-    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+    @if($isBangla)
+        font-family: "Kalpurush", "SolaimanLipi", sans-serif;
+    @endif
 }
 
 .empty-action {
@@ -847,13 +887,15 @@
     align-items: center;
     gap: 8px;
     padding: 12px 24px;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    background: var(--primary);
     color: var(--white);
     text-decoration: none;
     border-radius: var(--radius);
     font-weight: 600;
     transition: all var(--transition);
-    {{ $isBangla ? 'font-family: "Kalpurush", "SolaimanLipi", sans-serif;' : '' }}
+    @if($isBangla)
+        font-family: "Kalpurush", "SolaimanLipi", sans-serif;
+    @endif
 }
 
 .empty-action:hover {
@@ -979,6 +1021,10 @@
     }
 }
 
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 .stat-card {
     animation: fadeIn 0.5s ease-out;
 }
@@ -1008,7 +1054,20 @@
 }
 
 .table-wrapper::-webkit-scrollbar-thumb:hover {
-    background: var(--secondary);
+    background: var(--primary);
+}
+
+/* ==================== TOOLTIPS ==================== */
+.custom-tooltip {
+    position: fixed;
+    background: var(--text-dark);
+    color: var(--white);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    pointer-events: none;
+    z-index: 1000;
+    white-space: nowrap;
 }
 
 /* ==================== PRINT STYLES ==================== */
@@ -1104,7 +1163,6 @@ document.addEventListener('DOMContentLoaded', function() {
             let visibleCount = 0;
 
             if (query === '') {
-                // Show all rows
                 rows.forEach(row => {
                     row.style.display = '';
                 });
@@ -1113,10 +1171,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 noResults.style.display = 'none';
                 tableWrapper.style.display = '';
             } else {
-                // Filter rows
                 rows.forEach(row => {
-                    const ticket = row.dataset.ticket.toLowerCase();
-                    const packageName = row.dataset.package.toLowerCase();
+                    const ticket = (row.dataset.ticket || '').toLowerCase();
+                    const packageName = (row.dataset.package || '').toLowerCase();
 
                     if (ticket.includes(query) || packageName.includes(query)) {
                         row.style.display = '';
@@ -1142,12 +1199,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Clear search
-        clearBtn.addEventListener('click', function() {
-            searchInput.value = '';
-            searchInput.dispatchEvent(new Event('input'));
-            searchInput.focus();
-        });
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input'));
+                searchInput.focus();
+            });
+        }
     }
 
     // ============================================
@@ -1162,7 +1220,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const tbody = this.closest('table').querySelector('tbody');
             const rows = Array.from(tbody.querySelectorAll('.ticket-row'));
 
-            // Determine sort direction
             if (currentSort.column === sortType) {
                 currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
             } else {
@@ -1170,26 +1227,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             currentSort.column = sortType;
 
-            // Remove sort classes from all headers
             sortables.forEach(s => {
                 s.classList.remove('asc', 'desc');
             });
 
-            // Add current sort class
             this.classList.add(currentSort.direction);
 
-            // Sort rows
             rows.sort((a, b) => {
                 let aVal, bVal;
 
                 switch(sortType) {
                     case 'ticket':
-                        aVal = a.dataset.ticket;
-                        bVal = b.dataset.ticket;
+                        aVal = a.dataset.ticket || '';
+                        bVal = b.dataset.ticket || '';
                         break;
                     case 'package':
-                        aVal = a.dataset.package;
-                        bVal = b.dataset.package;
+                        aVal = a.dataset.package || '';
+                        bVal = b.dataset.package || '';
                         break;
                     case 'price':
                     case 'winnings':
@@ -1220,7 +1274,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Reorder rows in DOM
             rows.forEach(row => tbody.appendChild(row));
         });
     });
@@ -1229,7 +1282,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // KEYBOARD SHORTCUTS
     // ============================================
     document.addEventListener('keydown', function(e) {
-        // Ctrl/Cmd + K for search focus
         if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
             e.preventDefault();
             if (searchInput) {
@@ -1238,7 +1290,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Escape to clear search
         if (e.key === 'Escape' && searchInput === document.activeElement) {
             if (searchInput.value !== '') {
                 searchInput.value = '';
@@ -1250,12 +1301,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================================
-    // ROW CLICK HANDLER (Optional - for future expansion)
+    // ROW CLICK HANDLER
     // ============================================
     const ticketRows = document.querySelectorAll('.ticket-row');
     ticketRows.forEach(row => {
         row.addEventListener('click', function() {
-            // Future: Open ticket details modal or navigate to details page
             const ticketNumber = this.dataset.ticket;
             console.log('Clicked ticket:', ticketNumber);
         });
@@ -1270,24 +1320,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================
-    // LOADING STATE (if needed for future AJAX)
-    // ============================================
-    function showLoading() {
-        const tbody = document.querySelector('#ticketsTable tbody');
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" style="text-align: center; padding: 40px;">
-                        <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid var(--primary); border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite;"></div>
-                        <p style="margin-top: 16px; color: var(--text-muted);">Loading tickets...</p>
-                    </td>
-                </tr>
-            `;
-        }
-    }
-
-    // ============================================
-    // TOOLTIPS (Optional enhancement)
+    // TOOLTIPS
     // ============================================
     document.querySelectorAll('[data-tooltip]').forEach(el => {
         el.addEventListener('mouseenter', function() {
@@ -1342,28 +1375,6 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('%cTotal Tickets: ' + {{ $totalTickets }}, 'color: #28a745;');
     console.log('%cWon Tickets: ' + {{ $wonTickets }}, 'color: #ffc107;');
 });
-
-// ============================================
-// SPIN ANIMATION FOR LOADING
-// ============================================
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-    .custom-tooltip {
-        position: fixed;
-        background: var(--text-dark);
-        color: var(--white);
-        padding: 6px 12px;
-        border-radius: var(--radius-sm);
-        font-size: 0.85rem;
-        pointer-events: none;
-        z-index: 1000;
-        white-space: nowrap;
-    }
-`;
-document.head.appendChild(style);
 </script>
 
 @endsection
